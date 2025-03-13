@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Pagination, PaginationContent, PaginationItem, PaginationLink } from '@/components/ui/pagination';
 import { allJobs } from '@/lib/jobsData';
 import { motion } from 'framer-motion';
-import { Zap, Scan, BrainCircuit, Layers, Box3d, Globe, ArrowRight } from 'lucide-react';
+import { Zap, Scan, BrainCircuit, Layers, Cube, Globe, ArrowRight } from 'lucide-react';
 
 const Jobs = () => {
   const location = useLocation();
@@ -237,7 +237,7 @@ const Jobs = () => {
                   </div>
                   <div className="flex flex-col items-center text-center p-4 rounded-lg hover:bg-accent/5 transition-colors">
                     <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-3">
-                      <Box3d className="h-6 w-6 text-accent" />
+                      <Cube className="h-6 w-6 text-accent" />
                     </div>
                     <h4 className="font-medium mb-2">AR Interviews</h4>
                     <p className="text-sm text-muted-foreground">Practice with augmented reality to prepare for your real interviews</p>
