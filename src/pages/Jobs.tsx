@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
@@ -51,7 +50,6 @@ const Jobs = () => {
   const filteredJobs = getFilteredJobs();
   const paginatedJobs = filteredJobs.slice((currentPage - 1) * 9, currentPage * 9);
   
-  // Reset to page 1 when filters change
   useEffect(() => {
     setCurrentPage(1);
   }, [searchTerm, selectedLocation, selectedCategory]);
@@ -62,7 +60,6 @@ const Jobs = () => {
       
       <main className="flex-grow pt-24 pb-16">
         <div className="container mx-auto px-4 md:px-6">
-          {/* Page header */}
           <div className="mb-8">
             <h1 className="text-3xl font-bold mb-3">Browse Jobs</h1>
             <p className="text-muted-foreground">
@@ -70,21 +67,16 @@ const Jobs = () => {
             </p>
           </div>
           
-          {/* Search bar */}
           <div className="mb-8">
             <SearchBar />
           </div>
           
-          {/* Filter and results */}
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-            {/* Filters sidebar */}
             <div className="lg:col-span-1">
               <JobFilter />
             </div>
             
-            {/* Job listings */}
             <div className="lg:col-span-3">
-              {/* Results summary */}
               <div className="flex justify-between items-center mb-6">
                 <div className="text-sm text-muted-foreground">
                   Showing <span className="font-medium text-foreground">{paginatedJobs.length}</span> of{' '}
@@ -102,7 +94,6 @@ const Jobs = () => {
                 </div>
               </div>
               
-              {/* Job cards */}
               {paginatedJobs.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 mb-8">
                   {paginatedJobs.map(job => (
@@ -124,15 +115,13 @@ const Jobs = () => {
                 </div>
               )}
               
-              {/* Pagination */}
               {filteredJobs.length > 0 && (
                 <Pagination>
                   <PaginationContent>
                     <PaginationItem>
                       <PaginationLink 
                         onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                        disabled={currentPage === 1}
-                        className={currentPage === 1 ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}
+                        className={currentPage === 1 ? "opacity-50 pointer-events-none" : "cursor-pointer"}
                       >
                         Previous
                       </PaginationLink>
@@ -162,8 +151,7 @@ const Jobs = () => {
                     <PaginationItem>
                       <PaginationLink 
                         onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-                        disabled={currentPage === totalPages}
-                        className={currentPage === totalPages ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}
+                        className={currentPage === totalPages ? "opacity-50 pointer-events-none" : "cursor-pointer"}
                       >
                         Next
                       </PaginationLink>
