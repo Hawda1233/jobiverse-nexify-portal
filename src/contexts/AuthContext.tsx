@@ -6,7 +6,9 @@ import {
   signOut,
   onAuthStateChanged,
   UserCredential,
-  User
+  User,
+  GoogleAuthProvider,
+  signInWithPopup
 } from "firebase/auth";
 import { auth } from "../lib/firebase";
 
@@ -15,6 +17,7 @@ interface AuthContextProps {
   loading: boolean;
   signup: (email: string, password: string) => Promise<UserCredential>;
   login: (email: string, password: string) => Promise<UserCredential>;
+  loginWithGoogle: () => Promise<UserCredential>;
   logout: () => Promise<void>;
 }
 
@@ -31,6 +34,7 @@ export function useAuth() {
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const googleProvider = new GoogleAuthProvider();
 
   function signup(email: string, password: string) {
     return createUserWithEmailAndPassword(auth, email, password);
@@ -38,6 +42,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   function login(email: string, password: string) {
     return signInWithEmailAndPassword(auth, email, password);
+  }
+
+  function loginWithGoogle() {
+    return signInWithPopup(auth, googleProvider);
   }
 
   function logout() {
@@ -58,6 +66,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     loading,
     signup,
     login,
+    loginWithGoogle,
     logout
   };
 
