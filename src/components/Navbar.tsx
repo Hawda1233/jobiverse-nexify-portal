@@ -1,14 +1,28 @@
 
 import React, { useEffect, useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { Menu, X, User, BriefcaseBusiness, Bell, ChevronDown } from 'lucide-react';
+import { Menu, X, User, BriefcaseBusiness, Bell, LogOut } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/hooks/use-toast';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
+  const { currentUser, logout } = useAuth();
+  const { toast } = useToast();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -22,6 +36,29 @@ const Navbar = () => {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      toast({
+        title: "Success",
+        description: "You have been logged out successfully",
+      });
+      navigate('/');
+    } catch (error) {
+      console.error(error);
+      toast({
+        title: "Error",
+        description: "Failed to log out. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const getUserInitials = () => {
+    if (!currentUser?.email) return "U";
+    return currentUser.email.charAt(0).toUpperCase();
+  };
 
   return (
     <header
@@ -52,13 +89,46 @@ const Navbar = () => {
           <Button variant="ghost" size="icon">
             <Bell className="h-5 w-5" />
           </Button>
-          <div className="flex items-center gap-2">
-            <Button variant="outline" className="flex items-center gap-2">
-              <User className="h-4 w-4" />
-              <span>Sign In</span>
-            </Button>
-            <Button>Post a Job</Button>
-          </div>
+          
+          {currentUser ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="relative h-10 w-10 rounded-full">
+                  <Avatar>
+                    <AvatarImage src={currentUser.photoURL || ""} />
+                    <AvatarFallback>{getUserInitials()}</AvatarFallback>
+                  </Avatar>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => navigate('/profile')}>
+                  <User className="mr-2 h-4 w-4" />
+                  Profile
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate('/dashboard')}>
+                  Dashboard
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate('/applications')}>
+                  My Applications
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleLogout}>
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Log out
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <div className="flex items-center gap-2">
+              <Button variant="outline" className="flex items-center gap-2" onClick={() => navigate('/signin')}>
+                <User className="h-4 w-4" />
+                <span>Sign In</span>
+              </Button>
+              <Button onClick={() => navigate('/signup')}>Sign Up</Button>
+            </div>
+          )}
         </div>
 
         <Button 
@@ -80,11 +150,26 @@ const Navbar = () => {
             <MobileNavLink to="/resources" active={location.pathname.includes('/resources')}>Resources</MobileNavLink>
           </nav>
           <div className="flex flex-col gap-3">
-            <Button variant="outline" className="flex items-center justify-center gap-2 w-full">
-              <User className="h-4 w-4" />
-              <span>Sign In</span>
-            </Button>
-            <Button className="w-full">Post a Job</Button>
+            {currentUser ? (
+              <>
+                <Button variant="outline" className="flex items-center justify-center gap-2 w-full" onClick={() => navigate('/profile')}>
+                  <User className="h-4 w-4" />
+                  <span>Profile</span>
+                </Button>
+                <Button variant="destructive" className="w-full" onClick={handleLogout}>
+                  <LogOut className="h-4 w-4 mr-2" />
+                  Log out
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button variant="outline" className="flex items-center justify-center gap-2 w-full" onClick={() => navigate('/signin')}>
+                  <User className="h-4 w-4" />
+                  <span>Sign In</span>
+                </Button>
+                <Button className="w-full" onClick={() => navigate('/signup')}>Sign Up</Button>
+              </>
+            )}
           </div>
         </div>
       )}
