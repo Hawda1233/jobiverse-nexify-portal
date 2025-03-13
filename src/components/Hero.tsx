@@ -1,7 +1,6 @@
-
 import React from 'react';
 import { motion } from 'framer-motion';
-import { ArrowRight, Search, MapPin, Briefcase, Zap, BrainCircuit, Box, Cube } from 'lucide-react';
+import { ArrowRight, Search, MapPin, Briefcase, Zap, BrainCircuit, Box } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import SearchBar from './SearchBar';
 
@@ -93,7 +92,7 @@ const Hero = () => {
             </div>
             <div className="neo-blur rounded-xl p-5 flex flex-col items-center text-center card-hover">
               <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-3">
-                <Cube className="h-6 w-6 text-accent" />
+                <Box className="h-6 w-6 text-accent" />
               </div>
               <h3 className="font-medium mb-1">AR/VR Interviews</h3>
               <p className="text-sm text-muted-foreground">Practice and perform in immersive environments</p>
