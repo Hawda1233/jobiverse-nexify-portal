@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { Menu, X, User, BriefcaseBusiness, Bell, LogOut } from 'lucide-react';
+import { Menu, X, User, BriefcaseBusiness, Bell, LogOut, Briefcase } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import {
@@ -83,9 +83,20 @@ const Navbar = () => {
           <NavLink to="/jobs" active={location.pathname === '/jobs'}>Browse Jobs</NavLink>
           <NavLink to="/companies" active={location.pathname.includes('/companies')}>Companies</NavLink>
           <NavLink to="/resources" active={location.pathname.includes('/resources')}>Resources</NavLink>
+          <NavLink to="/interview" active={location.pathname === '/interview'}>Interview Simulator</NavLink>
         </nav>
 
         <div className="hidden md:flex items-center gap-3">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="gap-2"
+            onClick={() => navigate('/interview')}
+          >
+            <Briefcase className="h-4 w-4" />
+            <span>Practice Interview</span>
+          </Button>
+          
           <Button variant="ghost" size="icon">
             <Bell className="h-5 w-5" />
           </Button>
@@ -148,7 +159,21 @@ const Navbar = () => {
             <MobileNavLink to="/jobs" active={location.pathname === '/jobs'}>Browse Jobs</MobileNavLink>
             <MobileNavLink to="/companies" active={location.pathname.includes('/companies')}>Companies</MobileNavLink>
             <MobileNavLink to="/resources" active={location.pathname.includes('/resources')}>Resources</MobileNavLink>
+            <MobileNavLink to="/interview" active={location.pathname === '/interview'}>Interview Simulator</MobileNavLink>
           </nav>
+          
+          <Button 
+            variant="outline" 
+            className="flex items-center justify-center gap-2 w-full mb-3" 
+            onClick={() => {
+              navigate('/interview');
+              setMobileMenuOpen(false);
+            }}
+          >
+            <Briefcase className="h-4 w-4" />
+            <span>Practice Interview</span>
+          </Button>
+          
           <div className="flex flex-col gap-3">
             {currentUser ? (
               <>
