@@ -329,8 +329,8 @@ export function InterviewProvider({ children }: { children: React.ReactNode }) {
       await navigator.mediaDevices.getUserMedia({ audio: true });
       
       // Initialize speech recognition
-      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-      recognitionRef.current = new SpeechRecognition();
+      const SpeechRecognitionConstructor = window.SpeechRecognition || window.webkitSpeechRecognition;
+      recognitionRef.current = new SpeechRecognitionConstructor();
       
       recognitionRef.current.continuous = true;
       recognitionRef.current.interimResults = true;
@@ -500,8 +500,8 @@ export function InterviewProvider({ children }: { children: React.ReactNode }) {
 // TypeScript declarations for SpeechRecognition
 declare global {
   interface Window {
-    SpeechRecognition: typeof SpeechRecognition;
-    webkitSpeechRecognition: typeof SpeechRecognition;
+    SpeechRecognition: any;
+    webkitSpeechRecognition: any;
   }
 }
 
