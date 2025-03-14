@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { ChartContainer, ChartLegend, ChartLegendContent } from "@/components/ui/chart";
 import { AnimatePresence, motion } from "framer-motion";
+import AIInterviewerAvatar from "./AIInterviewerAvatar";
 
 interface VirtualInterviewerProps {
   topic?: string;
@@ -232,69 +233,82 @@ const VirtualInterviewer: React.FC<VirtualInterviewerProps> = ({ topic = "genera
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={interviewState.currentQuestionIndex}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.3 }}
-            className="p-4 bg-muted rounded-lg"
-          >
-            <h3 className="font-medium mb-2">Interviewer:</h3>
-            <p>{interviewState.currentQuestion}</p>
-          </motion.div>
-        </AnimatePresence>
-        
-        <div>
-          <div className="flex justify-between items-center mb-2">
-            <h3 className="font-medium">Your Answer:</h3>
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button 
-                    variant={interviewState.isListening ? "default" : "outline"} 
-                    size="sm"
-                    onClick={handleToggleMicrophone}
-                    disabled={isEvaluating}
-                    className={interviewState.isListening ? "bg-red-500 hover:bg-red-600" : ""}
-                  >
-                    {interviewState.isListening ? (
-                      <><MicOff className="h-4 w-4 mr-1" /> Stop Recording</>
-                    ) : (
-                      <><Mic className="h-4 w-4 mr-1" /> Start Recording</>
-                    )}
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  {interviewState.isListening ? "Stop voice input" : "Start voice input"}
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+        <div className="flex flex-col items-center md:flex-row md:items-start gap-4">
+          {/* AI Character Avatar */}
+          <div className="md:w-1/4 flex justify-center">
+            <AIInterviewerAvatar 
+              isSpeaking={interviewState.isSpeaking} 
+              isListening={interviewState.isListening} 
+            />
           </div>
-          <Textarea 
-            placeholder="Type your answer here or use the microphone above..." 
-            className="min-h-[150px]"
-            value={answer}
-            onChange={handleAnswerChange}
-            disabled={isEvaluating}
-          />
+          
+          {/* Question and Answer Area */}
+          <div className="md:w-3/4 space-y-4">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={interviewState.currentQuestionIndex}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.3 }}
+                className="p-4 bg-muted rounded-lg"
+              >
+                <h3 className="font-medium mb-2">Interviewer:</h3>
+                <p>{interviewState.currentQuestion}</p>
+              </motion.div>
+            </AnimatePresence>
+            
+            <div>
+              <div className="flex justify-between items-center mb-2">
+                <h3 className="font-medium">Your Answer:</h3>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button 
+                        variant={interviewState.isListening ? "default" : "outline"} 
+                        size="sm"
+                        onClick={handleToggleMicrophone}
+                        disabled={isEvaluating}
+                        className={interviewState.isListening ? "bg-red-500 hover:bg-red-600" : ""}
+                      >
+                        {interviewState.isListening ? (
+                          <><MicOff className="h-4 w-4 mr-1" /> Stop Recording</>
+                        ) : (
+                          <><Mic className="h-4 w-4 mr-1" /> Start Recording</>
+                        )}
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      {interviewState.isListening ? "Stop voice input" : "Start voice input"}
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
+              <Textarea 
+                placeholder="Type your answer here or use the microphone above..." 
+                className="min-h-[150px]"
+                value={answer}
+                onChange={handleAnswerChange}
+                disabled={isEvaluating}
+              />
+            </div>
+            
+            {currentFeedback && (
+              <AnimatePresence>
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.3 }}
+                  className="p-4 bg-background border rounded-lg"
+                >
+                  <h3 className="font-medium mb-2">Feedback:</h3>
+                  <p>{currentFeedback}</p>
+                </motion.div>
+              </AnimatePresence>
+            )}
+          </div>
         </div>
-        
-        {currentFeedback && (
-          <AnimatePresence>
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.3 }}
-              className="p-4 bg-background border rounded-lg"
-            >
-              <h3 className="font-medium mb-2">Feedback:</h3>
-              <p>{currentFeedback}</p>
-            </motion.div>
-          </AnimatePresence>
-        )}
       </CardContent>
       
       <CardFooter className="flex justify-between">

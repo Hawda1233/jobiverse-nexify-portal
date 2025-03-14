@@ -4,7 +4,6 @@ import { InterviewProvider } from "@/contexts/InterviewContext";
 import VirtualInterviewer from "@/components/VirtualInterviewer";
 import InterviewSetup from "@/components/InterviewSetup";
 import Navbar from "@/components/Navbar";
-import { Progress } from "@/components/ui/progress";
 
 const InterviewSimulator: React.FC = () => {
   const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
@@ -13,6 +12,13 @@ const InterviewSimulator: React.FC = () => {
     <div className="min-h-screen bg-background">
       <Navbar />
       <main className="container mx-auto px-4 py-8">
+        <div className="mb-8 text-center">
+          <h1 className="text-3xl font-bold mb-2">AI Interview Simulator</h1>
+          <p className="text-muted-foreground">
+            Practice your interview skills with our AI-powered interviewer
+          </p>
+        </div>
+        
         <InterviewProvider>
           {!selectedTopic ? (
             <InterviewSetup onTopicSelected={setSelectedTopic} />
