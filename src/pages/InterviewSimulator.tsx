@@ -2,7 +2,7 @@
 import React from "react";
 import { InterviewProvider } from "@/contexts/InterviewContext";
 import VirtualInterviewer from "@/components/VirtualInterviewer";
-import { Navbar } from "@/components/Navbar";
+import Navbar from "@/components/Navbar";
 
 const InterviewSimulator: React.FC = () => {
   return (
