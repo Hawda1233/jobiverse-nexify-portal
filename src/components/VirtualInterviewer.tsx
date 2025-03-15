@@ -1,10 +1,9 @@
-
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { useInterview } from "@/contexts/InterviewContext";
-import { Mic, MicOff, Send, ArrowRight, ArrowLeft, RotateCcw, Volume2, VolumeX } from "lucide-react";
+import { Mic, MicOff, Send, ArrowRight, ArrowLeft, RotateCcw, Volume2, VolumeX, Video, VideoOff } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -45,12 +44,10 @@ const VirtualInterviewer: React.FC<VirtualInterviewerProps> = ({ topic = "genera
     }
   }, [interviewState.isStarted, startInterview, topic]);
 
-  // Update answer when transcription changes
   useEffect(() => {
     if (interviewState.transcription) {
       setAnswer(interviewState.transcription);
       
-      // Reset silence timer when new transcription comes in
       if (interviewState.transcription.length > lastTranscriptionLength) {
         setLastTranscriptionLength(interviewState.transcription.length);
         
@@ -58,7 +55,6 @@ const VirtualInterviewer: React.FC<VirtualInterviewerProps> = ({ topic = "genera
           clearTimeout(silenceTimer);
         }
         
-        // Set a new silence timer - if no new words after 2 seconds, auto-submit
         const timer = setTimeout(() => {
           if (interviewState.isListening && interviewState.transcription.length >= 30) {
             handleSubmitAnswer();
@@ -158,7 +154,7 @@ const VirtualInterviewer: React.FC<VirtualInterviewerProps> = ({ topic = "genera
   
   if (!interviewState.isStarted) {
     return (
-      <Card className="w-full max-w-3xl mx-auto">
+      <Card className="w-full max-w-3xl mx-auto bg-background/95 backdrop-blur-sm border-gray-800">
         <CardHeader>
           <CardTitle className="text-2xl">Interview Loading...</CardTitle>
           <CardDescription>
@@ -171,7 +167,7 @@ const VirtualInterviewer: React.FC<VirtualInterviewerProps> = ({ topic = "genera
 
   if (interviewState.isFinished) {
     return (
-      <Card className="w-full max-w-3xl mx-auto">
+      <Card className="w-full max-w-3xl mx-auto bg-background/95 backdrop-blur-sm border-gray-800">
         <CardHeader>
           <CardTitle className="text-2xl">Interview Complete</CardTitle>
           <CardDescription>
@@ -231,60 +227,129 @@ const VirtualInterviewer: React.FC<VirtualInterviewerProps> = ({ topic = "genera
   }
 
   return (
-    <Card className="w-full max-w-3xl mx-auto">
-      <CardHeader>
-        <div className="flex justify-between items-center">
-          <div>
-            <div className="flex items-center gap-2">
-              <CardTitle>Interview Question {interviewState.currentQuestionIndex + 1}/{interviewState.allQuestions.length}</CardTitle>
-              <Badge variant="outline" className="ml-2">
-                {interviewState.category.charAt(0).toUpperCase() + interviewState.category.slice(1)}
-              </Badge>
+    <div className="flex flex-col md:flex-row gap-4 max-w-5xl mx-auto">
+      <div className="md:w-1/3">
+        <div className="sticky top-4">
+          <Card className="bg-background/95 backdrop-blur-sm border-gray-800">
+            <CardHeader className="pb-2">
+              <div className="flex justify-between items-center">
+                <div>
+                  <CardTitle className="text-sm text-muted-foreground">Video Interview</CardTitle>
+                </div>
+                <div className="flex gap-1">
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button 
+                          variant="outline" 
+                          size="icon"
+                          className="h-7 w-7"
+                          onClick={handleToggleSpeech}
+                        >
+                          {interviewState.isSpeaking || autoPlay ? <Volume2 className="h-3 w-3" /> : <VolumeX className="h-3 w-3" />}
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        {interviewState.isSpeaking || autoPlay ? "Mute audio" : "Unmute audio"}
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                  
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button 
+                          variant="outline" 
+                          size="icon"
+                          className="h-7 w-7"
+                        >
+                          <Video className="h-3 w-3" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        Video is on
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <AIInterviewerAvatar 
+                isSpeaking={interviewState.isSpeaking} 
+                isListening={interviewState.isListening} 
+              />
+
+              <div className="mt-4 relative rounded-lg overflow-hidden bg-gradient-to-b from-gray-800 to-gray-900 aspect-video w-full max-w-[280px] md:max-w-[320px] mx-auto shadow-lg border border-gray-700">
+                <div className="absolute inset-0 flex items-center justify-center opacity-50">
+                  <div className="bg-gray-900 rounded-full h-24 w-24 flex items-center justify-center">
+                    <motion.div
+                      animate={interviewState.isListening ? "active" : "inactive"}
+                      variants={{
+                        inactive: {
+                          scale: 1,
+                          opacity: 0.7,
+                        },
+                        active: {
+                          scale: [1, 1.1, 1],
+                          opacity: [0.7, 1, 0.7],
+                          transition: {
+                            repeat: Infinity,
+                            duration: 1.5,
+                          },
+                        },
+                      }}
+                    >
+                      <div className="text-xl text-gray-400">You</div>
+                    </motion.div>
+                  </div>
+                </div>
+                
+                <div className="absolute bottom-3 left-3 flex space-x-2">
+                  <div className="bg-black/50 p-1.5 rounded-full">
+                    <Video className="h-4 w-4 text-white" />
+                  </div>
+                  <div className="bg-black/50 p-1.5 rounded-full">
+                    {interviewState.isListening ? (
+                      <Mic className="h-4 w-4 text-white" />
+                    ) : (
+                      <MicOff className="h-4 w-4 text-white" />
+                    )}
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+
+      <div className="md:w-2/3">
+        <Card className="bg-background/95 backdrop-blur-sm border-gray-800">
+          <CardHeader>
+            <div className="flex justify-between items-center">
+              <div>
+                <div className="flex items-center gap-2">
+                  <CardTitle>Question {interviewState.currentQuestionIndex + 1}/{interviewState.allQuestions.length}</CardTitle>
+                  <Badge variant="outline" className="ml-2">
+                    {interviewState.category.charAt(0).toUpperCase() + interviewState.category.slice(1)}
+                  </Badge>
+                </div>
+                <CardDescription>Answer as if you were in a real interview</CardDescription>
+              </div>
+              <Button variant="outline" size="sm" onClick={handleRestart}>
+                <RotateCcw className="h-4 w-4 mr-1" /> Restart
+              </Button>
             </div>
-            <CardDescription>Answer as if you were in a real interview</CardDescription>
-          </div>
-          <div className="flex gap-2">
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button 
-                    variant="outline" 
-                    size="icon"
-                    onClick={handleToggleSpeech}
-                  >
-                    {interviewState.isSpeaking || autoPlay ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  {interviewState.isSpeaking || autoPlay ? "Turn off voice" : "Turn on voice"}
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
             
-            <Button variant="outline" size="sm" onClick={handleRestart}>
-              <RotateCcw className="h-4 w-4 mr-1" /> Restart
-            </Button>
-          </div>
-        </div>
-        
-        <div className="mt-2">
-          <div className="flex justify-between text-sm font-medium">
-            <span>Progress</span>
-            <span>{interviewState.progress}%</span>
-          </div>
-          <Progress value={interviewState.progress} className="h-2" />
-        </div>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="flex flex-col items-center md:flex-row md:items-start gap-4">
-          <div className="md:w-1/4 flex justify-center">
-            <AIInterviewerAvatar 
-              isSpeaking={interviewState.isSpeaking} 
-              isListening={interviewState.isListening} 
-            />
-          </div>
-          
-          <div className="md:w-3/4 space-y-4">
+            <div className="mt-2">
+              <div className="flex justify-between text-sm font-medium">
+                <span>Progress</span>
+                <span>{interviewState.progress}%</span>
+              </div>
+              <Progress value={interviewState.progress} className="h-2" />
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
             <AnimatePresence mode="wait">
               <motion.div
                 key={interviewState.currentQuestionIndex}
@@ -327,6 +392,7 @@ const VirtualInterviewer: React.FC<VirtualInterviewerProps> = ({ topic = "genera
                   </Tooltip>
                 </TooltipProvider>
               </div>
+              
               <Textarea 
                 placeholder="Type your answer here or use the microphone above..." 
                 className="min-h-[150px]"
@@ -357,42 +423,42 @@ const VirtualInterviewer: React.FC<VirtualInterviewerProps> = ({ topic = "genera
                 </motion.div>
               </AnimatePresence>
             )}
-          </div>
-        </div>
-      </CardContent>
-      
-      <CardFooter className="flex justify-between">
-        <div className="flex gap-2">
-          <Button 
-            variant="outline" 
-            onClick={handlePreviousQuestion}
-            disabled={interviewState.currentQuestionIndex === 0 || isEvaluating}
-          >
-            <ArrowLeft className="mr-2 h-4 w-4" /> Previous
-          </Button>
+          </CardContent>
           
-          {currentFeedback ? (
-            <Button 
-              onClick={handleNextQuestion} 
-              disabled={isEvaluating}
-            >
-              {interviewState.currentQuestionIndex === interviewState.allQuestions.length - 1 
-                ? "Finish Interview" 
-                : "Next Question"}
-              <ArrowRight className="ml-2 h-4 w-4" />
-            </Button>
-          ) : (
-            <Button 
-              onClick={handleSubmitAnswer} 
-              disabled={!answer.trim() || isEvaluating}
-            >
-              {isEvaluating ? "Evaluating..." : "Submit Answer"} 
-              <Send className="ml-2 h-4 w-4" />
-            </Button>
-          )}
-        </div>
-      </CardFooter>
-    </Card>
+          <CardFooter className="flex justify-between">
+            <div className="flex gap-2">
+              <Button 
+                variant="outline" 
+                onClick={handlePreviousQuestion}
+                disabled={interviewState.currentQuestionIndex === 0 || isEvaluating}
+              >
+                <ArrowLeft className="mr-2 h-4 w-4" /> Previous
+              </Button>
+              
+              {currentFeedback ? (
+                <Button 
+                  onClick={handleNextQuestion} 
+                  disabled={isEvaluating}
+                >
+                  {interviewState.currentQuestionIndex === interviewState.allQuestions.length - 1 
+                    ? "Finish Interview" 
+                    : "Next Question"}
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              ) : (
+                <Button 
+                  onClick={handleSubmitAnswer} 
+                  disabled={!answer.trim() || isEvaluating}
+                >
+                  {isEvaluating ? "Evaluating..." : "Submit Answer"} 
+                  <Send className="ml-2 h-4 w-4" />
+                </Button>
+              )}
+            </div>
+          </CardFooter>
+        </Card>
+      </div>
+    </div>
   );
 };
 
