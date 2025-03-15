@@ -68,6 +68,7 @@ type InterviewState = {
   isSpeaking: boolean;
   progress: number;
   category: string;
+  questionSpoken: boolean;
 };
 
 type InterviewContextType = {
@@ -100,6 +101,7 @@ const defaultInterviewState: InterviewState = {
   isSpeaking: false,
   progress: 0,
   category: "general",
+  questionSpoken: false,
 };
 
 const InterviewContext = createContext<InterviewContextType | undefined>(undefined);
@@ -118,7 +120,6 @@ export function InterviewProvider({ children }: { children: React.ReactNode }) {
   const synthRef = useRef<SpeechSynthesis | null>(null);
   const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
   
-  // Initialize speech synthesis
   useEffect(() => {
     if (typeof window !== 'undefined') {
       synthRef.current = window.speechSynthesis;
@@ -146,6 +147,7 @@ export function InterviewProvider({ children }: { children: React.ReactNode }) {
       allQuestions: questions,
       category,
       progress: 0,
+      questionSpoken: false,
     }));
     
     toast({
@@ -153,22 +155,17 @@ export function InterviewProvider({ children }: { children: React.ReactNode }) {
       description: "The interview has begun. Good luck!",
     });
     
-    // Speak the first question
     speakText(questions[0]);
   }, [interviewState.allQuestions]);
 
   const endInterview = useCallback(() => {
-    // Calculate overall score based on individual feedback
     const totalQuestions = Object.keys(interviewState.feedback).length;
     let overallScore = 0;
     
     if (totalQuestions > 0) {
-      // In a real app, you would have actual scores in the feedback
-      // This is just a placeholder calculation
       const answeredQuestions = Object.keys(interviewState.answers).length;
       const completionRatio = answeredQuestions / interviewState.allQuestions.length;
       
-      // Calculate score based on feedback and completion
       const feedbackScores = Object.values(interviewState.feedback).map(feedback => {
         if (feedback.includes("Excellent")) return 100;
         if (feedback.includes("Good")) return 80;
@@ -207,12 +204,11 @@ export function InterviewProvider({ children }: { children: React.ReactNode }) {
         currentQuestionIndex: nextIndex,
         currentQuestion: prev.allQuestions[nextIndex],
         progress,
+        questionSpoken: false,
       }));
       
-      // Speak the next question
       speakText(interviewState.allQuestions[nextIndex]);
     } else {
-      // If we're at the last question, end the interview
       endInterview();
     }
   }, [interviewState.currentQuestionIndex, interviewState.allQuestions, endInterview]);
@@ -228,9 +224,9 @@ export function InterviewProvider({ children }: { children: React.ReactNode }) {
         currentQuestionIndex: prevIndex,
         currentQuestion: prev.allQuestions[prevIndex],
         progress,
+        questionSpoken: false,
       }));
       
-      // Speak the previous question
       speakText(interviewState.allQuestions[prevIndex]);
     }
   }, [interviewState.currentQuestionIndex, interviewState.allQuestions]);
@@ -245,12 +241,9 @@ export function InterviewProvider({ children }: { children: React.ReactNode }) {
     }));
   }, []);
 
-  // This would be replaced with a real AI evaluation in a production app
   const simulateEvaluation = useCallback(async (answer: string): Promise<string> => {
-    // Simulate API call delay
     await new Promise(resolve => setTimeout(resolve, 1500));
     
-    // More sophisticated evaluation logic - in a real app this would be an API call to an AI service
     const answerLength = answer.length;
     const words = answer.split(/\s+/).filter(word => word.length > 0).length;
     const sentences = answer.split(/[.!?]+/).filter(sentence => sentence.length > 0).length;
@@ -258,7 +251,6 @@ export function InterviewProvider({ children }: { children: React.ReactNode }) {
     let feedback = "";
     let score = 0;
     
-    // Evaluate based on multiple factors
     if (answerLength < 50 || words < 10) {
       feedback = "Your answer was quite brief. Consider providing more details and examples to showcase your experience and skills.";
       score = 60;
@@ -266,7 +258,6 @@ export function InterviewProvider({ children }: { children: React.ReactNode }) {
       feedback = "Good answer. You provided some relevant details, but could elaborate more with specific examples from your experience.";
       score = 80;
     } else {
-      // Check for structure - does it have multiple sentences?
       if (sentences < 3) {
         feedback = "Good response with adequate detail. Try structuring your answer with a clear beginning, middle, and end for even better results.";
         score = 85;
@@ -276,7 +267,6 @@ export function InterviewProvider({ children }: { children: React.ReactNode }) {
       }
     }
 
-    // Save the feedback
     setInterviewState(prev => ({
       ...prev,
       feedback: {
@@ -300,7 +290,6 @@ export function InterviewProvider({ children }: { children: React.ReactNode }) {
     });
   }, []);
 
-  // Helper function to generate overall feedback based on score
   const generateOverallFeedback = (score: number): string => {
     if (score >= 90) {
       return "Outstanding performance! You demonstrated excellent communication skills and provided thoughtful, relevant answers. You would likely impress any interviewer.";
@@ -313,7 +302,6 @@ export function InterviewProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  // Speech recognition functionality
   const startVoiceRecognition = useCallback(async (): Promise<void> => {
     if (!('SpeechRecognition' in window || 'webkitSpeechRecognition' in window)) {
       toast({
@@ -325,10 +313,8 @@ export function InterviewProvider({ children }: { children: React.ReactNode }) {
     }
 
     try {
-      // Request microphone permission
       await navigator.mediaDevices.getUserMedia({ audio: true });
       
-      // Initialize speech recognition
       const SpeechRecognitionConstructor = window.SpeechRecognition || window.webkitSpeechRecognition;
       recognitionRef.current = new SpeechRecognitionConstructor();
       
@@ -345,7 +331,6 @@ export function InterviewProvider({ children }: { children: React.ReactNode }) {
           if (event.results[i].isFinal) {
             finalTranscript += event.results[i][0].transcript;
             
-            // Update the answer when we get a final result
             saveAnswer(finalTranscript);
           } else {
             interimTranscript += event.results[i][0].transcript;
@@ -388,7 +373,6 @@ export function InterviewProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  // Text-to-speech functionality
   const speakText = useCallback(async (text: string): Promise<void> => {
     if (!('speechSynthesis' in window)) {
       toast({
@@ -399,19 +383,19 @@ export function InterviewProvider({ children }: { children: React.ReactNode }) {
       return;
     }
     
-    // Stop any ongoing speech
+    if (interviewState.questionSpoken && text === interviewState.currentQuestion) {
+      return;
+    }
+    
     stopSpeaking();
     
-    // Create and configure speech utterance
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.rate = 1;
     utterance.pitch = 1;
     utterance.volume = 1;
     
-    // Try to find a good voice
     if (synthRef.current && synthRef.current.getVoices().length > 0) {
       const voices = synthRef.current.getVoices();
-      // Try to find a neutral, professional-sounding voice
       const preferredVoice = voices.find(voice => 
         (voice.name.includes('Daniel') || voice.name.includes('Google') || voice.name.includes('Microsoft')) && 
         voice.lang.includes('en')
@@ -427,7 +411,11 @@ export function InterviewProvider({ children }: { children: React.ReactNode }) {
     };
     
     utterance.onend = () => {
-      setInterviewState(prev => ({ ...prev, isSpeaking: false }));
+      setInterviewState(prev => ({ 
+        ...prev, 
+        isSpeaking: false,
+        questionSpoken: prev.currentQuestion === text ? true : prev.questionSpoken
+      }));
       utteranceRef.current = null;
     };
     
@@ -442,7 +430,7 @@ export function InterviewProvider({ children }: { children: React.ReactNode }) {
     if (synthRef.current) {
       synthRef.current.speak(utterance);
     }
-  }, []);
+  }, [interviewState.questionSpoken, interviewState.currentQuestion]);
 
   const stopSpeaking = useCallback(() => {
     if (synthRef.current) {
@@ -452,7 +440,6 @@ export function InterviewProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  // Set custom questions
   const setCustomQuestions = useCallback((questions: string[]) => {
     if (questions.length > 0) {
       setInterviewState(prev => ({
@@ -464,7 +451,6 @@ export function InterviewProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  // Update the current question when the index changes
   useEffect(() => {
     if (interviewState.isStarted && !interviewState.isFinished) {
       setInterviewState(prev => ({
@@ -497,7 +483,6 @@ export function InterviewProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
-// TypeScript declarations for SpeechRecognition
 declare global {
   interface Window {
     SpeechRecognition: any;
@@ -505,7 +490,6 @@ declare global {
   }
 }
 
-// Define SpeechRecognition interface
 interface SpeechRecognition extends EventTarget {
   continuous: boolean;
   interimResults: boolean;

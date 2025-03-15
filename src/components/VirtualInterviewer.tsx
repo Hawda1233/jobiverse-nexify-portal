@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
@@ -36,7 +35,6 @@ const VirtualInterviewer: React.FC<VirtualInterviewerProps> = ({ topic = "genera
   const [currentFeedback, setCurrentFeedback] = useState("");
   const [autoPlay, setAutoPlay] = useState(true);
 
-  // Start the interview when component mounts if it's not already started
   useEffect(() => {
     if (!interviewState.isStarted) {
       startInterview(topic);
@@ -74,7 +72,6 @@ const VirtualInterviewer: React.FC<VirtualInterviewerProps> = ({ topic = "genera
   const handlePreviousQuestion = () => {
     setCurrentFeedback("");
     
-    // Restore previous answer if it exists
     const prevAnswer = interviewState.answers[interviewState.currentQuestionIndex - 1] || "";
     setAnswer(prevAnswer);
     
@@ -104,20 +101,18 @@ const VirtualInterviewer: React.FC<VirtualInterviewerProps> = ({ topic = "genera
     setAutoPlay(!autoPlay);
   };
   
-  // Auto-update answer when listening
   useEffect(() => {
     if (interviewState.isListening && interviewState.answers[interviewState.currentQuestionIndex]) {
       setAnswer(interviewState.answers[interviewState.currentQuestionIndex]);
     }
   }, [interviewState.isListening, interviewState.answers, interviewState.currentQuestionIndex]);
   
-  // Automatically read questions if autoPlay is enabled
   useEffect(() => {
-    if (autoPlay && interviewState.currentQuestion && !interviewState.isSpeaking) {
+    if (autoPlay && interviewState.currentQuestion && !interviewState.isSpeaking && !interviewState.questionSpoken) {
       speakText(interviewState.currentQuestion);
     }
-  }, [interviewState.currentQuestion, autoPlay, speakText, interviewState.isSpeaking]);
-
+  }, [interviewState.currentQuestion, autoPlay, speakText, interviewState.isSpeaking, interviewState.questionSpoken]);
+  
   if (!interviewState.isStarted) {
     return (
       <Card className="w-full max-w-3xl mx-auto">
@@ -234,7 +229,6 @@ const VirtualInterviewer: React.FC<VirtualInterviewerProps> = ({ topic = "genera
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="flex flex-col items-center md:flex-row md:items-start gap-4">
-          {/* AI Character Avatar */}
           <div className="md:w-1/4 flex justify-center">
             <AIInterviewerAvatar 
               isSpeaking={interviewState.isSpeaking} 
@@ -242,7 +236,6 @@ const VirtualInterviewer: React.FC<VirtualInterviewerProps> = ({ topic = "genera
             />
           </div>
           
-          {/* Question and Answer Area */}
           <div className="md:w-3/4 space-y-4">
             <AnimatePresence mode="wait">
               <motion.div
