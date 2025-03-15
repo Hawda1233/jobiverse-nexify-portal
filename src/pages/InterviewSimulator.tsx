@@ -8,6 +8,10 @@ import Navbar from "@/components/Navbar";
 const InterviewSimulator: React.FC = () => {
   const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
 
+  const handleResetInterview = () => {
+    setSelectedTopic(null);
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
@@ -23,7 +27,10 @@ const InterviewSimulator: React.FC = () => {
           {!selectedTopic ? (
             <InterviewSetup onTopicSelected={setSelectedTopic} />
           ) : (
-            <VirtualInterviewer topic={selectedTopic} />
+            <VirtualInterviewer 
+              topic={selectedTopic} 
+              onReset={handleResetInterview}
+            />
           )}
         </InterviewProvider>
       </main>

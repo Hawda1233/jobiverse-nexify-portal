@@ -54,6 +54,42 @@ const EVALUATION_CRITERIA = [
   "Confidence",
 ];
 
+// AI Interviewer Characters
+export const AI_CHARACTERS = [
+  {
+    id: "professional",
+    name: "Alex",
+    title: "Professional Recruiter",
+    description: "A straightforward corporate recruiter focused on qualifications and experience.",
+    imageUrl: "https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=150&h=150",
+    style: "professional",
+  },
+  {
+    id: "friendly",
+    name: "Sarah",
+    title: "Friendly HR Manager",
+    description: "A warm and encouraging interviewer who creates a comfortable atmosphere.",
+    imageUrl: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=150&h=150",
+    style: "friendly",
+  },
+  {
+    id: "technical",
+    name: "Marcus",
+    title: "Technical Lead",
+    description: "A detail-oriented interviewer who digs deep into technical skills and problem-solving.",
+    imageUrl: "https://images.unsplash.com/photo-1566492031773-4f4e44671857?auto=format&fit=crop&w=150&h=150",
+    style: "technical",
+  },
+  {
+    id: "executive",
+    name: "Claire",
+    title: "Executive Interviewer",
+    description: "A senior leader who evaluates leadership potential and strategic thinking.",
+    imageUrl: "https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=150&h=150",
+    style: "executive",
+  }
+];
+
 type InterviewState = {
   isStarted: boolean;
   isFinished: boolean;
@@ -70,6 +106,7 @@ type InterviewState = {
   category: string;
   questionSpoken: boolean;
   transcription: string;
+  selectedCharacter: typeof AI_CHARACTERS[0];
 };
 
 type InterviewContextType = {
@@ -86,6 +123,7 @@ type InterviewContextType = {
   speakText: (text: string) => Promise<void>;
   stopSpeaking: () => void;
   setCustomQuestions: (questions: string[]) => void;
+  setInterviewCharacter: (character: typeof AI_CHARACTERS[0]) => void;
 };
 
 const defaultInterviewState: InterviewState = {
@@ -104,6 +142,7 @@ const defaultInterviewState: InterviewState = {
   category: "general",
   questionSpoken: false,
   transcription: "",
+  selectedCharacter: AI_CHARACTERS[0],
 };
 
 const InterviewContext = createContext<InterviewContextType | undefined>(undefined);
@@ -470,6 +509,13 @@ export function InterviewProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  const setInterviewCharacter = useCallback((character: typeof AI_CHARACTERS[0]) => {
+    setInterviewState(prev => ({
+      ...prev,
+      selectedCharacter: character,
+    }));
+  }, []);
+
   useEffect(() => {
     if (interviewState.isStarted && !interviewState.isFinished) {
       setInterviewState(prev => ({
@@ -493,6 +539,7 @@ export function InterviewProvider({ children }: { children: React.ReactNode }) {
     speakText,
     stopSpeaking,
     setCustomQuestions,
+    setInterviewCharacter,
   };
 
   return (

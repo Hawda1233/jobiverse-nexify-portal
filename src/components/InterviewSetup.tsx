@@ -1,172 +1,172 @@
 
 import React, { useState } from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { useInterview } from "@/contexts/InterviewContext";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { Check, Mic, Settings } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useInterview, AI_CHARACTERS } from "@/contexts/InterviewContext";
+import { motion } from "framer-motion";
+import { CheckCircle2 } from "lucide-react";
 
 interface InterviewSetupProps {
   onTopicSelected: (topic: string) => void;
 }
 
-const InterviewCategories = [
-  {
-    id: "general",
-    title: "General Interview",
-    description: "Common questions asked in most job interviews.",
-  },
-  {
-    id: "technical",
-    title: "Technical Interview",
-    description: "Questions focused on technical skills and problem-solving.",
-  },
-  {
-    id: "behavioral",
-    title: "Behavioral Interview",
-    description: "Questions about past experiences and how you handled situations.",
-  },
-  {
-    id: "leadership",
-    title: "Leadership Interview",
-    description: "Questions focused on leadership skills and experience.",
-  },
-];
-
 const InterviewSetup: React.FC<InterviewSetupProps> = ({ onTopicSelected }) => {
-  const { resetInterview, setCustomQuestions } = useInterview();
-  const [activeTab, setActiveTab] = useState("presets");
-  const [customTitle, setCustomTitle] = useState("");
-  const [customQuestions, setCustomQuestionsLocal] = useState("");
-  const [micPermission, setMicPermission] = useState<boolean | null>(null);
-  
-  const handleTopicSelection = (topicId: string) => {
-    onTopicSelected(topicId);
+  const [selectedCategory, setSelectedCategory] = useState("general");
+  const [characterStep, setCharacterStep] = useState(false);
+  const { setInterviewCharacter } = useInterview();
+  const [selectedCharacter, setSelectedCharacter] = useState(AI_CHARACTERS[0]);
+
+  const handleCategorySelect = (category: string) => {
+    setSelectedCategory(category);
   };
 
-  const handleCustomInterview = () => {
-    if (customTitle && customQuestions) {
-      const questions = customQuestions.split('\n').filter(q => q.trim().length > 0);
-      if (questions.length > 0) {
-        setCustomQuestions(questions);
-        onTopicSelected(customTitle);
-      }
-    }
+  const handleNextStep = () => {
+    setCharacterStep(true);
   };
 
-  const checkMicrophonePermission = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      stream.getTracks().forEach(track => track.stop());
-      setMicPermission(true);
-    } catch (error) {
-      setMicPermission(false);
-      console.error("Microphone permission denied:", error);
-    }
+  const handlePreviousStep = () => {
+    setCharacterStep(false);
+  };
+
+  const handleStartInterview = () => {
+    setInterviewCharacter(selectedCharacter);
+    onTopicSelected(selectedCategory);
+  };
+
+  const handleCharacterSelect = (characterId: string) => {
+    const character = AI_CHARACTERS.find(char => char.id === characterId) || AI_CHARACTERS[0];
+    setSelectedCharacter(character);
   };
 
   return (
-    <Card className="w-full max-w-4xl mx-auto">
+    <Card className="w-full max-w-3xl mx-auto">
       <CardHeader>
-        <CardTitle className="text-2xl">Interview Simulator Setup</CardTitle>
+        <CardTitle>Set Up Your Interview</CardTitle>
         <CardDescription>
-          Prepare for your next interview with our AI-powered interview simulator.
-          Choose a preset interview type or create your own custom interview.
+          {characterStep 
+            ? "Choose who will interview you" 
+            : "Select the type of interview you want to practice"}
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-6">
-        <div className="flex items-center space-x-4 p-4 border rounded-lg bg-muted">
-          <div className={`p-3 rounded-full ${micPermission === true ? 'bg-green-100 text-green-600' : micPermission === false ? 'bg-red-100 text-red-600' : 'bg-blue-100 text-blue-600'}`}>
-            <Mic className="h-6 w-6" />
-          </div>
-          <div className="flex-1">
-            <h3 className="font-medium">Microphone Access</h3>
-            <p className="text-sm text-muted-foreground">
-              {micPermission === null 
-                ? "The interview simulator works best with voice input. Click to check microphone access." 
-                : micPermission 
-                  ? "Microphone access granted. You're all set for voice interaction!" 
-                  : "Microphone access denied. You'll need to enable it in your browser settings for voice features."}
-            </p>
-          </div>
-          {micPermission !== true && (
-            <Button variant="outline" onClick={checkMicrophonePermission}>
-              Check Access
-            </Button>
-          )}
-          {micPermission === true && (
-            <Check className="h-6 w-6 text-green-600" />
-          )}
-        </div>
-
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="presets">Preset Interviews</TabsTrigger>
-            <TabsTrigger value="custom">Custom Interview</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="presets" className="space-y-4 pt-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {InterviewCategories.map((category) => (
-                <Card key={category.id} className="hover:border-primary cursor-pointer transition-all" onClick={() => handleTopicSelection(category.id)}>
-                  <CardHeader className="pb-2">
-                    <CardTitle>{category.title}</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-sm text-muted-foreground">{category.description}</p>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </TabsContent>
-          
-          <TabsContent value="custom" className="space-y-4 pt-4">
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="title">Interview Title</Label>
-                <Input 
-                  id="title" 
-                  placeholder="E.g., Product Manager Interview" 
-                  value={customTitle}
-                  onChange={(e) => setCustomTitle(e.target.value)}
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="questions">
-                  Questions (one per line)
+      <CardContent>
+        {!characterStep ? (
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 20 }}
+            transition={{ duration: 0.3 }}
+          >
+            <RadioGroup
+              defaultValue="general"
+              value={selectedCategory}
+              onValueChange={handleCategorySelect}
+              className="space-y-4"
+            >
+              <div className="flex items-center space-x-2 border p-4 rounded-md hover:bg-muted/50 cursor-pointer transition-colors">
+                <RadioGroupItem value="general" id="general" />
+                <Label htmlFor="general" className="flex-1 cursor-pointer">
+                  <div className="font-medium">General Interview</div>
+                  <div className="text-sm text-muted-foreground">Common questions asked in most interviews</div>
                 </Label>
-                <Textarea 
-                  id="questions" 
-                  placeholder="Enter your interview questions, one per line.
-E.g., Tell me about your experience with product development.
-How do you prioritize features?
-How do you handle stakeholder disagreements?"
-                  className="min-h-[200px]"
-                  value={customQuestions}
-                  onChange={(e) => setCustomQuestionsLocal(e.target.value)}
-                />
               </div>
               
-              <Button 
-                className="w-full" 
-                onClick={handleCustomInterview}
-                disabled={!customTitle || !customQuestions}
-              >
-                Start Custom Interview
-              </Button>
-            </div>
-          </TabsContent>
-        </Tabs>
+              <div className="flex items-center space-x-2 border p-4 rounded-md hover:bg-muted/50 cursor-pointer transition-colors">
+                <RadioGroupItem value="technical" id="technical" />
+                <Label htmlFor="technical" className="flex-1 cursor-pointer">
+                  <div className="font-medium">Technical Interview</div>
+                  <div className="text-sm text-muted-foreground">Questions focusing on your technical skills and knowledge</div>
+                </Label>
+              </div>
+              
+              <div className="flex items-center space-x-2 border p-4 rounded-md hover:bg-muted/50 cursor-pointer transition-colors">
+                <RadioGroupItem value="behavioral" id="behavioral" />
+                <Label htmlFor="behavioral" className="flex-1 cursor-pointer">
+                  <div className="font-medium">Behavioral Interview</div>
+                  <div className="text-sm text-muted-foreground">Questions about past experiences and how you handled situations</div>
+                </Label>
+              </div>
+              
+              <div className="flex items-center space-x-2 border p-4 rounded-md hover:bg-muted/50 cursor-pointer transition-colors">
+                <RadioGroupItem value="leadership" id="leadership" />
+                <Label htmlFor="leadership" className="flex-1 cursor-pointer">
+                  <div className="font-medium">Leadership Interview</div>
+                  <div className="text-sm text-muted-foreground">Questions focused on leadership skills and experience</div>
+                </Label>
+              </div>
+            </RadioGroup>
+          </motion.div>
+        ) : (
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            transition={{ duration: 0.3 }}
+            className="space-y-4"
+          >
+            <RadioGroup
+              value={selectedCharacter.id}
+              onValueChange={handleCharacterSelect}
+              className="grid grid-cols-1 md:grid-cols-2 gap-4"
+            >
+              {AI_CHARACTERS.map((character) => (
+                <div 
+                  key={character.id}
+                  className={`relative border rounded-lg p-4 transition-all ${
+                    selectedCharacter.id === character.id 
+                      ? "ring-2 ring-primary border-primary" 
+                      : "hover:bg-muted/50"
+                  }`}
+                >
+                  <RadioGroupItem
+                    value={character.id}
+                    id={character.id}
+                    className="sr-only"
+                  />
+                  <Label 
+                    htmlFor={character.id}
+                    className="flex flex-col items-center cursor-pointer"
+                  >
+                    <div className="relative mb-3">
+                      <img
+                        src={character.imageUrl}
+                        alt={character.name}
+                        className="w-24 h-24 rounded-full object-cover"
+                      />
+                      {selectedCharacter.id === character.id && (
+                        <div className="absolute -right-1 -bottom-1 bg-primary rounded-full p-1">
+                          <CheckCircle2 className="h-5 w-5 text-primary-foreground" />
+                        </div>
+                      )}
+                    </div>
+                    <div className="text-center">
+                      <div className="font-medium text-lg">{character.name}</div>
+                      <div className="text-sm font-medium text-primary">{character.title}</div>
+                      <div className="text-xs text-muted-foreground mt-1">{character.description}</div>
+                    </div>
+                  </Label>
+                </div>
+              ))}
+            </RadioGroup>
+          </motion.div>
+        )}
       </CardContent>
-      <CardFooter className="flex flex-col items-start gap-2 text-sm text-muted-foreground">
-        <div className="flex items-center gap-1">
-          <Settings className="h-4 w-4" />
-          <span>Features: AI evaluation, voice recognition, and progress tracking.</span>
-        </div>
+      <CardFooter className="flex justify-between">
+        {characterStep ? (
+          <>
+            <Button variant="outline" onClick={handlePreviousStep}>
+              Back
+            </Button>
+            <Button onClick={handleStartInterview}>
+              Start Interview
+            </Button>
+          </>
+        ) : (
+          <Button onClick={handleNextStep} className="ml-auto">
+            Next
+          </Button>
+        )}
       </CardFooter>
     </Card>
   );

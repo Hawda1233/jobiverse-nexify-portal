@@ -14,9 +14,10 @@ import AIInterviewerAvatar from "./AIInterviewerAvatar";
 
 interface VirtualInterviewerProps {
   topic?: string;
+  onReset?: () => void;
 }
 
-const VirtualInterviewer: React.FC<VirtualInterviewerProps> = ({ topic = "general" }) => {
+const VirtualInterviewer: React.FC<VirtualInterviewerProps> = ({ topic = "general", onReset }) => {
   const {
     interviewState,
     startInterview,
@@ -119,6 +120,10 @@ const VirtualInterviewer: React.FC<VirtualInterviewerProps> = ({ topic = "genera
     setCurrentFeedback("");
     setLastTranscriptionLength(0);
     resetInterview();
+    
+    if (onReset) {
+      onReset();
+    }
   };
   
   const handleToggleMicrophone = async () => {
@@ -211,10 +216,15 @@ const VirtualInterviewer: React.FC<VirtualInterviewerProps> = ({ topic = "genera
             ))}
           </div>
         </CardContent>
-        <CardFooter>
+        <CardFooter className="flex gap-3">
           <Button onClick={handleRestart} className="w-full">
             <RotateCcw className="mr-2 h-4 w-4" /> Try Again
           </Button>
+          {onReset && (
+            <Button variant="outline" onClick={onReset} className="w-full">
+              Choose New Setup
+            </Button>
+          )}
         </CardFooter>
       </Card>
     );
@@ -284,7 +294,9 @@ const VirtualInterviewer: React.FC<VirtualInterviewerProps> = ({ topic = "genera
                 transition={{ duration: 0.3 }}
                 className="p-4 bg-muted rounded-lg"
               >
-                <h3 className="font-medium mb-2">Interviewer:</h3>
+                <h3 className="font-medium mb-2">
+                  {interviewState.selectedCharacter.name}:
+                </h3>
                 <p>{interviewState.currentQuestion}</p>
               </motion.div>
             </AnimatePresence>
