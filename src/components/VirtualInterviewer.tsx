@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
@@ -34,12 +35,45 @@ const VirtualInterviewer: React.FC<VirtualInterviewerProps> = ({ topic = "genera
   const [isEvaluating, setIsEvaluating] = useState(false);
   const [currentFeedback, setCurrentFeedback] = useState("");
   const [autoPlay, setAutoPlay] = useState(true);
+  const [silenceTimer, setSilenceTimer] = useState<NodeJS.Timeout | null>(null);
+  const [lastTranscriptionLength, setLastTranscriptionLength] = useState(0);
 
   useEffect(() => {
     if (!interviewState.isStarted) {
       startInterview(topic);
     }
   }, [interviewState.isStarted, startInterview, topic]);
+
+  // Update answer when transcription changes
+  useEffect(() => {
+    if (interviewState.transcription) {
+      setAnswer(interviewState.transcription);
+      
+      // Reset silence timer when new transcription comes in
+      if (interviewState.transcription.length > lastTranscriptionLength) {
+        setLastTranscriptionLength(interviewState.transcription.length);
+        
+        if (silenceTimer) {
+          clearTimeout(silenceTimer);
+        }
+        
+        // Set a new silence timer - if no new words after 2 seconds, auto-submit
+        const timer = setTimeout(() => {
+          if (interviewState.isListening && interviewState.transcription.length >= 30) {
+            handleSubmitAnswer();
+          }
+        }, 2000);
+        
+        setSilenceTimer(timer);
+      }
+    }
+    
+    return () => {
+      if (silenceTimer) {
+        clearTimeout(silenceTimer);
+      }
+    };
+  }, [interviewState.transcription, lastTranscriptionLength]);
 
   const handleAnswerChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setAnswer(e.target.value);
@@ -66,11 +100,13 @@ const VirtualInterviewer: React.FC<VirtualInterviewerProps> = ({ topic = "genera
   const handleNextQuestion = () => {
     setAnswer("");
     setCurrentFeedback("");
+    setLastTranscriptionLength(0);
     nextQuestion();
   };
 
   const handlePreviousQuestion = () => {
     setCurrentFeedback("");
+    setLastTranscriptionLength(0);
     
     const prevAnswer = interviewState.answers[interviewState.currentQuestionIndex - 1] || "";
     setAnswer(prevAnswer);
@@ -81,6 +117,7 @@ const VirtualInterviewer: React.FC<VirtualInterviewerProps> = ({ topic = "genera
   const handleRestart = () => {
     setAnswer("");
     setCurrentFeedback("");
+    setLastTranscriptionLength(0);
     resetInterview();
   };
   
@@ -89,6 +126,7 @@ const VirtualInterviewer: React.FC<VirtualInterviewerProps> = ({ topic = "genera
       stopVoiceRecognition();
     } else {
       await startVoiceRecognition();
+      setLastTranscriptionLength(0);
     }
   };
   
@@ -261,7 +299,7 @@ const VirtualInterviewer: React.FC<VirtualInterviewerProps> = ({ topic = "genera
                         variant={interviewState.isListening ? "default" : "outline"} 
                         size="sm"
                         onClick={handleToggleMicrophone}
-                        disabled={isEvaluating}
+                        disabled={isEvaluating || currentFeedback !== ""}
                         className={interviewState.isListening ? "bg-red-500 hover:bg-red-600" : ""}
                       >
                         {interviewState.isListening ? (
@@ -282,8 +320,15 @@ const VirtualInterviewer: React.FC<VirtualInterviewerProps> = ({ topic = "genera
                 className="min-h-[150px]"
                 value={answer}
                 onChange={handleAnswerChange}
-                disabled={isEvaluating}
+                disabled={isEvaluating || interviewState.isListening}
               />
+              
+              {interviewState.isListening && (
+                <div className="mt-2 text-sm text-muted-foreground">
+                  <p>Listening... {interviewState.transcription ? "(speech detected)" : "(waiting for speech)"}</p>
+                  <p className="text-xs mt-1">Speak clearly and the answer will be submitted automatically after you finish.</p>
+                </div>
+              )}
             </div>
             
             {currentFeedback && (

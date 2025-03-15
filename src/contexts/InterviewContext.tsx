@@ -69,6 +69,7 @@ type InterviewState = {
   progress: number;
   category: string;
   questionSpoken: boolean;
+  transcription: string;
 };
 
 type InterviewContextType = {
@@ -102,6 +103,7 @@ const defaultInterviewState: InterviewState = {
   progress: 0,
   category: "general",
   questionSpoken: false,
+  transcription: "",
 };
 
 const InterviewContext = createContext<InterviewContextType | undefined>(undefined);
@@ -242,7 +244,7 @@ export function InterviewProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const simulateEvaluation = useCallback(async (answer: string): Promise<string> => {
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    await new Promise(resolve => setTimeout(resolve, 800));
     
     const answerLength = answer.length;
     const words = answer.split(/\s+/).filter(word => word.length > 0).length;
@@ -334,13 +336,22 @@ export function InterviewProvider({ children }: { children: React.ReactNode }) {
             saveAnswer(finalTranscript);
           } else {
             interimTranscript += event.results[i][0].transcript;
+            
+            setInterviewState(prev => ({
+              ...prev,
+              transcription: finalTranscript + interimTranscript
+            }));
           }
         }
       };
       
       recognitionRef.current.onerror = (event) => {
         console.error('Speech recognition error', event.error);
-        setInterviewState(prev => ({ ...prev, isListening: false }));
+        setInterviewState(prev => ({ 
+          ...prev, 
+          isListening: false,
+          transcription: ""
+        }));
         
         toast({
           title: "Speech Recognition Error",
@@ -354,7 +365,11 @@ export function InterviewProvider({ children }: { children: React.ReactNode }) {
       };
       
       recognitionRef.current.start();
-      setInterviewState(prev => ({ ...prev, isListening: true }));
+      setInterviewState(prev => ({ 
+        ...prev, 
+        isListening: true,
+        transcription: ""
+      }));
       
     } catch (error) {
       console.error('Failed to start speech recognition:', error);
@@ -369,7 +384,11 @@ export function InterviewProvider({ children }: { children: React.ReactNode }) {
   const stopVoiceRecognition = useCallback(() => {
     if (recognitionRef.current) {
       recognitionRef.current.stop();
-      setInterviewState(prev => ({ ...prev, isListening: false }));
+      setInterviewState(prev => ({ 
+        ...prev, 
+        isListening: false,
+        transcription: ""
+      }));
     }
   }, []);
 
@@ -390,7 +409,7 @@ export function InterviewProvider({ children }: { children: React.ReactNode }) {
     stopSpeaking();
     
     const utterance = new SpeechSynthesisUtterance(text);
-    utterance.rate = 1;
+    utterance.rate = 1.1;
     utterance.pitch = 1;
     utterance.volume = 1;
     
