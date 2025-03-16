@@ -15,6 +15,13 @@ interface VirtualInterviewerProps {
   onReset?: () => void;
 }
 
+interface FeedbackStructure {
+  STRENGTHS?: string;
+  WEAKNESSES?: string;
+  "KEY POINTS MISSED"?: string;
+  "IMPROVEMENT SUGGESTIONS"?: string;
+}
+
 const VirtualInterviewer: React.FC<VirtualInterviewerProps> = ({ topic = "general", onReset }) => {
   const {
     interviewState,
@@ -32,7 +39,7 @@ const VirtualInterviewer: React.FC<VirtualInterviewerProps> = ({ topic = "genera
   } = useInterview();
 
   const [answer, setAnswer] = useState("");
-  const [currentFeedback, setCurrentFeedback] = useState("");
+  const [currentFeedback, setCurrentFeedback] = useState<string | FeedbackStructure>("");
   const [showImprovedAnswer, setShowImprovedAnswer] = useState(false);
   const [autoPlay, setAutoPlay] = useState(true);
   const [silenceTimer, setSilenceTimer] = useState<NodeJS.Timeout | null>(null);
@@ -489,39 +496,39 @@ const VirtualInterviewer: React.FC<VirtualInterviewerProps> = ({ topic = "genera
                     <p>{currentFeedback}</p>
                   ) : (
                     <div className="space-y-3">
-                      {currentFeedback.STRENGTHS && (
+                      {(currentFeedback as FeedbackStructure).STRENGTHS && (
                         <div>
                           <h4 className="text-sm font-medium flex items-center text-green-500">
                             <ThumbsUp className="h-4 w-4 mr-1" /> Strengths
                           </h4>
-                          <p className="text-sm">{currentFeedback.STRENGTHS}</p>
+                          <p className="text-sm">{(currentFeedback as FeedbackStructure).STRENGTHS}</p>
                         </div>
                       )}
                       
-                      {currentFeedback.WEAKNESSES && (
+                      {(currentFeedback as FeedbackStructure).WEAKNESSES && (
                         <div>
                           <h4 className="text-sm font-medium flex items-center text-amber-500">
                             <ThumbsDown className="h-4 w-4 mr-1" /> Areas for Improvement
                           </h4>
-                          <p className="text-sm">{currentFeedback.WEAKNESSES}</p>
+                          <p className="text-sm">{(currentFeedback as FeedbackStructure).WEAKNESSES}</p>
                         </div>
                       )}
                       
-                      {currentFeedback["KEY POINTS MISSED"] && (
+                      {(currentFeedback as FeedbackStructure)["KEY POINTS MISSED"] && (
                         <div>
                           <h4 className="text-sm font-medium flex items-center text-blue-500">
                             <Award className="h-4 w-4 mr-1" /> Key Points Missed
                           </h4>
-                          <p className="text-sm">{currentFeedback["KEY POINTS MISSED"]}</p>
+                          <p className="text-sm">{(currentFeedback as FeedbackStructure)["KEY POINTS MISSED"]}</p>
                         </div>
                       )}
                       
-                      {currentFeedback["IMPROVEMENT SUGGESTIONS"] && (
+                      {(currentFeedback as FeedbackStructure)["IMPROVEMENT SUGGESTIONS"] && (
                         <div>
                           <h4 className="text-sm font-medium flex items-center text-purple-500">
                             <Check className="h-4 w-4 mr-1" /> Improvement Tips
                           </h4>
-                          <p className="text-sm">{currentFeedback["IMPROVEMENT SUGGESTIONS"]}</p>
+                          <p className="text-sm">{(currentFeedback as FeedbackStructure)["IMPROVEMENT SUGGESTIONS"]}</p>
                         </div>
                       )}
                     </div>
