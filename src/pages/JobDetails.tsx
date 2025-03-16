@@ -22,6 +22,7 @@ import {
   MapPin,
   Send,
   Share2,
+  Star,
   Users
 } from 'lucide-react';
 import { allJobs } from '@/lib/jobsData';
@@ -113,10 +114,18 @@ const JobDetails = () => {
             {/* Main content */}
             <div className="lg:col-span-2">
               {/* Job header */}
-              <Card className="mb-8">
+              <Card className={job.featured ? "mb-8 border-accent/30 shadow-md relative" : "mb-8"}>
+                {job.featured && (
+                  <div className="absolute -top-3 -right-3 z-10">
+                    <Badge className="bg-accent text-accent-foreground flex items-center px-3 py-1 gap-1.5">
+                      <Star className="h-3.5 w-3.5 fill-current" />
+                      Featured Job
+                    </Badge>
+                  </div>
+                )}
                 <CardContent className="p-6">
                   <div className="flex items-start gap-4">
-                    <div className="w-16 h-16 rounded-lg bg-accent/10 flex items-center justify-center flex-shrink-0">
+                    <div className={`w-16 h-16 rounded-lg ${job.featured ? "bg-accent/10" : "bg-accent/10"} flex items-center justify-center flex-shrink-0`}>
                       <img 
                         src={job.companyLogo || "/placeholder.svg"} 
                         alt={job.companyName}
@@ -319,9 +328,15 @@ const JobDetails = () => {
             {/* Sidebar */}
             <div className="space-y-6">
               {/* Apply card */}
-              <Card>
+              <Card className={job.featured ? "border-accent/30" : ""}>
                 <CardContent className="p-6">
                   <h3 className="text-lg font-semibold mb-4">Apply for this job</h3>
+                  {job.featured && (
+                    <Badge className="bg-accent text-accent-foreground mb-4 flex items-center w-fit gap-1.5">
+                      <Star className="h-3.5 w-3.5 fill-current" />
+                      Featured Opportunity
+                    </Badge>
+                  )}
                   <p className="text-sm text-muted-foreground mb-6">
                     Take the next step in your career journey by applying for this role at {job.companyName}.
                   </p>
@@ -358,10 +373,15 @@ const JobDetails = () => {
                 {similarJobs.length > 0 ? (
                   <div className="space-y-4">
                     {similarJobs.map(similarJob => (
-                      <div key={similarJob.id}>
+                      <div key={similarJob.id} className={similarJob.featured ? "relative" : ""}>
+                        {similarJob.featured && (
+                          <Badge className="absolute -top-2 right-0 bg-accent text-accent-foreground text-xs px-2 py-0">
+                            Featured
+                          </Badge>
+                        )}
                         <Link 
                           to={`/jobs/${similarJob.id}`}
-                          className="block"
+                          className="block pt-2"
                         >
                           <h4 className="font-medium hover:text-accent transition-colors line-clamp-1">
                             {similarJob.title}
