@@ -109,6 +109,8 @@ type InterviewState = {
   transcription: string;
   selectedCharacter: typeof AI_CHARACTERS[0];
   isAnalyzing: boolean;
+  isGeneratingQuestion: boolean;
+  followUpMode: boolean;
 };
 
 type InterviewContextType = {
@@ -126,6 +128,7 @@ type InterviewContextType = {
   stopSpeaking: () => void;
   setCustomQuestions: (questions: string[]) => void;
   setInterviewCharacter: (character: typeof AI_CHARACTERS[0]) => void;
+  generateFollowUpQuestion: (previousAnswer: string) => Promise<void>;
 };
 
 const defaultInterviewState: InterviewState = {
@@ -147,6 +150,8 @@ const defaultInterviewState: InterviewState = {
   transcription: "",
   selectedCharacter: AI_CHARACTERS[0],
   isAnalyzing: false,
+  isGeneratingQuestion: false,
+  followUpMode: false,
 };
 
 const InterviewContext = createContext<InterviewContextType | undefined>(undefined);
@@ -177,12 +182,212 @@ export function InterviewProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
-  const startInterview = useCallback((category: string = "general") => {
-    const questions = category in INTERVIEW_QUESTIONS 
-      ? INTERVIEW_QUESTIONS[category as keyof typeof INTERVIEW_QUESTIONS] 
-      : interviewState.allQuestions.length > 0 
-        ? interviewState.allQuestions 
-        : INTERVIEW_QUESTIONS.general;
+  const generateInterviewQuestions = async (category: string, count: number = 8): Promise<string[]> => {
+    try {
+      setInterviewState(prev => ({
+        ...prev,
+        isGeneratingQuestion: true
+      }));
+      
+      const apiKey = "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";
+      
+      const response = await fetch("https://api.perplexity.ai/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${apiKey}`
+        },
+        body: JSON.stringify({
+          model: "gpt-4o-mini",
+          messages: [
+            {
+              role: "system",
+              content: `You are an expert interviewer for ${category} interviews. Generate ${count} challenging interview questions that a professional interviewer would ask. Each question should be thorough and designed to assess a candidate's experience, skills, and thinking process. Format your response as a JSON array of strings.`
+            },
+            {
+              role: "user",
+              content: `Please generate ${count} professional interview questions for the ${category} category. These should be questions a real interviewer would ask.`
+            }
+          ],
+          temperature: 0.8,
+          max_tokens: 1000
+        })
+      });
+
+      if (!response.ok) {
+        console.error("API request failed:", response.statusText);
+        throw new Error(`API request failed: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      
+      try {
+        const contentText = data.choices[0].message.content;
+        const jsonMatch = contentText.match(/\[[\s\S]*\]/);
+        
+        if (jsonMatch) {
+          const questions = JSON.parse(jsonMatch[0]);
+          return Array.isArray(questions) ? questions : [];
+        } else {
+          const lines = contentText.split('\n').filter(line => 
+            line.trim().length > 0 && 
+            (line.includes('?') || /^\d+\./.test(line.trim()))
+          );
+          return lines.slice(0, count);
+        }
+      } catch (parseError) {
+        console.error("Error parsing API response:", parseError);
+        return [];
+      }
+    } catch (error) {
+      console.error("Error generating questions:", error);
+      return [];
+    } finally {
+      setInterviewState(prev => ({
+        ...prev,
+        isGeneratingQuestion: false
+      }));
+    }
+  };
+  
+  const generateFollowUpQuestion = async (previousAnswer: string): Promise<void> => {
+    try {
+      setInterviewState(prev => ({
+        ...prev,
+        isGeneratingQuestion: true
+      }));
+      
+      const apiKey = "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";
+      
+      const currentQuestion = interviewState.currentQuestion;
+      
+      const response = await fetch("https://api.perplexity.ai/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${apiKey}`
+        },
+        body: JSON.stringify({
+          model: "gpt-4o-mini",
+          messages: [
+            {
+              role: "system",
+              content: "You are a professional interviewer asking follow-up questions. Based on the candidate's previous answer, generate a single, relevant follow-up question to dig deeper or clarify their response. Make it sound natural, as a real interviewer would ask. Return only the follow-up question with no prefix or explanation."
+            },
+            {
+              role: "user",
+              content: `Original question: "${currentQuestion}"\n\nCandidate's answer: "${previousAnswer}"\n\nProvide a relevant follow-up question to dig deeper into their response.`
+            }
+          ],
+          temperature: 0.7,
+          max_tokens: 150
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`API request failed: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      const followUpQuestion = data.choices[0].message.content.trim();
+      
+      if (followUpQuestion) {
+        setInterviewState(prev => {
+          const updatedQuestions = [...prev.allQuestions];
+          
+          updatedQuestions.splice(prev.currentQuestionIndex + 1, 0, followUpQuestion);
+          
+          const updatedAnswers: Record<number, string> = {};
+          const updatedFeedback: Record<number, string> = {};
+          const updatedImprovedAnswers: Record<number, string> = {};
+          
+          Object.entries(prev.answers).forEach(([index, answer]) => {
+            const numIndex = Number(index);
+            if (numIndex > prev.currentQuestionIndex) {
+              updatedAnswers[numIndex + 1] = answer;
+            } else {
+              updatedAnswers[numIndex] = answer;
+            }
+          });
+          
+          Object.entries(prev.feedback).forEach(([index, feedback]) => {
+            const numIndex = Number(index);
+            if (numIndex > prev.currentQuestionIndex) {
+              updatedFeedback[numIndex + 1] = feedback;
+            } else {
+              updatedFeedback[numIndex] = feedback;
+            }
+          });
+          
+          Object.entries(prev.improvedAnswers).forEach(([index, improved]) => {
+            const numIndex = Number(index);
+            if (numIndex > prev.currentQuestionIndex) {
+              updatedImprovedAnswers[numIndex + 1] = improved;
+            } else {
+              updatedImprovedAnswers[numIndex] = improved;
+            }
+          });
+          
+          return {
+            ...prev,
+            allQuestions: updatedQuestions,
+            followUpMode: false,
+            answers: updatedAnswers,
+            feedback: updatedFeedback,
+            improvedAnswers: updatedImprovedAnswers,
+          };
+        });
+        
+        nextQuestion();
+      }
+    } catch (error) {
+      console.error("Error generating follow-up question:", error);
+      toast({
+        title: "Error",
+        description: "Could not generate a follow-up question. Please continue with the next question.",
+        variant: "destructive",
+      });
+      setInterviewState(prev => ({
+        ...prev,
+        followUpMode: false
+      }));
+    } finally {
+      setInterviewState(prev => ({
+        ...prev,
+        isGeneratingQuestion: false
+      }));
+    }
+  };
+
+  const startInterview = useCallback(async (category: string = "general") => {
+    let questions = [];
+    
+    try {
+      toast({
+        title: "Generating Questions",
+        description: "Using AI to prepare personalized interview questions...",
+      });
+      
+      const generatedQuestions = await generateInterviewQuestions(category);
+      
+      if (generatedQuestions.length >= 4) {
+        questions = generatedQuestions;
+      } else {
+        questions = category in INTERVIEW_QUESTIONS 
+          ? INTERVIEW_QUESTIONS[category as keyof typeof INTERVIEW_QUESTIONS] 
+          : interviewState.allQuestions.length > 0 
+            ? interviewState.allQuestions 
+            : INTERVIEW_QUESTIONS.general;
+      }
+    } catch (error) {
+      console.error("Error generating questions:", error);
+      
+      questions = category in INTERVIEW_QUESTIONS 
+        ? INTERVIEW_QUESTIONS[category as keyof typeof INTERVIEW_QUESTIONS] 
+        : interviewState.allQuestions.length > 0 
+          ? interviewState.allQuestions 
+          : INTERVIEW_QUESTIONS.general;
+    }
         
     setInterviewState(prev => ({
       ...prev,
@@ -335,7 +540,6 @@ export function InterviewProvider({ children }: { children: React.ReactNode }) {
         }
       } catch (parseError) {
         console.error("Error parsing API response:", parseError);
-        // Fallback to treating the entire content as feedback
         return {
           feedback: data.choices[0].message.content || "Analysis unavailable.",
           improvedAnswer: "No improved answer available."
@@ -350,11 +554,11 @@ export function InterviewProvider({ children }: { children: React.ReactNode }) {
   const simulateEvaluation = useCallback(async (answer: string): Promise<string> => {
     setInterviewState(prev => ({
       ...prev,
-      isAnalyzing: true
+      isAnalyzing: true,
+      followUpMode: true
     }));
     
     try {
-      // First try to get AI-powered feedback
       const currentQuestion = interviewState.allQuestions[interviewState.currentQuestionIndex];
       const { feedback, improvedAnswer } = await analyzeAnswerWithOpenAI(currentQuestion, answer);
       
@@ -375,7 +579,6 @@ export function InterviewProvider({ children }: { children: React.ReactNode }) {
     } catch (error) {
       console.error("Error with AI evaluation, falling back to simple evaluation:", error);
       
-      // Fallback to simple evaluation
       await new Promise(resolve => setTimeout(resolve, 800));
     
       const answerLength = answer.length;
@@ -630,6 +833,7 @@ export function InterviewProvider({ children }: { children: React.ReactNode }) {
     stopSpeaking,
     setCustomQuestions,
     setInterviewCharacter,
+    generateFollowUpQuestion,
   };
 
   return (
@@ -684,3 +888,4 @@ interface SpeechRecognitionErrorEvent extends Event {
   error: string;
   message: string;
 }
+

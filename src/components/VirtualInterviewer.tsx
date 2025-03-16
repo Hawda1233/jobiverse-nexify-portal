@@ -1,10 +1,9 @@
-
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { useInterview } from "@/contexts/InterviewContext";
-import { Mic, MicOff, Send, ArrowRight, ArrowLeft, RotateCcw, Volume2, VolumeX, Video, VideoOff } from "lucide-react";
+import { Mic, MicOff, Send, ArrowRight, ArrowLeft, RotateCcw, Volume2, VolumeX, Video, VideoOff, Loader2 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -29,6 +28,7 @@ const VirtualInterviewer: React.FC<VirtualInterviewerProps> = ({ topic = "genera
     stopVoiceRecognition,
     speakText,
     stopSpeaking,
+    generateFollowUpQuestion,
   } = useInterview();
 
   const [answer, setAnswer] = useState("");
@@ -100,6 +100,22 @@ const VirtualInterviewer: React.FC<VirtualInterviewerProps> = ({ topic = "genera
     setLastTranscriptionLength(0);
     nextQuestion();
   };
+  
+  const handleFollowUpQuestion = async () => {
+    if (interviewState.isGeneratingQuestion) return;
+    
+    try {
+      setAnswer("");
+      setCurrentFeedback("");
+      setShowImprovedAnswer(false);
+      setLastTranscriptionLength(0);
+      await generateFollowUpQuestion(interviewState.answers[interviewState.currentQuestionIndex] || "");
+    } catch (error) {
+      console.error("Error generating follow-up:", error);
+      // Fallback to regular next question
+      handleNextQuestion();
+    }
+  };
 
   const handlePreviousQuestion = () => {
     setCurrentFeedback("");
@@ -162,11 +178,19 @@ const VirtualInterviewer: React.FC<VirtualInterviewerProps> = ({ topic = "genera
     return (
       <Card className="w-full max-w-3xl mx-auto bg-background/95 backdrop-blur-sm border-gray-800">
         <CardHeader>
-          <CardTitle className="text-2xl">Interview Loading...</CardTitle>
+          <CardTitle className="text-2xl">Preparing Your Interview</CardTitle>
           <CardDescription>
-            Preparing your interview questions...
+            Using AI to generate personalized interview questions...
           </CardDescription>
         </CardHeader>
+        <CardContent className="flex flex-col items-center justify-center py-8">
+          <div className="flex items-center justify-center h-16 w-16 rounded-full bg-muted mb-4">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
+          <p className="text-muted-foreground text-center max-w-sm">
+            Our AI is preparing challenging questions tailored to your selected topic. This may take a moment...
+          </p>
+        </CardContent>
       </Card>
     );
   }
@@ -371,10 +395,19 @@ const VirtualInterviewer: React.FC<VirtualInterviewerProps> = ({ topic = "genera
                 transition={{ duration: 0.3 }}
                 className="p-4 bg-muted rounded-lg"
               >
-                <h3 className="font-medium mb-2">
-                  {interviewState.selectedCharacter.name}:
-                </h3>
-                <p>{interviewState.currentQuestion}</p>
+                {interviewState.isGeneratingQuestion ? (
+                  <div className="flex flex-col items-center py-2">
+                    <Loader2 className="h-5 w-5 animate-spin mb-2" />
+                    <p className="text-sm text-muted-foreground">Generating follow-up question...</p>
+                  </div>
+                ) : (
+                  <>
+                    <h3 className="font-medium mb-2">
+                      {interviewState.selectedCharacter.name}:
+                    </h3>
+                    <p>{interviewState.currentQuestion}</p>
+                  </>
+                )}
               </motion.div>
             </AnimatePresence>
             
@@ -388,7 +421,7 @@ const VirtualInterviewer: React.FC<VirtualInterviewerProps> = ({ topic = "genera
                         variant={interviewState.isListening ? "default" : "outline"} 
                         size="sm"
                         onClick={handleToggleMicrophone}
-                        disabled={interviewState.isAnalyzing || currentFeedback !== ""}
+                        disabled={interviewState.isAnalyzing || interviewState.isGeneratingQuestion || currentFeedback !== ""}
                         className={interviewState.isListening ? "bg-red-500 hover:bg-red-600" : ""}
                       >
                         {interviewState.isListening ? (
@@ -406,11 +439,11 @@ const VirtualInterviewer: React.FC<VirtualInterviewerProps> = ({ topic = "genera
               </div>
               
               <Textarea 
-                placeholder="Type your answer here or use the microphone above..." 
+                placeholder={interviewState.isGeneratingQuestion ? "Wait for the follow-up question..." : "Type your answer here or use the microphone above..."} 
                 className="min-h-[150px]"
                 value={answer}
                 onChange={handleAnswerChange}
-                disabled={interviewState.isAnalyzing || interviewState.isListening}
+                disabled={interviewState.isAnalyzing || interviewState.isListening || interviewState.isGeneratingQuestion}
               />
               
               {interviewState.isListening && (
@@ -425,7 +458,7 @@ const VirtualInterviewer: React.FC<VirtualInterviewerProps> = ({ topic = "genera
               <div className="p-4 bg-background border rounded-lg">
                 <div className="flex items-center space-x-2">
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
-                  <p>Analyzing your answer...</p>
+                  <p>AI is analyzing your answer...</p>
                 </div>
               </div>
             )}
@@ -472,25 +505,37 @@ const VirtualInterviewer: React.FC<VirtualInterviewerProps> = ({ topic = "genera
               <Button 
                 variant="outline" 
                 onClick={handlePreviousQuestion}
-                disabled={interviewState.currentQuestionIndex === 0 || interviewState.isAnalyzing}
+                disabled={interviewState.currentQuestionIndex === 0 || interviewState.isAnalyzing || interviewState.isGeneratingQuestion}
               >
                 <ArrowLeft className="mr-2 h-4 w-4" /> Previous
               </Button>
               
               {currentFeedback ? (
-                <Button 
-                  onClick={handleNextQuestion} 
-                  disabled={interviewState.isAnalyzing}
-                >
-                  {interviewState.currentQuestionIndex === interviewState.allQuestions.length - 1 
-                    ? "Finish Interview" 
-                    : "Next Question"}
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
+                <div className="flex gap-2">
+                  {interviewState.followUpMode && interviewState.currentQuestionIndex < interviewState.allQuestions.length - 1 && (
+                    <Button 
+                      onClick={handleFollowUpQuestion}
+                      disabled={interviewState.isAnalyzing || interviewState.isGeneratingQuestion}
+                      variant="secondary"
+                    >
+                      Ask Follow-Up
+                      {interviewState.isGeneratingQuestion && <Loader2 className="ml-2 h-4 w-4 animate-spin" />}
+                    </Button>
+                  )}
+                  <Button 
+                    onClick={handleNextQuestion} 
+                    disabled={interviewState.isAnalyzing || interviewState.isGeneratingQuestion}
+                  >
+                    {interviewState.currentQuestionIndex === interviewState.allQuestions.length - 1 
+                      ? "Finish Interview" 
+                      : "Next Question"}
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
+                </div>
               ) : (
                 <Button 
                   onClick={handleSubmitAnswer} 
-                  disabled={!answer.trim() || interviewState.isAnalyzing}
+                  disabled={!answer.trim() || interviewState.isAnalyzing || interviewState.isGeneratingQuestion}
                 >
                   {interviewState.isAnalyzing ? "Analyzing..." : "Submit Answer"} 
                   <Send className="ml-2 h-4 w-4" />

@@ -17,9 +17,9 @@ const InterviewSimulator: React.FC = () => {
       <Navbar />
       <main className="container mx-auto px-4 py-8">
         <div className="mb-8 text-center">
-          <h1 className="text-3xl font-bold mb-2 text-white">AI Interview Simulator</h1>
+          <h1 className="text-3xl font-bold mb-2 text-white">AI-Powered Interview Simulator</h1>
           <p className="text-gray-300">
-            Practice your interview skills with our online video interviewer
+            Practice with our intelligent interviewer that adapts to your responses and provides real-time feedback
           </p>
         </div>
         
