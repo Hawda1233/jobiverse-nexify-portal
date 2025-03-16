@@ -97,7 +97,7 @@ type InterviewState = {
   currentQuestion: string;
   allQuestions: string[];
   answers: Record<number, string>;
-  feedback: Record<number, string>;
+  feedback: Record<number, string | any>;
   improvedAnswers: Record<number, string>;
   overallFeedback: string;
   score: number;
@@ -120,7 +120,7 @@ type InterviewContextType = {
   nextQuestion: () => void;
   previousQuestion: () => void;
   saveAnswer: (answer: string) => void;
-  simulateEvaluation: (answer: string) => Promise<string>;
+  simulateEvaluation: (answer: string) => Promise<string | any>;
   resetInterview: () => void;
   startVoiceRecognition: () => Promise<void>;
   stopVoiceRecognition: () => void;
@@ -491,7 +491,7 @@ export function InterviewProvider({ children }: { children: React.ReactNode }) {
     }));
   }, []);
 
-  const analyzeAnswerWithOpenAI = async (question: string, answer: string): Promise<{ feedback: string; improvedAnswer: string }> => {
+  const analyzeAnswerWithOpenAI = async (question: string, answer: string): Promise<{ feedback: string | any; improvedAnswer: string }> => {
     try {
       const apiKey = "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";
       
@@ -506,15 +506,25 @@ export function InterviewProvider({ children }: { children: React.ReactNode }) {
           messages: [
             {
               role: "system",
-              content: "You are an expert interview coach. Analyze the candidate's answer to the interview question and provide: 1) Constructive feedback on strengths and weaknesses 2) An improved version of the answer that addresses the weaknesses. Format your response as a JSON object with 'feedback' and 'improvedAnswer' fields."
+              content: `You are an expert interview coach specializing in providing detailed, constructive feedback.
+              
+              Analyze the candidate's interview answer and provide:
+              
+              1) STRENGTHS: What specific parts of the answer were effective.
+              2) WEAKNESSES: What specific areas need improvement.
+              3) KEY POINTS MISSED: Important points or concepts that should have been included.
+              4) IMPROVEMENT SUGGESTIONS: Concrete, actionable tips to make the answer stronger.
+              5) IMPROVED ANSWER: A rewritten version that addresses all the weaknesses and incorporates the missed key points.
+              
+              Format your response as a JSON object with 'feedback' (containing all feedback points in a structured format) and 'improvedAnswer' fields.`
             },
             {
               role: "user",
-              content: `Question: ${question}\n\nCandidate's Answer: ${answer}\n\nPlease analyze this answer and provide feedback and an improved version.`
+              content: `Question: ${question}\n\nCandidate's Answer: ${answer}\n\nPlease analyze this answer and provide detailed feedback and an improved version.`
             }
           ],
           temperature: 0.7,
-          max_tokens: 1000
+          max_tokens: 1500
         })
       });
 
@@ -551,7 +561,7 @@ export function InterviewProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const simulateEvaluation = useCallback(async (answer: string): Promise<string> => {
+  const simulateEvaluation = useCallback(async (answer: string): Promise<string | any> => {
     setInterviewState(prev => ({
       ...prev,
       isAnalyzing: true,
@@ -888,4 +898,3 @@ interface SpeechRecognitionErrorEvent extends Event {
   error: string;
   message: string;
 }
-

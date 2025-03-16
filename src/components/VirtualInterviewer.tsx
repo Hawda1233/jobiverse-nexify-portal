@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { useInterview } from "@/contexts/InterviewContext";
-import { Mic, MicOff, Send, ArrowRight, ArrowLeft, RotateCcw, Volume2, VolumeX, Video, VideoOff, Loader2 } from "lucide-react";
+import { Mic, MicOff, Send, ArrowRight, ArrowLeft, RotateCcw, Volume2, VolumeX, Video, VideoOff, Loader2, ThumbsUp, ThumbsDown, Award, Check } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -112,7 +112,6 @@ const VirtualInterviewer: React.FC<VirtualInterviewerProps> = ({ topic = "genera
       await generateFollowUpQuestion(interviewState.answers[interviewState.currentQuestionIndex] || "");
     } catch (error) {
       console.error("Error generating follow-up:", error);
-      // Fallback to regular next question
       handleNextQuestion();
     }
   };
@@ -485,11 +484,55 @@ const VirtualInterviewer: React.FC<VirtualInterviewerProps> = ({ topic = "genera
                       </Button>
                     )}
                   </div>
-                  <p>{currentFeedback}</p>
+                  
+                  {typeof currentFeedback === 'string' ? (
+                    <p>{currentFeedback}</p>
+                  ) : (
+                    <div className="space-y-3">
+                      {currentFeedback.STRENGTHS && (
+                        <div>
+                          <h4 className="text-sm font-medium flex items-center text-green-500">
+                            <ThumbsUp className="h-4 w-4 mr-1" /> Strengths
+                          </h4>
+                          <p className="text-sm">{currentFeedback.STRENGTHS}</p>
+                        </div>
+                      )}
+                      
+                      {currentFeedback.WEAKNESSES && (
+                        <div>
+                          <h4 className="text-sm font-medium flex items-center text-amber-500">
+                            <ThumbsDown className="h-4 w-4 mr-1" /> Areas for Improvement
+                          </h4>
+                          <p className="text-sm">{currentFeedback.WEAKNESSES}</p>
+                        </div>
+                      )}
+                      
+                      {currentFeedback["KEY POINTS MISSED"] && (
+                        <div>
+                          <h4 className="text-sm font-medium flex items-center text-blue-500">
+                            <Award className="h-4 w-4 mr-1" /> Key Points Missed
+                          </h4>
+                          <p className="text-sm">{currentFeedback["KEY POINTS MISSED"]}</p>
+                        </div>
+                      )}
+                      
+                      {currentFeedback["IMPROVEMENT SUGGESTIONS"] && (
+                        <div>
+                          <h4 className="text-sm font-medium flex items-center text-purple-500">
+                            <Check className="h-4 w-4 mr-1" /> Improvement Tips
+                          </h4>
+                          <p className="text-sm">{currentFeedback["IMPROVEMENT SUGGESTIONS"]}</p>
+                        </div>
+                      )}
+                    </div>
+                  )}
                   
                   {showImprovedAnswer && interviewState.improvedAnswers[interviewState.currentQuestionIndex] && (
                     <div className="mt-4 pt-2 border-t">
-                      <h3 className="font-medium mb-2">Improved Answer:</h3>
+                      <h3 className="font-medium mb-2 flex items-center">
+                        <Award className="h-4 w-4 mr-1 text-yellow-500" /> 
+                        Improved Answer:
+                      </h3>
                       <p className="p-3 bg-muted/50 rounded-md text-sm">
                         {interviewState.improvedAnswers[interviewState.currentQuestionIndex]}
                       </p>
