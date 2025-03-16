@@ -98,6 +98,7 @@ type InterviewState = {
   allQuestions: string[];
   answers: Record<number, string>;
   feedback: Record<number, string>;
+  improvedAnswers: Record<number, string>;
   overallFeedback: string;
   score: number;
   isListening: boolean;
@@ -107,6 +108,7 @@ type InterviewState = {
   questionSpoken: boolean;
   transcription: string;
   selectedCharacter: typeof AI_CHARACTERS[0];
+  isAnalyzing: boolean;
 };
 
 type InterviewContextType = {
@@ -134,6 +136,7 @@ const defaultInterviewState: InterviewState = {
   allQuestions: [],
   answers: {},
   feedback: {},
+  improvedAnswers: {},
   overallFeedback: "",
   score: 0,
   isListening: false,
@@ -143,6 +146,7 @@ const defaultInterviewState: InterviewState = {
   questionSpoken: false,
   transcription: "",
   selectedCharacter: AI_CHARACTERS[0],
+  isAnalyzing: false,
 };
 
 const InterviewContext = createContext<InterviewContextType | undefined>(undefined);
@@ -282,42 +286,128 @@ export function InterviewProvider({ children }: { children: React.ReactNode }) {
     }));
   }, []);
 
-  const simulateEvaluation = useCallback(async (answer: string): Promise<string> => {
-    await new Promise(resolve => setTimeout(resolve, 800));
-    
-    const answerLength = answer.length;
-    const words = answer.split(/\s+/).filter(word => word.length > 0).length;
-    const sentences = answer.split(/[.!?]+/).filter(sentence => sentence.length > 0).length;
-    
-    let feedback = "";
-    let score = 0;
-    
-    if (answerLength < 50 || words < 10) {
-      feedback = "Your answer was quite brief. Consider providing more details and examples to showcase your experience and skills.";
-      score = 60;
-    } else if (answerLength < 200 || words < 40) {
-      feedback = "Good answer. You provided some relevant details, but could elaborate more with specific examples from your experience.";
-      score = 80;
-    } else {
-      if (sentences < 3) {
-        feedback = "Good response with adequate detail. Try structuring your answer with a clear beginning, middle, and end for even better results.";
-        score = 85;
-      } else {
-        feedback = "Excellent response! You provided a comprehensive answer with good structure, specific examples, and demonstrated clear communication.";
-        score = 95;
-      }
-    }
+  const analyzeAnswerWithOpenAI = async (question: string, answer: string): Promise<{ feedback: string; improvedAnswer: string }> => {
+    try {
+      const apiKey = "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";
+      
+      const response = await fetch("https://api.perplexity.ai/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${apiKey}`
+        },
+        body: JSON.stringify({
+          model: "gpt-4o-mini",
+          messages: [
+            {
+              role: "system",
+              content: "You are an expert interview coach. Analyze the candidate's answer to the interview question and provide: 1) Constructive feedback on strengths and weaknesses 2) An improved version of the answer that addresses the weaknesses. Format your response as a JSON object with 'feedback' and 'improvedAnswer' fields."
+            },
+            {
+              role: "user",
+              content: `Question: ${question}\n\nCandidate's Answer: ${answer}\n\nPlease analyze this answer and provide feedback and an improved version.`
+            }
+          ],
+          temperature: 0.7,
+          max_tokens: 1000
+        })
+      });
 
+      if (!response.ok) {
+        console.error("API request failed:", response.statusText);
+        throw new Error(`API request failed: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      
+      try {
+        const contentText = data.choices[0].message.content;
+        const jsonMatch = contentText.match(/\{[\s\S]*\}/);
+        
+        if (jsonMatch) {
+          const jsonContent = JSON.parse(jsonMatch[0]);
+          return {
+            feedback: jsonContent.feedback || "No specific feedback available.",
+            improvedAnswer: jsonContent.improvedAnswer || "No improved answer available."
+          };
+        } else {
+          throw new Error("Could not extract JSON from response");
+        }
+      } catch (parseError) {
+        console.error("Error parsing API response:", parseError);
+        // Fallback to treating the entire content as feedback
+        return {
+          feedback: data.choices[0].message.content || "Analysis unavailable.",
+          improvedAnswer: "No improved answer available."
+        };
+      }
+    } catch (error) {
+      console.error("Error calling OpenAI API:", error);
+      throw error;
+    }
+  };
+
+  const simulateEvaluation = useCallback(async (answer: string): Promise<string> => {
     setInterviewState(prev => ({
       ...prev,
-      feedback: {
-        ...prev.feedback,
-        [prev.currentQuestionIndex]: feedback,
-      },
+      isAnalyzing: true
     }));
+    
+    try {
+      // First try to get AI-powered feedback
+      const currentQuestion = interviewState.allQuestions[interviewState.currentQuestionIndex];
+      const { feedback, improvedAnswer } = await analyzeAnswerWithOpenAI(currentQuestion, answer);
+      
+      setInterviewState(prev => ({
+        ...prev,
+        feedback: {
+          ...prev.feedback,
+          [prev.currentQuestionIndex]: feedback,
+        },
+        improvedAnswers: {
+          ...prev.improvedAnswers,
+          [prev.currentQuestionIndex]: improvedAnswer,
+        },
+        isAnalyzing: false
+      }));
+      
+      return feedback;
+    } catch (error) {
+      console.error("Error with AI evaluation, falling back to simple evaluation:", error);
+      
+      // Fallback to simple evaluation
+      await new Promise(resolve => setTimeout(resolve, 800));
+    
+      const answerLength = answer.length;
+      const words = answer.split(/\s+/).filter(word => word.length > 0).length;
+      const sentences = answer.split(/[.!?]+/).filter(sentence => sentence.length > 0).length;
+      
+      let feedback = "";
+      
+      if (answerLength < 50 || words < 10) {
+        feedback = "Your answer was quite brief. Consider providing more details and examples to showcase your experience and skills.";
+      } else if (answerLength < 200 || words < 40) {
+        feedback = "Good answer. You provided some relevant details, but could elaborate more with specific examples from your experience.";
+      } else {
+        if (sentences < 3) {
+          feedback = "Good response with adequate detail. Try structuring your answer with a clear beginning, middle, and end for even better results.";
+        } else {
+          feedback = "Excellent response! You provided a comprehensive answer with good structure, specific examples, and demonstrated clear communication.";
+        }
+      }
 
-    return feedback;
-  }, []);
+      setInterviewState(prev => ({
+        ...prev,
+        feedback: {
+          ...prev.feedback,
+          [prev.currentQuestionIndex]: feedback,
+        },
+        isAnalyzing: false
+      }));
+
+      return feedback;
+    }
+  }, [interviewState.allQuestions, interviewState.currentQuestionIndex]);
 
   const resetInterview = useCallback(() => {
     stopVoiceRecognition();

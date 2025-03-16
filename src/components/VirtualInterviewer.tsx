@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
@@ -7,7 +8,6 @@ import { Mic, MicOff, Send, ArrowRight, ArrowLeft, RotateCcw, Volume2, VolumeX, 
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { ChartContainer, ChartLegend, ChartLegendContent } from "@/components/ui/chart";
 import { AnimatePresence, motion } from "framer-motion";
 import AIInterviewerAvatar from "./AIInterviewerAvatar";
 
@@ -32,8 +32,8 @@ const VirtualInterviewer: React.FC<VirtualInterviewerProps> = ({ topic = "genera
   } = useInterview();
 
   const [answer, setAnswer] = useState("");
-  const [isEvaluating, setIsEvaluating] = useState(false);
   const [currentFeedback, setCurrentFeedback] = useState("");
+  const [showImprovedAnswer, setShowImprovedAnswer] = useState(false);
   const [autoPlay, setAutoPlay] = useState(true);
   const [silenceTimer, setSilenceTimer] = useState<NodeJS.Timeout | null>(null);
   const [lastTranscriptionLength, setLastTranscriptionLength] = useState(0);
@@ -80,7 +80,7 @@ const VirtualInterviewer: React.FC<VirtualInterviewerProps> = ({ topic = "genera
     if (!answer.trim()) return;
     
     saveAnswer(answer);
-    setIsEvaluating(true);
+    setShowImprovedAnswer(false);
     
     try {
       const feedback = await simulateEvaluation(answer);
@@ -89,7 +89,6 @@ const VirtualInterviewer: React.FC<VirtualInterviewerProps> = ({ topic = "genera
       console.error("Error evaluating answer:", error);
       setCurrentFeedback("Sorry, there was an error evaluating your answer.");
     } finally {
-      setIsEvaluating(false);
       stopVoiceRecognition();
     }
   };
@@ -97,12 +96,14 @@ const VirtualInterviewer: React.FC<VirtualInterviewerProps> = ({ topic = "genera
   const handleNextQuestion = () => {
     setAnswer("");
     setCurrentFeedback("");
+    setShowImprovedAnswer(false);
     setLastTranscriptionLength(0);
     nextQuestion();
   };
 
   const handlePreviousQuestion = () => {
     setCurrentFeedback("");
+    setShowImprovedAnswer(false);
     setLastTranscriptionLength(0);
     
     const prevAnswer = interviewState.answers[interviewState.currentQuestionIndex - 1] || "";
@@ -114,6 +115,7 @@ const VirtualInterviewer: React.FC<VirtualInterviewerProps> = ({ topic = "genera
   const handleRestart = () => {
     setAnswer("");
     setCurrentFeedback("");
+    setShowImprovedAnswer(false);
     setLastTranscriptionLength(0);
     resetInterview();
     
@@ -138,6 +140,10 @@ const VirtualInterviewer: React.FC<VirtualInterviewerProps> = ({ topic = "genera
       speakText(interviewState.currentQuestion);
     }
     setAutoPlay(!autoPlay);
+  };
+  
+  const toggleImprovedAnswer = () => {
+    setShowImprovedAnswer(!showImprovedAnswer);
   };
   
   useEffect(() => {
@@ -207,6 +213,12 @@ const VirtualInterviewer: React.FC<VirtualInterviewerProps> = ({ topic = "genera
                     <p className="text-sm font-medium">Feedback:</p>
                     <p className="text-sm">{interviewState.feedback[index]}</p>
                   </div>
+                  {interviewState.improvedAnswers[index] && (
+                    <div className="mt-2 pt-2 border-t">
+                      <p className="text-sm font-medium">Improved Answer:</p>
+                      <p className="text-sm">{interviewState.improvedAnswers[index]}</p>
+                    </div>
+                  )}
                 </div>
               )
             ))}
@@ -376,7 +388,7 @@ const VirtualInterviewer: React.FC<VirtualInterviewerProps> = ({ topic = "genera
                         variant={interviewState.isListening ? "default" : "outline"} 
                         size="sm"
                         onClick={handleToggleMicrophone}
-                        disabled={isEvaluating || currentFeedback !== ""}
+                        disabled={interviewState.isAnalyzing || currentFeedback !== ""}
                         className={interviewState.isListening ? "bg-red-500 hover:bg-red-600" : ""}
                       >
                         {interviewState.isListening ? (
@@ -398,7 +410,7 @@ const VirtualInterviewer: React.FC<VirtualInterviewerProps> = ({ topic = "genera
                 className="min-h-[150px]"
                 value={answer}
                 onChange={handleAnswerChange}
-                disabled={isEvaluating || interviewState.isListening}
+                disabled={interviewState.isAnalyzing || interviewState.isListening}
               />
               
               {interviewState.isListening && (
@@ -409,6 +421,15 @@ const VirtualInterviewer: React.FC<VirtualInterviewerProps> = ({ topic = "genera
               )}
             </div>
             
+            {interviewState.isAnalyzing && (
+              <div className="p-4 bg-background border rounded-lg">
+                <div className="flex items-center space-x-2">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+                  <p>Analyzing your answer...</p>
+                </div>
+              </div>
+            )}
+            
             {currentFeedback && (
               <AnimatePresence>
                 <motion.div
@@ -418,8 +439,29 @@ const VirtualInterviewer: React.FC<VirtualInterviewerProps> = ({ topic = "genera
                   transition={{ duration: 0.3 }}
                   className="p-4 bg-background border rounded-lg"
                 >
-                  <h3 className="font-medium mb-2">Feedback:</h3>
+                  <div className="flex justify-between items-center">
+                    <h3 className="font-medium mb-2">Feedback:</h3>
+                    {interviewState.improvedAnswers[interviewState.currentQuestionIndex] && (
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={toggleImprovedAnswer}
+                        className="mb-2"
+                      >
+                        {showImprovedAnswer ? "Hide Improved Answer" : "Show Improved Answer"}
+                      </Button>
+                    )}
+                  </div>
                   <p>{currentFeedback}</p>
+                  
+                  {showImprovedAnswer && interviewState.improvedAnswers[interviewState.currentQuestionIndex] && (
+                    <div className="mt-4 pt-2 border-t">
+                      <h3 className="font-medium mb-2">Improved Answer:</h3>
+                      <p className="p-3 bg-muted/50 rounded-md text-sm">
+                        {interviewState.improvedAnswers[interviewState.currentQuestionIndex]}
+                      </p>
+                    </div>
+                  )}
                 </motion.div>
               </AnimatePresence>
             )}
@@ -430,7 +472,7 @@ const VirtualInterviewer: React.FC<VirtualInterviewerProps> = ({ topic = "genera
               <Button 
                 variant="outline" 
                 onClick={handlePreviousQuestion}
-                disabled={interviewState.currentQuestionIndex === 0 || isEvaluating}
+                disabled={interviewState.currentQuestionIndex === 0 || interviewState.isAnalyzing}
               >
                 <ArrowLeft className="mr-2 h-4 w-4" /> Previous
               </Button>
@@ -438,7 +480,7 @@ const VirtualInterviewer: React.FC<VirtualInterviewerProps> = ({ topic = "genera
               {currentFeedback ? (
                 <Button 
                   onClick={handleNextQuestion} 
-                  disabled={isEvaluating}
+                  disabled={interviewState.isAnalyzing}
                 >
                   {interviewState.currentQuestionIndex === interviewState.allQuestions.length - 1 
                     ? "Finish Interview" 
@@ -448,9 +490,9 @@ const VirtualInterviewer: React.FC<VirtualInterviewerProps> = ({ topic = "genera
               ) : (
                 <Button 
                   onClick={handleSubmitAnswer} 
-                  disabled={!answer.trim() || isEvaluating}
+                  disabled={!answer.trim() || interviewState.isAnalyzing}
                 >
-                  {isEvaluating ? "Evaluating..." : "Submit Answer"} 
+                  {interviewState.isAnalyzing ? "Analyzing..." : "Submit Answer"} 
                   <Send className="ml-2 h-4 w-4" />
                 </Button>
               )}
