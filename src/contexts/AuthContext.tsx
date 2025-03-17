@@ -45,7 +45,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   function loginWithGoogle() {
-    return signInWithPopup(auth, googleProvider);
+    // Add better error handling for Google login
+    return signInWithPopup(auth, googleProvider)
+      .catch((error) => {
+        console.error("Google sign-in error:", error);
+        throw error;
+      });
   }
 
   function logout() {

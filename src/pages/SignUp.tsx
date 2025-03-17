@@ -57,17 +57,18 @@ const SignUp = () => {
   const handleGoogleSignUp = async () => {
     setIsGoogleLoading(true);
     try {
-      await loginWithGoogle();
+      const result = await loginWithGoogle();
+      console.log("Google sign up successful:", result);
       toast({
         title: "Success!",
         description: "Your account has been created with Google.",
       });
-      navigate("/");
+      navigate("/profile");
     } catch (error) {
-      console.error(error);
+      console.error("Google sign up error:", error);
       toast({
         title: "Error",
-        description: "Failed to create an account with Google. Please try again.",
+        description: error instanceof Error ? error.message : "Failed to create an account with Google. Please try again.",
         variant: "destructive",
       });
     } finally {
