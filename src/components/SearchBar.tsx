@@ -70,7 +70,9 @@ const SearchBar = () => {
 // Location selector component
 const LocationSelector = ({ value, onChange }: { value: string, onChange: (value: string) => void }) => {
   const locations = [
-    'Remote', 'New York', 'San Francisco', 'London', 'Berlin', 'Tokyo', 'Sydney', 'Toronto', 'Singapore'
+    'Remote', 'Bangalore', 'Mumbai', 'Delhi', 'Hyderabad', 'Chennai', 'Pune', 
+    'Kolkata', 'Ahmedabad', 'Jaipur', 'Lucknow', 'Noida', 'Gurgaon', 'Chandigarh', 
+    'Kochi', 'Indore', 'Coimbatore', 'Bhubaneswar', 'Guwahati', 'Nagpur'
   ];
   
   return (
