@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -32,7 +31,12 @@ import {
   Shield,
   Bell,
   Palette,
-  Languages
+  Languages,
+  Lock, 
+  History, 
+  LogOut, 
+  Eye,
+  Download
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Switch } from "@/components/ui/switch";
@@ -42,6 +46,8 @@ import JobApplicationCard, { ApplicationStatus } from "@/components/JobApplicati
 import ResumePreview from "@/components/ResumePreview";
 import DashboardMetrics from "@/components/DashboardMetrics";
 import SkillsForm, { Skill } from "@/components/SkillsForm";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
 
 const Profile = () => {
   const { currentUser } = useAuth();
@@ -118,6 +124,14 @@ const Profile = () => {
 };
 
 const DashboardTab = () => {
+  // Fix for first click() error - use a proper method to programmatically navigate to tabs
+  const handleViewAllApplications = () => {
+    const applicationsTab = document.querySelector('[value="applications"]') as HTMLElement;
+    if (applicationsTab) {
+      applicationsTab.click();
+    }
+  };
+
   return (
     <div className="space-y-8">
       <div className="grid grid-cols-1 gap-6">
@@ -157,10 +171,8 @@ const DashboardTab = () => {
               </div>
             </CardContent>
             <CardFooter className="border-t">
-              <Button variant="ghost" size="sm" asChild className="w-full">
-                <Link to="#" onClick={() => document.querySelector('[value="applications"]')?.click()}>
-                  View All Applications
-                </Link>
+              <Button variant="ghost" size="sm" onClick={handleViewAllApplications} className="w-full">
+                View All Applications
               </Button>
             </CardFooter>
           </Card>
@@ -257,7 +269,12 @@ const DashboardTab = () => {
                 variant="ghost" 
                 size="sm" 
                 className="w-full"
-                onClick={() => document.querySelector('[value="resume"]')?.click()}
+                onClick={() => {
+                  const resumeTab = document.querySelector('[value="resume"]') as HTMLElement;
+                  if (resumeTab) {
+                    resumeTab.click();
+                  }
+                }}
               >
                 <Edit className="h-4 w-4 mr-2" />
                 Complete Resume
@@ -1314,10 +1331,5 @@ const SettingsTab = () => {
     </div>
   );
 };
-
-// Missing imports for other icons
-import { Lock, History, LogOut, Eye } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
 
 export default Profile;
