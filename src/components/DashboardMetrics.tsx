@@ -137,9 +137,11 @@ const responseRateData = [
   { name: 'No Response', value: 4, color: '#f59e0b' }, // Amber
 ];
 
-const ApplicationActivityChart = () => {
+interface ChartProps extends React.HTMLAttributes<HTMLDivElement> {}
+
+const ApplicationActivityChart: React.FC<ChartProps> = ({ className, ...props }) => {
   return (
-    <Card className="col-span-full">
+    <Card className={className} {...props}>
       <CardHeader>
         <CardTitle>Weekly Application Activity</CardTitle>
       </CardHeader>
@@ -165,9 +167,9 @@ const ApplicationActivityChart = () => {
   );
 };
 
-const ResponseRateChart = () => {
+const ResponseRateChart: React.FC<ChartProps> = ({ className, ...props }) => {
   return (
-    <Card>
+    <Card className={className} {...props}>
       <CardHeader>
         <CardTitle>Response Rate</CardTitle>
       </CardHeader>
