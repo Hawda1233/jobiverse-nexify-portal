@@ -12,6 +12,19 @@ import {
 } from "lucide-react";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
+import { 
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell
+} from "recharts";
 
 interface MetricCardProps {
   title: string;
@@ -107,6 +120,84 @@ const ApplicationMetrics = () => {
   );
 };
 
+// Application activity data for the chart
+const applicationActivityData = [
+  { name: 'Mon', applications: 1, interviews: 0 },
+  { name: 'Tue', applications: 3, interviews: 1 },
+  { name: 'Wed', applications: 2, interviews: 1 },
+  { name: 'Thu', applications: 4, interviews: 2 },
+  { name: 'Fri', applications: 2, interviews: 1 },
+  { name: 'Sat', applications: 0, interviews: 0 },
+  { name: 'Sun', applications: 0, interviews: 0 },
+];
+
+// Response rate chart data
+const responseRateData = [
+  { name: 'Responded', value: 8, color: '#10b981' },  // Green
+  { name: 'No Response', value: 4, color: '#f59e0b' }, // Amber
+];
+
+const ApplicationActivityChart = () => {
+  return (
+    <Card className="col-span-full">
+      <CardHeader>
+        <CardTitle>Weekly Application Activity</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="h-80 w-full">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart
+              data={applicationActivityData}
+              margin={{ top: 20, right: 30, left: 0, bottom: 5 }}
+            >
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="name" />
+              <YAxis />
+              <Tooltip />
+              <Legend />
+              <Bar dataKey="applications" fill="#3b82f6" name="Applications" />
+              <Bar dataKey="interviews" fill="#10b981" name="Interviews" />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
+
+const ResponseRateChart = () => {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Response Rate</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="h-64 w-full">
+          <ResponsiveContainer width="100%" height="100%">
+            <PieChart>
+              <Pie
+                data={responseRateData}
+                cx="50%"
+                cy="50%"
+                labelLine={false}
+                outerRadius={80}
+                fill="#8884d8"
+                dataKey="value"
+                label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+              >
+                {responseRateData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={entry.color} />
+                ))}
+              </Pie>
+              <Tooltip />
+            </PieChart>
+          </ResponsiveContainer>
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
+
 const GoalsProgress = () => {
   const goals = [
     { id: 1, name: "Applications", target: 20, current: 12, icon: <Briefcase className="h-4 w-4" /> },
@@ -159,6 +250,12 @@ const DashboardMetrics = () => {
   return (
     <div className="space-y-6">
       <ApplicationMetrics />
+      
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <ApplicationActivityChart className="md:col-span-2" />
+        <ResponseRateChart />
+      </div>
+      
       <GoalsProgress />
     </div>
   );
