@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from "react";
 import { toast } from "@/components/ui/use-toast";
 
@@ -427,7 +426,6 @@ export function InterviewProvider({ children, apiKey = "" }: InterviewProviderPr
     }
   };
 
-  // Helper function to update questions with follow-up
   const updateQuestionsWithFollowup = (followUpQuestion: string) => {
     setInterviewState(prev => {
       const updatedQuestions = [...prev.allQuestions];
@@ -842,7 +840,6 @@ export function InterviewProvider({ children, apiKey = "" }: InterviewProviderPr
     }
   }, [interviewState.allQuestions, interviewState.currentQuestionIndex]);
 
-  // Helper function to generate a basic improved answer for fallback
   const generateBasicImprovedAnswer = (question: string, originalAnswer: string): string => {
     // This is a simple fallback function to create an improved answer when the AI analysis fails
     if (originalAnswer.length < 50) {
@@ -854,7 +851,6 @@ export function InterviewProvider({ children, apiKey = "" }: InterviewProviderPr
     }
   };
 
-  // Function to generate overall feedback based on score
   const generateOverallFeedback = (score: number): string => {
     if (score >= 90) {
       return "Excellent performance! Your responses were clear, detailed, and highly relevant. You demonstrated strong communication skills and provided specific examples to support your points. You're well-prepared for professional interviews.";
@@ -867,17 +863,16 @@ export function InterviewProvider({ children, apiKey = "" }: InterviewProviderPr
     }
   };
 
-  // Voice recognition functions
   const startVoiceRecognition = async () => {
     try {
-      if (typeof window !== 'undefined' && 'SpeechRecognition' in window || 'webkitSpeechRecognition' in window) {
-        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (typeof window !== 'undefined' && ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window)) {
+        const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
         
         if (recognitionRef.current) {
           recognitionRef.current.stop();
         }
         
-        const recognition = new SpeechRecognition();
+        const recognition = new SpeechRecognitionAPI();
         recognition.continuous = true;
         recognition.interimResults = true;
         recognition.lang = 'en-US';
@@ -952,7 +947,6 @@ export function InterviewProvider({ children, apiKey = "" }: InterviewProviderPr
     }
   };
 
-  // Text to speech functions
   const speakText = async (text: string) => {
     if (typeof window !== 'undefined' && synthRef.current) {
       // Cancel any ongoing speech
@@ -1040,7 +1034,6 @@ export function InterviewProvider({ children, apiKey = "" }: InterviewProviderPr
     }
   };
 
-  // Reset interview
   const resetInterview = () => {
     stopVoiceRecognition();
     stopSpeaking();
@@ -1051,7 +1044,6 @@ export function InterviewProvider({ children, apiKey = "" }: InterviewProviderPr
     });
   };
 
-  // Set custom questions for the interview
   const setCustomQuestions = (questions: string[]) => {
     if (questions.length > 0) {
       setInterviewState(prev => ({
@@ -1062,7 +1054,6 @@ export function InterviewProvider({ children, apiKey = "" }: InterviewProviderPr
     }
   };
   
-  // Set interview character
   const setInterviewCharacter = (character: typeof AI_CHARACTERS[0]) => {
     setInterviewState(prev => ({
       ...prev,
