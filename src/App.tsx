@@ -13,6 +13,7 @@ import SignUp from "./pages/SignUp";
 import NotFound from "./pages/NotFound";
 import InterviewSimulator from "./pages/InterviewSimulator";
 import Profile from "./pages/Profile";
+// Companies and Resources pages will be implemented later
 
 const queryClient = new QueryClient();
 
@@ -31,6 +32,15 @@ const App = () => (
             <Route path="/signin" element={<SignIn />} />
             <Route path="/signup" element={<SignUp />} />
             <Route path="/profile" element={<Profile />} />
+            
+            {/* Companies routes */}
+            <Route path="/companies" element={<NotFound />} />
+            <Route path="/companies/:company" element={<NotFound />} />
+            
+            {/* Resources routes */}
+            <Route path="/resources" element={<NotFound />} />
+            <Route path="/resources/:topic" element={<NotFound />} />
+            
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

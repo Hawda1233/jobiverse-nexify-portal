@@ -1,9 +1,8 @@
-
 import React, { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { Menu, X, User, BriefcaseBusiness, Bell, LogOut, Briefcase } from 'lucide-react';
+import { Menu, X, User, BriefcaseBusiness, Bell, LogOut, Briefcase, Building, BookOpen } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import {
@@ -15,6 +14,15 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  NavigationMenu,
+  NavigationMenuContent,
+  NavigationMenuItem,
+  NavigationMenuLink,
+  NavigationMenuList,
+  NavigationMenuTrigger,
+  navigationMenuTriggerStyle,
+} from "@/components/ui/navigation-menu";
 
 const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -78,13 +86,98 @@ const Navbar = () => {
           <span className="hidden sm:inline">Nexify</span>
         </Link>
 
-        <nav className="hidden md:flex items-center gap-6">
-          <NavLink to="/" active={location.pathname === '/'}>Home</NavLink>
-          <NavLink to="/jobs" active={location.pathname === '/jobs'}>Browse Jobs</NavLink>
-          <NavLink to="/companies" active={location.pathname.includes('/companies')}>Companies</NavLink>
-          <NavLink to="/resources" active={location.pathname.includes('/resources')}>Resources</NavLink>
-          <NavLink to="/interview" active={location.pathname === '/interview'}>Interview Simulator</NavLink>
-        </nav>
+        <div className="hidden md:block">
+          <NavigationMenu>
+            <NavigationMenuList>
+              <NavigationMenuItem>
+                <Link to="/">
+                  <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+                    Home
+                  </NavigationMenuLink>
+                </Link>
+              </NavigationMenuItem>
+              
+              <NavigationMenuItem>
+                <Link to="/jobs">
+                  <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+                    Browse Jobs
+                  </NavigationMenuLink>
+                </Link>
+              </NavigationMenuItem>
+              
+              <NavigationMenuItem>
+                <NavigationMenuTrigger>Companies</NavigationMenuTrigger>
+                <NavigationMenuContent>
+                  <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px]">
+                    <li className="row-span-3">
+                      <NavigationMenuLink asChild>
+                        <a
+                          className="flex flex-col justify-end w-full h-full p-6 no-underline rounded-md outline-none select-none bg-gradient-to-b from-muted/50 to-muted focus:shadow-md"
+                          href="/companies"
+                        >
+                          <Building className="h-6 w-6 mb-2" />
+                          <div className="text-lg font-medium">Top Indian Companies</div>
+                          <p className="text-sm text-muted-foreground">
+                            Explore opportunities at India's leading tech firms
+                          </p>
+                        </a>
+                      </NavigationMenuLink>
+                    </li>
+                    <ListItem href="/companies/tcs" title="Tata Consultancy Services">
+                      India's largest IT services and consulting company
+                    </ListItem>
+                    <ListItem href="/companies/infosys" title="Infosys">
+                      Global leader in next-generation digital services
+                    </ListItem>
+                    <ListItem href="/companies/wipro" title="Wipro">
+                      Leading technology services and consulting company
+                    </ListItem>
+                    <ListItem href="/companies/hcl" title="HCL Technologies">
+                      Global technology company helping enterprises reimagine their businesses
+                    </ListItem>
+                    <ListItem href="/companies/techmahindra" title="Tech Mahindra">
+                      Provider of digital transformation, consulting and business reengineering services
+                    </ListItem>
+                  </ul>
+                </NavigationMenuContent>
+              </NavigationMenuItem>
+              
+              <NavigationMenuItem>
+                <NavigationMenuTrigger>Resources</NavigationMenuTrigger>
+                <NavigationMenuContent>
+                  <ul className="grid gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px]">
+                    <ListItem href="/resources/interview-preparation" title="Interview Preparation">
+                      Tips, common questions, and strategies for tech interviews
+                    </ListItem>
+                    <ListItem href="/resources/resume-tips" title="Resume Building">
+                      Expert advice on creating a standout technical resume
+                    </ListItem>
+                    <ListItem href="/resources/skills-development" title="Skills Development">
+                      Resources to develop in-demand technical skills
+                    </ListItem>
+                    <ListItem href="/resources/career-paths" title="Career Paths">
+                      Guidance on various tech career trajectories in India
+                    </ListItem>
+                    <ListItem href="/resources/industry-trends" title="Industry Trends">
+                      Latest trends and technologies in the Indian tech industry
+                    </ListItem>
+                    <ListItem href="/resources/salary-guides" title="Salary Guides">
+                      Comprehensive salary information for tech roles in India
+                    </ListItem>
+                  </ul>
+                </NavigationMenuContent>
+              </NavigationMenuItem>
+              
+              <NavigationMenuItem>
+                <Link to="/interview">
+                  <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+                    Interview Simulator
+                  </NavigationMenuLink>
+                </Link>
+              </NavigationMenuItem>
+            </NavigationMenuList>
+          </NavigationMenu>
+        </div>
 
         <div className="hidden md:flex items-center gap-3">
           <Button 
@@ -233,5 +326,31 @@ const MobileNavLink = ({ to, active, children }: NavLinkProps) => (
     {children}
   </Link>
 );
+
+const ListItem = React.forwardRef<
+  React.ElementRef<"a">,
+  React.ComponentPropsWithoutRef<"a">
+>(({ className, title, children, ...props }, ref) => {
+  return (
+    <li>
+      <NavigationMenuLink asChild>
+        <a
+          ref={ref}
+          className={cn(
+            "block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground",
+            className
+          )}
+          {...props}
+        >
+          <div className="text-sm font-medium leading-none">{title}</div>
+          <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
+            {children}
+          </p>
+        </a>
+      </NavigationMenuLink>
+    </li>
+  );
+});
+ListItem.displayName = "ListItem";
 
 export default Navbar;
