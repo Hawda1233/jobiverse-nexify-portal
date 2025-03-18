@@ -7,10 +7,10 @@ import {
   onAuthStateChanged,
   UserCredential,
   User,
-  GoogleAuthProvider,
   signInWithPopup
 } from "firebase/auth";
-import { auth } from "../lib/firebase";
+import { auth, googleProvider } from "../lib/firebase";
+import { useToast } from "@/hooks/use-toast";
 
 interface AuthContextProps {
   currentUser: User | null;
@@ -34,7 +34,7 @@ export function useAuth() {
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const googleProvider = new GoogleAuthProvider();
+  const { toast } = useToast();
 
   function signup(email: string, password: string) {
     return createUserWithEmailAndPassword(auth, email, password);
@@ -45,10 +45,37 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   function loginWithGoogle() {
-    // Add better error handling for Google login
     return signInWithPopup(auth, googleProvider)
       .catch((error) => {
         console.error("Google sign-in error:", error);
+        
+        // Handle common Firebase errors
+        if (error.code === 'auth/unauthorized-domain') {
+          toast({
+            title: "Authentication Error",
+            description: "This domain is not authorized for Google authentication. Please try another sign-in method or contact support.",
+            variant: "destructive",
+          });
+        } else if (error.code === 'auth/popup-closed-by-user') {
+          toast({
+            title: "Sign-in Cancelled",
+            description: "You closed the Google sign-in popup. Try again when you're ready.",
+            variant: "default",
+          });
+        } else if (error.code === 'auth/popup-blocked') {
+          toast({
+            title: "Popup Blocked",
+            description: "Pop-up was blocked by your browser. Please allow pop-ups for this website and try again.",
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "Authentication Error",
+            description: "There was a problem signing in with Google. Please try again later.",
+            variant: "destructive",
+          });
+        }
+        
         throw error;
       });
   }

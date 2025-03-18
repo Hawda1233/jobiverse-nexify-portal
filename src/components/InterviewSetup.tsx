@@ -6,10 +6,18 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { useInterview, AI_CHARACTERS } from "@/contexts/InterviewContext";
 import { motion } from "framer-motion";
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle2, Briefcase, Code, UserCheck, Users, GraduationCap, Globe } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface InterviewSetupProps {
   onTopicSelected: (topic: string) => void;
+}
+
+interface InterviewCategory {
+  id: string;
+  title: string;
+  description: string;
+  icon: React.ReactNode;
 }
 
 const InterviewSetup: React.FC<InterviewSetupProps> = ({ onTopicSelected }) => {
@@ -17,6 +25,85 @@ const InterviewSetup: React.FC<InterviewSetupProps> = ({ onTopicSelected }) => {
   const [characterStep, setCharacterStep] = useState(false);
   const { setInterviewCharacter } = useInterview();
   const [selectedCharacter, setSelectedCharacter] = useState(AI_CHARACTERS[0]);
+  const [selectedIndustry, setSelectedIndustry] = useState("tech");
+
+  const generalCategories: InterviewCategory[] = [
+    {
+      id: "general",
+      title: "General Interview",
+      description: "Common questions asked in most interviews",
+      icon: <Briefcase className="h-5 w-5 text-blue-500" />
+    },
+    {
+      id: "technical",
+      title: "Technical Interview",
+      description: "Questions focusing on your technical skills and knowledge",
+      icon: <Code className="h-5 w-5 text-green-500" />
+    },
+    {
+      id: "behavioral",
+      title: "Behavioral Interview",
+      description: "Questions about past experiences and how you handled situations",
+      icon: <UserCheck className="h-5 w-5 text-purple-500" />
+    },
+    {
+      id: "leadership",
+      title: "Leadership Interview",
+      description: "Questions focused on leadership skills and experience",
+      icon: <Users className="h-5 w-5 text-orange-500" />
+    }
+  ];
+
+  const industrySpecificCategories: Record<string, InterviewCategory[]> = {
+    tech: [
+      {
+        id: "software_engineering",
+        title: "Software Engineering",
+        description: "Technical coding questions, system design, and software principles",
+        icon: <Code className="h-5 w-5 text-blue-500" />
+      },
+      {
+        id: "product_management",
+        title: "Product Management",
+        description: "Product strategy, user experience, and roadmap planning questions",
+        icon: <Briefcase className="h-5 w-5 text-purple-500" />
+      },
+      {
+        id: "data_science",
+        title: "Data Science",
+        description: "Data analysis, machine learning, and statistical modeling questions",
+        icon: <GraduationCap className="h-5 w-5 text-green-500" />
+      }
+    ],
+    finance: [
+      {
+        id: "investment_banking",
+        title: "Investment Banking",
+        description: "Financial modeling, deal structures, and market analysis questions",
+        icon: <Briefcase className="h-5 w-5 text-blue-500" />
+      },
+      {
+        id: "financial_analyst",
+        title: "Financial Analyst",
+        description: "Financial reporting, valuation, and forecasting questions",
+        icon: <Globe className="h-5 w-5 text-green-500" />
+      }
+    ],
+    healthcare: [
+      {
+        id: "clinical",
+        title: "Clinical Roles",
+        description: "Patient care, medical knowledge, and clinical scenarios",
+        icon: <UserCheck className="h-5 w-5 text-red-500" />
+      },
+      {
+        id: "healthcare_admin",
+        title: "Healthcare Administration",
+        description: "Healthcare regulations, operations, and management",
+        icon: <Briefcase className="h-5 w-5 text-blue-500" />
+      }
+    ]
+  };
 
   const handleCategorySelect = (category: string) => {
     setSelectedCategory(category);
@@ -40,6 +127,12 @@ const InterviewSetup: React.FC<InterviewSetupProps> = ({ onTopicSelected }) => {
     setSelectedCharacter(character);
   };
 
+  const handleIndustryChange = (industry: string) => {
+    setSelectedIndustry(industry);
+    // Reset the selected category when changing industries
+    setSelectedCategory(industrySpecificCategories[industry][0].id);
+  };
+
   return (
     <Card className="w-full max-w-3xl mx-auto">
       <CardHeader>
@@ -58,44 +151,117 @@ const InterviewSetup: React.FC<InterviewSetupProps> = ({ onTopicSelected }) => {
             exit={{ opacity: 0, x: 20 }}
             transition={{ duration: 0.3 }}
           >
-            <RadioGroup
-              defaultValue="general"
-              value={selectedCategory}
-              onValueChange={handleCategorySelect}
-              className="space-y-4"
+            <Tabs 
+              defaultValue="general" 
+              className="mb-6"
+              onValueChange={(value) => {
+                if (value === "industry") {
+                  setSelectedCategory(industrySpecificCategories[selectedIndustry][0].id);
+                } else {
+                  setSelectedCategory(generalCategories[0].id);
+                }
+              }}
             >
-              <div className="flex items-center space-x-2 border p-4 rounded-md hover:bg-muted/50 cursor-pointer transition-colors">
-                <RadioGroupItem value="general" id="general" />
-                <Label htmlFor="general" className="flex-1 cursor-pointer">
-                  <div className="font-medium">General Interview</div>
-                  <div className="text-sm text-muted-foreground">Common questions asked in most interviews</div>
-                </Label>
-              </div>
-              
-              <div className="flex items-center space-x-2 border p-4 rounded-md hover:bg-muted/50 cursor-pointer transition-colors">
-                <RadioGroupItem value="technical" id="technical" />
-                <Label htmlFor="technical" className="flex-1 cursor-pointer">
-                  <div className="font-medium">Technical Interview</div>
-                  <div className="text-sm text-muted-foreground">Questions focusing on your technical skills and knowledge</div>
-                </Label>
-              </div>
-              
-              <div className="flex items-center space-x-2 border p-4 rounded-md hover:bg-muted/50 cursor-pointer transition-colors">
-                <RadioGroupItem value="behavioral" id="behavioral" />
-                <Label htmlFor="behavioral" className="flex-1 cursor-pointer">
-                  <div className="font-medium">Behavioral Interview</div>
-                  <div className="text-sm text-muted-foreground">Questions about past experiences and how you handled situations</div>
-                </Label>
-              </div>
-              
-              <div className="flex items-center space-x-2 border p-4 rounded-md hover:bg-muted/50 cursor-pointer transition-colors">
-                <RadioGroupItem value="leadership" id="leadership" />
-                <Label htmlFor="leadership" className="flex-1 cursor-pointer">
-                  <div className="font-medium">Leadership Interview</div>
-                  <div className="text-sm text-muted-foreground">Questions focused on leadership skills and experience</div>
-                </Label>
-              </div>
-            </RadioGroup>
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="general">General Categories</TabsTrigger>
+                <TabsTrigger value="industry">Industry Specific</TabsTrigger>
+              </TabsList>
+              <TabsContent value="general" className="mt-4">
+                <RadioGroup
+                  value={selectedCategory}
+                  onValueChange={handleCategorySelect}
+                  className="space-y-4"
+                >
+                  {generalCategories.map((category) => (
+                    <div 
+                      key={category.id}
+                      className="flex items-center space-x-2 border p-4 rounded-md hover:bg-muted/50 cursor-pointer transition-colors"
+                    >
+                      <RadioGroupItem value={category.id} id={category.id} />
+                      <Label htmlFor={category.id} className="flex-1 cursor-pointer">
+                        <div className="flex items-center gap-2 font-medium">
+                          {category.icon}
+                          {category.title}
+                        </div>
+                        <div className="text-sm text-muted-foreground">{category.description}</div>
+                      </Label>
+                    </div>
+                  ))}
+                </RadioGroup>
+              </TabsContent>
+              <TabsContent value="industry" className="mt-4">
+                <div className="mb-4">
+                  <Label className="mb-2 block">Select Industry</Label>
+                  <RadioGroup
+                    value={selectedIndustry}
+                    onValueChange={handleIndustryChange}
+                    className="grid grid-cols-3 gap-2"
+                  >
+                    <div className="rounded-md border flex justify-center p-3 cursor-pointer hover:bg-muted/50">
+                      <RadioGroupItem value="tech" id="tech" className="sr-only" />
+                      <Label htmlFor="tech" className="cursor-pointer flex flex-col items-center gap-2">
+                        <Code className="h-5 w-5 text-blue-500" />
+                        <span className="text-sm font-medium">Tech</span>
+                      </Label>
+                    </div>
+                    <div className="rounded-md border flex justify-center p-3 cursor-pointer hover:bg-muted/50">
+                      <RadioGroupItem value="finance" id="finance" className="sr-only" />
+                      <Label htmlFor="finance" className="cursor-pointer flex flex-col items-center gap-2">
+                        <Globe className="h-5 w-5 text-green-500" />
+                        <span className="text-sm font-medium">Finance</span>
+                      </Label>
+                    </div>
+                    <div className="rounded-md border flex justify-center p-3 cursor-pointer hover:bg-muted/50">
+                      <RadioGroupItem value="healthcare" id="healthcare" className="sr-only" />
+                      <Label htmlFor="healthcare" className="cursor-pointer flex flex-col items-center gap-2">
+                        <UserCheck className="h-5 w-5 text-red-500" />
+                        <span className="text-sm font-medium">Healthcare</span>
+                      </Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+                
+                <RadioGroup
+                  value={selectedCategory}
+                  onValueChange={handleCategorySelect}
+                  className="space-y-4"
+                >
+                  {industrySpecificCategories[selectedIndustry].map((category) => (
+                    <div 
+                      key={category.id}
+                      className="flex items-center space-x-2 border p-4 rounded-md hover:bg-muted/50 cursor-pointer transition-colors"
+                    >
+                      <RadioGroupItem value={category.id} id={category.id} />
+                      <Label htmlFor={category.id} className="flex-1 cursor-pointer">
+                        <div className="flex items-center gap-2 font-medium">
+                          {category.icon}
+                          {category.title}
+                        </div>
+                        <div className="text-sm text-muted-foreground">{category.description}</div>
+                      </Label>
+                    </div>
+                  ))}
+                </RadioGroup>
+              </TabsContent>
+            </Tabs>
+            
+            <div className="pt-4 mt-4 border-t">
+              <h3 className="text-sm font-medium mb-2">Interview Difficulty</h3>
+              <RadioGroup defaultValue="medium" className="grid grid-cols-3 gap-2">
+                <div className="border rounded-md text-center p-2 cursor-pointer hover:bg-muted/50">
+                  <RadioGroupItem value="easy" id="easy" className="sr-only" />
+                  <Label htmlFor="easy" className="cursor-pointer text-sm">Easy</Label>
+                </div>
+                <div className="border rounded-md text-center p-2 cursor-pointer hover:bg-muted/50">
+                  <RadioGroupItem value="medium" id="medium" className="sr-only" />
+                  <Label htmlFor="medium" className="cursor-pointer text-sm">Medium</Label>
+                </div>
+                <div className="border rounded-md text-center p-2 cursor-pointer hover:bg-muted/50">
+                  <RadioGroupItem value="hard" id="hard" className="sr-only" />
+                  <Label htmlFor="hard" className="cursor-pointer text-sm">Hard</Label>
+                </div>
+              </RadioGroup>
+            </div>
           </motion.div>
         ) : (
           <motion.div
