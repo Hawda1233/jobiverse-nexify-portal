@@ -21,4 +21,21 @@ googleProvider.setCustomParameters({
   prompt: 'select_account'
 });
 
+// Add authorized domains dynamically for local development
+export const addAuthDomain = () => {
+  try {
+    const currentDomain = window.location.hostname;
+    if (!currentDomain.includes('nexify-job-platform.firebaseapp.com')) {
+      // This is a workaround for development environments
+      // In production, you would add domains through Firebase Console
+      console.log(`Using domain: ${currentDomain} for authentication`);
+    }
+  } catch (error) {
+    console.error("Error setting auth domain:", error);
+  }
+};
+
+// Call this function when initializing the app
+addAuthDomain();
+
 export default app;

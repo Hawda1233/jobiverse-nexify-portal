@@ -164,7 +164,12 @@ export function useInterview() {
   return context;
 }
 
-export function InterviewProvider({ children }: { children: React.ReactNode }) {
+interface InterviewProviderProps {
+  children: React.ReactNode;
+  apiKey?: string;
+}
+
+export function InterviewProvider({ children, apiKey = "" }: InterviewProviderProps) {
   const [interviewState, setInterviewState] = useState<InterviewState>(defaultInterviewState);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const synthRef = useRef<SpeechSynthesis | null>(null);
@@ -189,13 +194,76 @@ export function InterviewProvider({ children }: { children: React.ReactNode }) {
         isGeneratingQuestion: true
       }));
       
-      const apiKey = "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";
+      // Use OpenAI API if key is provided, otherwise fallback to Perplexity
+      if (apiKey) {
+        try {
+          console.log("Using OpenAI API for question generation");
+          const response = await fetch("https://api.openai.com/v1/chat/completions", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${apiKey}`
+            },
+            body: JSON.stringify({
+              model: "gpt-4o-mini",
+              messages: [
+                {
+                  role: "system",
+                  content: `You are an expert interviewer for ${category} interviews. Generate ${count} challenging interview questions that a professional interviewer would ask. Each question should be thorough and designed to assess a candidate's experience, skills, and thinking process. Format your response as a JSON array of strings.`
+                },
+                {
+                  role: "user",
+                  content: `Please generate ${count} professional interview questions for the ${category} category. These should be questions a real interviewer would ask.`
+                }
+              ],
+              temperature: 0.8,
+              max_tokens: 1000
+            })
+          });
+
+          if (!response.ok) {
+            throw new Error(`OpenAI API request failed: ${response.statusText}`);
+          }
+
+          const data = await response.json();
+          
+          try {
+            const contentText = data.choices[0].message.content;
+            const jsonMatch = contentText.match(/\[[\s\S]*\]/);
+            
+            if (jsonMatch) {
+              const questions = JSON.parse(jsonMatch[0]);
+              return Array.isArray(questions) ? questions : [];
+            } else {
+              const lines = contentText.split('\n').filter(line => 
+                line.trim().length > 0 && 
+                (line.includes('?') || /^\d+\./.test(line.trim()))
+              );
+              return lines.slice(0, count);
+            }
+          } catch (parseError) {
+            console.error("Error parsing OpenAI API response:", parseError);
+            throw parseError;
+          }
+        } catch (error) {
+          console.error("Error with OpenAI, falling back to Perplexity:", error);
+          toast({
+            title: "OpenAI API Error",
+            description: "Could not connect to OpenAI. Falling back to default AI.",
+            variant: "destructive",
+          });
+          // Continue to Perplexity fallback
+        }
+      }
+      
+      // Fallback to Perplexity
+      const perplexityKey = "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";
       
       const response = await fetch("https://api.perplexity.ai/chat/completions", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${apiKey}`
+          "Authorization": `Bearer ${perplexityKey}`
         },
         body: JSON.stringify({
           model: "gpt-4o-mini",
@@ -257,15 +325,60 @@ export function InterviewProvider({ children }: { children: React.ReactNode }) {
         isGeneratingQuestion: true
       }));
       
-      const apiKey = "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";
-      
       const currentQuestion = interviewState.currentQuestion;
+      
+      // Use OpenAI API if key is provided, otherwise fallback to Perplexity
+      if (apiKey) {
+        try {
+          console.log("Using OpenAI API for follow-up generation");
+          const response = await fetch("https://api.openai.com/v1/chat/completions", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${apiKey}`
+            },
+            body: JSON.stringify({
+              model: "gpt-4o-mini",
+              messages: [
+                {
+                  role: "system",
+                  content: "You are a professional interviewer asking follow-up questions. Based on the candidate's previous answer, generate a single, relevant follow-up question to dig deeper or clarify their response. Make it sound natural, as a real interviewer would ask. Return only the follow-up question with no prefix or explanation."
+                },
+                {
+                  role: "user",
+                  content: `Original question: "${currentQuestion}"\n\nCandidate's answer: "${previousAnswer}"\n\nProvide a relevant follow-up question to dig deeper into their response.`
+                }
+              ],
+              temperature: 0.7,
+              max_tokens: 150
+            })
+          });
+
+          if (!response.ok) {
+            throw new Error(`OpenAI API request failed: ${response.statusText}`);
+          }
+
+          const data = await response.json();
+          const followUpQuestion = data.choices[0].message.content.trim();
+          
+          if (followUpQuestion) {
+            updateQuestionsWithFollowup(followUpQuestion);
+            return;
+          }
+        } catch (error) {
+          console.error("Error with OpenAI, falling back to Perplexity:", error);
+          // Continue to Perplexity fallback
+        }
+      }
+      
+      // Fallback to Perplexity
+      const perplexityKey = "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";
       
       const response = await fetch("https://api.perplexity.ai/chat/completions", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${apiKey}`
+          "Authorization": `Bearer ${perplexityKey}`
         },
         body: JSON.stringify({
           model: "gpt-4o-mini",
@@ -292,53 +405,7 @@ export function InterviewProvider({ children }: { children: React.ReactNode }) {
       const followUpQuestion = data.choices[0].message.content.trim();
       
       if (followUpQuestion) {
-        setInterviewState(prev => {
-          const updatedQuestions = [...prev.allQuestions];
-          
-          updatedQuestions.splice(prev.currentQuestionIndex + 1, 0, followUpQuestion);
-          
-          const updatedAnswers: Record<number, string> = {};
-          const updatedFeedback: Record<number, string> = {};
-          const updatedImprovedAnswers: Record<number, string> = {};
-          
-          Object.entries(prev.answers).forEach(([index, answer]) => {
-            const numIndex = Number(index);
-            if (numIndex > prev.currentQuestionIndex) {
-              updatedAnswers[numIndex + 1] = answer;
-            } else {
-              updatedAnswers[numIndex] = answer;
-            }
-          });
-          
-          Object.entries(prev.feedback).forEach(([index, feedback]) => {
-            const numIndex = Number(index);
-            if (numIndex > prev.currentQuestionIndex) {
-              updatedFeedback[numIndex + 1] = feedback;
-            } else {
-              updatedFeedback[numIndex] = feedback;
-            }
-          });
-          
-          Object.entries(prev.improvedAnswers).forEach(([index, improved]) => {
-            const numIndex = Number(index);
-            if (numIndex > prev.currentQuestionIndex) {
-              updatedImprovedAnswers[numIndex + 1] = improved;
-            } else {
-              updatedImprovedAnswers[numIndex] = improved;
-            }
-          });
-          
-          return {
-            ...prev,
-            allQuestions: updatedQuestions,
-            followUpMode: false,
-            answers: updatedAnswers,
-            feedback: updatedFeedback,
-            improvedAnswers: updatedImprovedAnswers,
-          };
-        });
-        
-        nextQuestion();
+        updateQuestionsWithFollowup(followUpQuestion);
       }
     } catch (error) {
       console.error("Error generating follow-up question:", error);
@@ -357,6 +424,57 @@ export function InterviewProvider({ children }: { children: React.ReactNode }) {
         isGeneratingQuestion: false
       }));
     }
+  };
+
+  // Helper function to update questions with follow-up
+  const updateQuestionsWithFollowup = (followUpQuestion: string) => {
+    setInterviewState(prev => {
+      const updatedQuestions = [...prev.allQuestions];
+      
+      updatedQuestions.splice(prev.currentQuestionIndex + 1, 0, followUpQuestion);
+      
+      const updatedAnswers: Record<number, string> = {};
+      const updatedFeedback: Record<number, string> = {};
+      const updatedImprovedAnswers: Record<number, string> = {};
+      
+      Object.entries(prev.answers).forEach(([index, answer]) => {
+        const numIndex = Number(index);
+        if (numIndex > prev.currentQuestionIndex) {
+          updatedAnswers[numIndex + 1] = answer;
+        } else {
+          updatedAnswers[numIndex] = answer;
+        }
+      });
+      
+      Object.entries(prev.feedback).forEach(([index, feedback]) => {
+        const numIndex = Number(index);
+        if (numIndex > prev.currentQuestionIndex) {
+          updatedFeedback[numIndex + 1] = feedback;
+        } else {
+          updatedFeedback[numIndex] = feedback;
+        }
+      });
+      
+      Object.entries(prev.improvedAnswers).forEach(([index, improved]) => {
+        const numIndex = Number(index);
+        if (numIndex > prev.currentQuestionIndex) {
+          updatedImprovedAnswers[numIndex + 1] = improved;
+        } else {
+          updatedImprovedAnswers[numIndex] = improved;
+        }
+      });
+      
+      return {
+        ...prev,
+        allQuestions: updatedQuestions,
+        followUpMode: false,
+        answers: updatedAnswers,
+        feedback: updatedFeedback,
+        improvedAnswers: updatedImprovedAnswers,
+      };
+    });
+    
+    nextQuestion();
   };
 
   const startInterview = useCallback(async (category: string = "general") => {
@@ -493,13 +611,82 @@ export function InterviewProvider({ children }: { children: React.ReactNode }) {
 
   const analyzeAnswerWithOpenAI = async (question: string, answer: string): Promise<{ feedback: string | any; improvedAnswer: string }> => {
     try {
-      const apiKey = "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";
+      // Use OpenAI API if key is provided, otherwise fallback to Perplexity
+      if (apiKey) {
+        try {
+          console.log("Using OpenAI API for answer analysis");
+          const response = await fetch("https://api.openai.com/v1/chat/completions", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${apiKey}`
+            },
+            body: JSON.stringify({
+              model: "gpt-4o-mini",
+              messages: [
+                {
+                  role: "system",
+                  content: `You are an expert interview coach specializing in providing detailed, constructive feedback.
+                  
+                  Analyze the candidate's interview answer and provide:
+                  
+                  1) STRENGTHS: What specific parts of the answer were effective.
+                  2) WEAKNESSES: What specific areas need improvement.
+                  3) KEY POINTS MISSED: Important points or concepts that should have been included.
+                  4) IMPROVEMENT SUGGESTIONS: Concrete, actionable tips to make the answer stronger.
+                  5) IMPROVED ANSWER: A rewritten version that addresses all the weaknesses and incorporates the missed key points.
+                  
+                  Be extremely detailed and constructive. Your feedback should help the candidate significantly improve their interview skills. If it's a short or incomplete answer, be honest but provide guidance on structure and content for a proper response.
+                  
+                  Format your response as a JSON object with 'feedback' (containing all feedback points in a structured format) and 'improvedAnswer' fields.`
+                },
+                {
+                  role: "user",
+                  content: `Question: ${question}\n\nCandidate's Answer: ${answer}\n\nPlease analyze this answer and provide detailed feedback and an improved version.`
+                }
+              ],
+              temperature: 0.7,
+              max_tokens: 1500
+            })
+          });
+
+          if (!response.ok) {
+            throw new Error(`OpenAI API request failed: ${response.statusText}`);
+          }
+
+          const data = await response.json();
+          
+          try {
+            const contentText = data.choices[0].message.content;
+            const jsonMatch = contentText.match(/\{[\s\S]*\}/);
+            
+            if (jsonMatch) {
+              const jsonContent = JSON.parse(jsonMatch[0]);
+              return {
+                feedback: jsonContent.feedback || "No specific feedback available.",
+                improvedAnswer: jsonContent.improvedAnswer || "No improved answer available."
+              };
+            } else {
+              throw new Error("Could not extract JSON from OpenAI response");
+            }
+          } catch (parseError) {
+            console.error("Error parsing OpenAI API response:", parseError);
+            throw parseError;
+          }
+        } catch (error) {
+          console.error("Error with OpenAI, falling back to Perplexity:", error);
+          // Continue to Perplexity fallback
+        }
+      }
+      
+      // Fallback to Perplexity
+      const perplexityKey = "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";
       
       const response = await fetch("https://api.perplexity.ai/chat/completions", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${apiKey}`
+          "Authorization": `Bearer ${perplexityKey}`
         },
         body: JSON.stringify({
           model: "gpt-4o-mini",
@@ -556,7 +743,7 @@ export function InterviewProvider({ children }: { children: React.ReactNode }) {
         };
       }
     } catch (error) {
-      console.error("Error calling OpenAI API:", error);
+      console.error("Error calling AI API:", error);
       throw error;
     }
   };
@@ -595,25 +782,57 @@ export function InterviewProvider({ children }: { children: React.ReactNode }) {
       const words = answer.split(/\s+/).filter(word => word.length > 0).length;
       const sentences = answer.split(/[.!?]+/).filter(sentence => sentence.length > 0).length;
       
-      let feedback = "";
+      let feedback = {
+        "STRENGTHS": "You provided a response.",
+        "WEAKNESSES": "Your answer was quite brief. Consider providing more details.",
+        "KEY POINTS MISSED": "You didn't include specific examples or structured your response well.",
+        "IMPROVEMENT SUGGESTIONS": "Try using the STAR method (Situation, Task, Action, Result) for behavioral questions."
+      };
       
       if (answerLength < 50 || words < 10) {
-        feedback = "Your answer was quite brief. Consider providing more details and examples to showcase your experience and skills.";
+        feedback = {
+          "STRENGTHS": "You attempted to answer the question.",
+          "WEAKNESSES": "Your answer was too brief and lacked substance. It doesn't give the interviewer enough information about your skills and experience.",
+          "KEY POINTS MISSED": "You didn't include specific examples, details about your experience, or demonstrate relevant skills.",
+          "IMPROVEMENT SUGGESTIONS": "Expand your answer to at least 3-5 sentences. Include a specific example that demonstrates your abilities. Use the STAR method if applicable."
+        };
       } else if (answerLength < 200 || words < 40) {
-        feedback = "Good answer. You provided some relevant details, but could elaborate more with specific examples from your experience.";
+        feedback = {
+          "STRENGTHS": "You provided some relevant information in your answer.",
+          "WEAKNESSES": "While you gave some information, your answer could benefit from more details and specific examples.",
+          "KEY POINTS MISSED": "Your answer lacked depth and specific examples that showcase your skills and experience.",
+          "IMPROVEMENT SUGGESTIONS": "Elaborate with concrete examples from your past experience. Quantify your achievements when possible."
+        };
       } else {
         if (sentences < 3) {
-          feedback = "Good response with adequate detail. Try structuring your answer with a clear beginning, middle, and end for even better results.";
+          feedback = {
+            "STRENGTHS": "You provided a substantial amount of information in your answer.",
+            "WEAKNESSES": "Your answer could benefit from better structure and flow between ideas.",
+            "KEY POINTS MISSED": "Your response may lack a clear beginning, middle, and end structure.",
+            "IMPROVEMENT SUGGESTIONS": "Try structuring your answer with a clear introduction, main points, and conclusion. Break up long sentences for clarity."
+          };
         } else {
-          feedback = "Excellent response! You provided a comprehensive answer with good structure, specific examples, and demonstrated clear communication.";
+          feedback = {
+            "STRENGTHS": "Excellent response! You provided comprehensive information with good structure.",
+            "WEAKNESSES": "Minor areas for improvement could include being more concise in some areas.",
+            "KEY POINTS MISSED": "Consider adding more quantifiable results if applicable.",
+            "IMPROVEMENT SUGGESTIONS": "Continue to refine your delivery and consider preparing additional examples for similar questions."
+          };
         }
       }
+
+      // Generate a basic improved answer
+      const improvedAnswer = generateBasicImprovedAnswer(interviewState.currentQuestion, answer);
 
       setInterviewState(prev => ({
         ...prev,
         feedback: {
           ...prev.feedback,
           [prev.currentQuestionIndex]: feedback,
+        },
+        improvedAnswers: {
+          ...prev.improvedAnswers,
+          [prev.currentQuestionIndex]: improvedAnswer,
         },
         isAnalyzing: false
       }));
@@ -622,279 +841,4 @@ export function InterviewProvider({ children }: { children: React.ReactNode }) {
     }
   }, [interviewState.allQuestions, interviewState.currentQuestionIndex]);
 
-  const resetInterview = useCallback(() => {
-    stopVoiceRecognition();
-    stopSpeaking();
-    
-    setInterviewState(defaultInterviewState);
-    
-    toast({
-      title: "Interview Reset",
-      description: "The interview has been reset. You can start again.",
-    });
-  }, []);
-
-  const generateOverallFeedback = (score: number): string => {
-    if (score >= 90) {
-      return "Outstanding performance! You demonstrated excellent communication skills and provided thoughtful, relevant answers. You would likely impress any interviewer.";
-    } else if (score >= 75) {
-      return "Great job! Your answers were clear and relevant. With a bit more preparation on specific examples, you could take your interview skills to the next level.";
-    } else if (score >= 60) {
-      return "Good effort. You provided adequate answers but could improve by being more specific and offering concrete examples of your experiences.";
-    } else {
-      return "Thanks for completing the interview. We recommend practicing more with specific examples from your experience and focusing on clear, concise responses.";
-    }
-  };
-
-  const startVoiceRecognition = useCallback(async (): Promise<void> => {
-    if (!('SpeechRecognition' in window || 'webkitSpeechRecognition' in window)) {
-      toast({
-        title: "Speech Recognition Not Supported",
-        description: "Your browser doesn't support speech recognition. Try using Chrome or Edge.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    try {
-      await navigator.mediaDevices.getUserMedia({ audio: true });
-      
-      const SpeechRecognitionConstructor = window.SpeechRecognition || window.webkitSpeechRecognition;
-      recognitionRef.current = new SpeechRecognitionConstructor();
-      
-      recognitionRef.current.continuous = true;
-      recognitionRef.current.interimResults = true;
-      recognitionRef.current.lang = 'en-US';
-      
-      let finalTranscript = '';
-      
-      recognitionRef.current.onresult = (event) => {
-        let interimTranscript = '';
-        
-        for (let i = event.resultIndex; i < event.results.length; ++i) {
-          if (event.results[i].isFinal) {
-            finalTranscript += event.results[i][0].transcript;
-            
-            saveAnswer(finalTranscript);
-          } else {
-            interimTranscript += event.results[i][0].transcript;
-            
-            setInterviewState(prev => ({
-              ...prev,
-              transcription: finalTranscript + interimTranscript
-            }));
-          }
-        }
-      };
-      
-      recognitionRef.current.onerror = (event) => {
-        console.error('Speech recognition error', event.error);
-        setInterviewState(prev => ({ 
-          ...prev, 
-          isListening: false,
-          transcription: ""
-        }));
-        
-        toast({
-          title: "Speech Recognition Error",
-          description: `Error: ${event.error}. Please try again.`,
-          variant: "destructive",
-        });
-      };
-      
-      recognitionRef.current.onend = () => {
-        setInterviewState(prev => ({ ...prev, isListening: false }));
-      };
-      
-      recognitionRef.current.start();
-      setInterviewState(prev => ({ 
-        ...prev, 
-        isListening: true,
-        transcription: ""
-      }));
-      
-    } catch (error) {
-      console.error('Failed to start speech recognition:', error);
-      toast({
-        title: "Microphone Access Denied",
-        description: "Please allow microphone access to use voice input.",
-        variant: "destructive",
-      });
-    }
-  }, [saveAnswer]);
-
-  const stopVoiceRecognition = useCallback(() => {
-    if (recognitionRef.current) {
-      recognitionRef.current.stop();
-      setInterviewState(prev => ({ 
-        ...prev, 
-        isListening: false,
-        transcription: ""
-      }));
-    }
-  }, []);
-
-  const speakText = useCallback(async (text: string): Promise<void> => {
-    if (!('speechSynthesis' in window)) {
-      toast({
-        title: "Text-to-Speech Not Supported",
-        description: "Your browser doesn't support text-to-speech. Try using Chrome or Edge.",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    if (interviewState.questionSpoken && text === interviewState.currentQuestion) {
-      return;
-    }
-    
-    stopSpeaking();
-    
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.rate = 1.1;
-    utterance.pitch = 1;
-    utterance.volume = 1;
-    
-    if (synthRef.current && synthRef.current.getVoices().length > 0) {
-      const voices = synthRef.current.getVoices();
-      const preferredVoice = voices.find(voice => 
-        (voice.name.includes('Daniel') || voice.name.includes('Google') || voice.name.includes('Microsoft')) && 
-        voice.lang.includes('en')
-      );
-      
-      if (preferredVoice) {
-        utterance.voice = preferredVoice;
-      }
-    }
-    
-    utterance.onstart = () => {
-      setInterviewState(prev => ({ ...prev, isSpeaking: true }));
-    };
-    
-    utterance.onend = () => {
-      setInterviewState(prev => ({ 
-        ...prev, 
-        isSpeaking: false,
-        questionSpoken: prev.currentQuestion === text ? true : prev.questionSpoken
-      }));
-      utteranceRef.current = null;
-    };
-    
-    utterance.onerror = (event) => {
-      console.error('Speech synthesis error', event);
-      setInterviewState(prev => ({ ...prev, isSpeaking: false }));
-      utteranceRef.current = null;
-    };
-    
-    utteranceRef.current = utterance;
-    
-    if (synthRef.current) {
-      synthRef.current.speak(utterance);
-    }
-  }, [interviewState.questionSpoken, interviewState.currentQuestion]);
-
-  const stopSpeaking = useCallback(() => {
-    if (synthRef.current) {
-      synthRef.current.cancel();
-      setInterviewState(prev => ({ ...prev, isSpeaking: false }));
-      utteranceRef.current = null;
-    }
-  }, []);
-
-  const setCustomQuestions = useCallback((questions: string[]) => {
-    if (questions.length > 0) {
-      setInterviewState(prev => ({
-        ...prev,
-        allQuestions: questions,
-        currentQuestion: questions[0],
-        category: "custom",
-      }));
-    }
-  }, []);
-
-  const setInterviewCharacter = useCallback((character: typeof AI_CHARACTERS[0]) => {
-    setInterviewState(prev => ({
-      ...prev,
-      selectedCharacter: character,
-    }));
-  }, []);
-
-  useEffect(() => {
-    if (interviewState.isStarted && !interviewState.isFinished) {
-      setInterviewState(prev => ({
-        ...prev,
-        currentQuestion: prev.allQuestions[prev.currentQuestionIndex],
-      }));
-    }
-  }, [interviewState.currentQuestionIndex]);
-
-  const value = {
-    interviewState,
-    startInterview,
-    endInterview,
-    nextQuestion,
-    previousQuestion,
-    saveAnswer,
-    simulateEvaluation,
-    resetInterview,
-    startVoiceRecognition,
-    stopVoiceRecognition,
-    speakText,
-    stopSpeaking,
-    setCustomQuestions,
-    setInterviewCharacter,
-    generateFollowUpQuestion,
-  };
-
-  return (
-    <InterviewContext.Provider value={value}>
-      {children}
-    </InterviewContext.Provider>
-  );
-}
-
-declare global {
-  interface Window {
-    SpeechRecognition: any;
-    webkitSpeechRecognition: any;
-  }
-}
-
-interface SpeechRecognition extends EventTarget {
-  continuous: boolean;
-  interimResults: boolean;
-  lang: string;
-  onresult: (event: SpeechRecognitionEvent) => void;
-  onerror: (event: SpeechRecognitionErrorEvent) => void;
-  onend: () => void;
-  start: () => void;
-  stop: () => void;
-}
-
-interface SpeechRecognitionEvent {
-  resultIndex: number;
-  results: SpeechRecognitionResultList;
-}
-
-interface SpeechRecognitionResultList {
-  length: number;
-  item(index: number): SpeechRecognitionResult;
-  [index: number]: SpeechRecognitionResult;
-}
-
-interface SpeechRecognitionResult {
-  isFinal: boolean;
-  length: number;
-  item(index: number): SpeechRecognitionAlternative;
-  [index: number]: SpeechRecognitionAlternative;
-}
-
-interface SpeechRecognitionAlternative {
-  transcript: string;
-  confidence: number;
-}
-
-interface SpeechRecognitionErrorEvent extends Event {
-  error: string;
-  message: string;
-}
+  // Helper function to generate a basic improved answer for fallback

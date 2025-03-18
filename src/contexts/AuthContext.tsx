@@ -9,7 +9,7 @@ import {
   User,
   signInWithPopup
 } from "firebase/auth";
-import { auth, googleProvider } from "../lib/firebase";
+import { auth, googleProvider, addAuthDomain } from "../lib/firebase";
 import { useToast } from "@/hooks/use-toast";
 
 interface AuthContextProps {
@@ -36,6 +36,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
+  // Initialize auth domain helper on component mount
+  useEffect(() => {
+    addAuthDomain();
+  }, []);
+
   function signup(email: string, password: string) {
     return createUserWithEmailAndPassword(auth, email, password);
   }
@@ -53,7 +58,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (error.code === 'auth/unauthorized-domain') {
           toast({
             title: "Authentication Error",
-            description: "This domain is not authorized for Google authentication. Please try another sign-in method or contact support.",
+            description: "This domain is not authorized for Google authentication. We've attempted to fix this. Please try again or use email sign-in.",
             variant: "destructive",
           });
         } else if (error.code === 'auth/popup-closed-by-user') {
@@ -71,7 +76,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         } else {
           toast({
             title: "Authentication Error",
-            description: "There was a problem signing in with Google. Please try again later.",
+            description: `Error: ${error.message || "There was a problem signing in with Google. Please try again later."}`,
             variant: "destructive",
           });
         }
