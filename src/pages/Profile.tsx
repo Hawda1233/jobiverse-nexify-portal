@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -831,3 +832,511 @@ const ResumeBuilder = () => {
                             </div>
                             <div className="space-y-2">
                               <Label>End Date</Label>
+                              <Input 
+                                type="month"
+                                value={edu.endDate}
+                                onChange={(e) => handleEducationChange(edu.id, 'endDate', e.target.value)}
+                              />
+                              <div className="flex items-center gap-2 pt-1">
+                                <Checkbox 
+                                  id={`current-education-${edu.id}`} 
+                                  checked={edu.endDate === 'Present'}
+                                  onCheckedChange={(checked) => {
+                                    if (checked) {
+                                      handleEducationChange(edu.id, 'endDate', 'Present');
+                                    } else {
+                                      handleEducationChange(edu.id, 'endDate', '');
+                                    }
+                                  }}
+                                />
+                                <label htmlFor={`current-education-${edu.id}`} className="text-sm">Current Education</label>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+
+                  <div className="pt-2">
+                    <h4 className="text-sm font-medium mb-2">Top Indian Institutions</h4>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                      <Button onClick={() => { 
+                        const newId = Math.max(0, ...resumeData.education.map(e => e.id)) + 1;
+                        setResumeData(prev => ({
+                          ...prev,
+                          education: [
+                            ...prev.education, 
+                            { id: newId, institution: "Indian Institute of Technology (IIT)", degree: "", field: "", startDate: "", endDate: "" }
+                          ]
+                        }));
+                      }} size="sm" variant="outline" className="justify-start">+ IIT</Button>
+                      <Button onClick={() => { 
+                        const newId = Math.max(0, ...resumeData.education.map(e => e.id)) + 1;
+                        setResumeData(prev => ({
+                          ...prev,
+                          education: [
+                            ...prev.education, 
+                            { id: newId, institution: "Indian Institute of Management (IIM)", degree: "", field: "", startDate: "", endDate: "" }
+                          ]
+                        }));
+                      }} size="sm" variant="outline" className="justify-start">+ IIM</Button>
+                      <Button onClick={() => { 
+                        const newId = Math.max(0, ...resumeData.education.map(e => e.id)) + 1;
+                        setResumeData(prev => ({
+                          ...prev,
+                          education: [
+                            ...prev.education, 
+                            { id: newId, institution: "National Institute of Technology (NIT)", degree: "", field: "", startDate: "", endDate: "" }
+                          ]
+                        }));
+                      }} size="sm" variant="outline" className="justify-start">+ NIT</Button>
+                      <Button onClick={() => { 
+                        const newId = Math.max(0, ...resumeData.education.map(e => e.id)) + 1;
+                        setResumeData(prev => ({
+                          ...prev,
+                          education: [
+                            ...prev.education, 
+                            { id: newId, institution: "Delhi University", degree: "", field: "", startDate: "", endDate: "" }
+                          ]
+                        }));
+                      }} size="sm" variant="outline" className="justify-start">+ Delhi University</Button>
+                      <Button onClick={() => { 
+                        const newId = Math.max(0, ...resumeData.education.map(e => e.id)) + 1;
+                        setResumeData(prev => ({
+                          ...prev,
+                          education: [
+                            ...prev.education, 
+                            { id: newId, institution: "Mumbai University", degree: "", field: "", startDate: "", endDate: "" }
+                          ]
+                        }));
+                      }} size="sm" variant="outline" className="justify-start">+ Mumbai University</Button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Certifications */}
+              {activeTab === "certifications" && (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-medium">Certifications</h3>
+                    <Button type="button" onClick={handleAddCertification} variant="outline" size="sm">
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add Certification
+                    </Button>
+                  </div>
+                  
+                  {resumeData.certifications.map((cert) => (
+                    <Card key={cert.id} className="border border-muted">
+                      <CardContent className="p-4 space-y-4">
+                        <div className="flex justify-end">
+                          <Button 
+                            type="button" 
+                            onClick={() => handleRemoveCertification(cert.id)} 
+                            variant="ghost" 
+                            size="sm"
+                            className="text-muted-foreground hover:text-destructive h-8 w-8 p-0"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label>Certification Name</Label>
+                            <Input 
+                              value={cert.name}
+                              onChange={(e) => handleCertificationChange(cert.id, 'name', e.target.value)}
+                              placeholder="Certificate name"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label>Issuing Organization</Label>
+                            <Input 
+                              value={cert.issuer}
+                              onChange={(e) => handleCertificationChange(cert.id, 'issuer', e.target.value)}
+                              placeholder="Organization name"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label>Issue Date</Label>
+                            <Input 
+                              type="month"
+                              value={cert.date}
+                              onChange={(e) => handleCertificationChange(cert.id, 'date', e.target.value)}
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label>Expiry Date (if applicable)</Label>
+                            <Input 
+                              type="month"
+                              value={cert.expiry}
+                              onChange={(e) => handleCertificationChange(cert.id, 'expiry', e.target.value)}
+                            />
+                            <div className="flex items-center gap-2 pt-1">
+                              <Checkbox 
+                                id={`no-expiry-${cert.id}`} 
+                                checked={cert.expiry === 'No Expiry'}
+                                onCheckedChange={(checked) => {
+                                  if (checked) {
+                                    handleCertificationChange(cert.id, 'expiry', 'No Expiry');
+                                  } else {
+                                    handleCertificationChange(cert.id, 'expiry', '');
+                                  }
+                                }}
+                              />
+                              <label htmlFor={`no-expiry-${cert.id}`} className="text-sm">No Expiry</label>
+                            </div>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
+
+              {/* Projects */}
+              {activeTab === "projects" && (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-medium">Projects</h3>
+                    <Button type="button" onClick={handleAddProject} variant="outline" size="sm">
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add Project
+                    </Button>
+                  </div>
+                  
+                  {resumeData.projects.map((proj) => (
+                    <Card key={proj.id} className="border border-muted">
+                      <CardContent className="p-4 space-y-4">
+                        <div className="flex justify-end">
+                          <Button 
+                            type="button" 
+                            onClick={() => handleRemoveProject(proj.id)} 
+                            variant="ghost" 
+                            size="sm"
+                            className="text-muted-foreground hover:text-destructive h-8 w-8 p-0"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                        <div className="space-y-4">
+                          <div className="space-y-2">
+                            <Label>Project Title</Label>
+                            <Input 
+                              value={proj.title}
+                              onChange={(e) => handleProjectChange(proj.id, 'title', e.target.value)}
+                              placeholder="Project name"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label>Description</Label>
+                            <Textarea 
+                              value={proj.description}
+                              onChange={(e) => handleProjectChange(proj.id, 'description', e.target.value)}
+                              placeholder="Describe the project and your role"
+                              rows={3}
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label>Project Link (if any)</Label>
+                            <Input 
+                              value={proj.link}
+                              onChange={(e) => handleProjectChange(proj.id, 'link', e.target.value)}
+                              placeholder="URL to project (GitHub, live site, etc.)"
+                            />
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
+
+              {/* Languages */}
+              {activeTab === "languages" && (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-medium">Languages</h3>
+                    <Button type="button" onClick={handleAddLanguage} variant="outline" size="sm">
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add Language
+                    </Button>
+                  </div>
+                  
+                  {resumeData.languages.map((lang) => (
+                    <Card key={lang.id} className="border border-muted">
+                      <CardContent className="p-4 space-y-4">
+                        <div className="flex justify-end">
+                          <Button 
+                            type="button" 
+                            onClick={() => handleRemoveLanguage(lang.id)} 
+                            variant="ghost" 
+                            size="sm"
+                            className="text-muted-foreground hover:text-destructive h-8 w-8 p-0"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label>Language</Label>
+                            <Input 
+                              value={lang.name}
+                              onChange={(e) => handleLanguageChange(lang.id, 'name', e.target.value)}
+                              placeholder="Language name"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label>Proficiency</Label>
+                            <select 
+                              className="w-full h-10 rounded-md border border-input bg-background px-3 py-2"
+                              value={lang.proficiency}
+                              onChange={(e) => handleLanguageChange(lang.id, 'proficiency', e.target.value)}
+                            >
+                              <option value="Native">Native</option>
+                              <option value="Fluent">Fluent</option>
+                              <option value="Advanced">Advanced</option>
+                              <option value="Intermediate">Intermediate</option>
+                              <option value="Beginner">Beginner</option>
+                            </select>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                  
+                  <div className="pt-2">
+                    <h4 className="text-sm font-medium mb-2">Indian Languages</h4>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                      <Button onClick={() => { 
+                        const newId = Math.max(0, ...resumeData.languages.map(l => l.id)) + 1;
+                        setResumeData(prev => ({
+                          ...prev,
+                          languages: [
+                            ...prev.languages, 
+                            { id: newId, name: "Hindi", proficiency: "Native" }
+                          ]
+                        }));
+                      }} size="sm" variant="outline" className="justify-start">+ Hindi</Button>
+                      <Button onClick={() => { 
+                        const newId = Math.max(0, ...resumeData.languages.map(l => l.id)) + 1;
+                        setResumeData(prev => ({
+                          ...prev,
+                          languages: [
+                            ...prev.languages, 
+                            { id: newId, name: "Tamil", proficiency: "Native" }
+                          ]
+                        }));
+                      }} size="sm" variant="outline" className="justify-start">+ Tamil</Button>
+                      <Button onClick={() => { 
+                        const newId = Math.max(0, ...resumeData.languages.map(l => l.id)) + 1;
+                        setResumeData(prev => ({
+                          ...prev,
+                          languages: [
+                            ...prev.languages, 
+                            { id: newId, name: "Bengali", proficiency: "Native" }
+                          ]
+                        }));
+                      }} size="sm" variant="outline" className="justify-start">+ Bengali</Button>
+                      <Button onClick={() => { 
+                        const newId = Math.max(0, ...resumeData.languages.map(l => l.id)) + 1;
+                        setResumeData(prev => ({
+                          ...prev,
+                          languages: [
+                            ...prev.languages, 
+                            { id: newId, name: "Telugu", proficiency: "Native" }
+                          ]
+                        }));
+                      }} size="sm" variant="outline" className="justify-start">+ Telugu</Button>
+                      <Button onClick={() => { 
+                        const newId = Math.max(0, ...resumeData.languages.map(l => l.id)) + 1;
+                        setResumeData(prev => ({
+                          ...prev,
+                          languages: [
+                            ...prev.languages, 
+                            { id: newId, name: "Marathi", proficiency: "Native" }
+                          ]
+                        }));
+                      }} size="sm" variant="outline" className="justify-start">+ Marathi</Button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* References */}
+              {activeTab === "references" && (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-medium">References</h3>
+                    <Button type="button" onClick={handleAddReference} variant="outline" size="sm">
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add Reference
+                    </Button>
+                  </div>
+                  
+                  {resumeData.references.map((ref) => (
+                    <Card key={ref.id} className="border border-muted">
+                      <CardContent className="p-4 space-y-4">
+                        <div className="flex justify-end">
+                          <Button 
+                            type="button" 
+                            onClick={() => handleRemoveReference(ref.id)} 
+                            variant="ghost" 
+                            size="sm"
+                            className="text-muted-foreground hover:text-destructive h-8 w-8 p-0"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label>Name</Label>
+                            <Input 
+                              value={ref.name}
+                              onChange={(e) => handleReferenceChange(ref.id, 'name', e.target.value)}
+                              placeholder="Reference name"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label>Position</Label>
+                            <Input 
+                              value={ref.position}
+                              onChange={(e) => handleReferenceChange(ref.id, 'position', e.target.value)}
+                              placeholder="Job title"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label>Company</Label>
+                            <Input 
+                              value={ref.company}
+                              onChange={(e) => handleReferenceChange(ref.id, 'company', e.target.value)}
+                              placeholder="Company name"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label>Email</Label>
+                            <Input 
+                              value={ref.email}
+                              onChange={(e) => handleReferenceChange(ref.id, 'email', e.target.value)}
+                              placeholder="Email address"
+                              type="email"
+                            />
+                          </div>
+                          <div className="space-y-2 md:col-span-2">
+                            <Label>Phone (optional)</Label>
+                            <Input 
+                              value={ref.phone}
+                              onChange={(e) => handleReferenceChange(ref.id, 'phone', e.target.value)}
+                              placeholder="Phone number"
+                            />
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
+
+              {/* Achievements */}
+              {activeTab === "achievements" && (
+                <div className="space-y-4">
+                  <h3 className="text-lg font-medium">Achievements</h3>
+                  <div className="space-y-2">
+                    <Label htmlFor="achievements">Awards & Achievements</Label>
+                    <Textarea 
+                      id="achievements" 
+                      name="achievements"
+                      value={resumeData.achievements}
+                      onChange={handleChange}
+                      placeholder="List your significant achievements, awards, or recognitions"
+                      rows={6}
+                    />
+                    <div className="text-sm text-muted-foreground">
+                      Pro tip: Quantify your achievements when possible (e.g., "Increased sales by 30%")
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Hobbies */}
+              {activeTab === "hobbies" && (
+                <div className="space-y-4">
+                  <h3 className="text-lg font-medium">Hobbies & Interests</h3>
+                  <div className="space-y-2">
+                    <Label htmlFor="hobbies">Personal Interests</Label>
+                    <Textarea 
+                      id="hobbies" 
+                      name="hobbies"
+                      value={resumeData.hobbies}
+                      onChange={handleChange}
+                      placeholder="Share a bit about your hobbies and personal interests"
+                      rows={4}
+                    />
+                    <div className="text-sm text-muted-foreground">
+                      Including relevant hobbies can show personality and additional skills.
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Settings */}
+              {activeTab === "settings" && (
+                <div className="space-y-6">
+                  <h3 className="text-lg font-medium">Resume Settings</h3>
+                  
+                  <div className="space-y-4">
+                    <h4 className="text-md font-medium">Appearance</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label>Theme</Label>
+                        <select 
+                          className="w-full h-10 rounded-md border border-input bg-background px-3 py-2"
+                          value={resumeTheme}
+                          onChange={(e) => setResumeTheme(e.target.value)}
+                        >
+                          {resumeThemes.map(theme => (
+                            <option key={theme.id} value={theme.id}>{theme.name}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Font</Label>
+                        <select 
+                          className="w-full h-10 rounded-md border border-input bg-background px-3 py-2"
+                          value={fontFamily}
+                          onChange={(e) => setFontFamily(e.target.value)}
+                        >
+                          {fontFamilies.map(font => (
+                            <option key={font.id} value={font.id}>{font.name}</option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    <h4 className="text-md font-medium">Actions</h4>
+                    <div className="flex gap-2">
+                      <Button onClick={handleSaveResume}>
+                        <Save className="h-4 w-4 mr-2" />
+                        Save Resume
+                      </Button>
+                      <Button variant="outline" onClick={handleExportPDF}>
+                        <Download className="h-4 w-4 mr-2" />
+                        Export as PDF
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default ResumeBuilder;
+
