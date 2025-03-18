@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from "react";
 import { toast } from "@/components/ui/use-toast";
 
@@ -842,3 +843,254 @@ export function InterviewProvider({ children, apiKey = "" }: InterviewProviderPr
   }, [interviewState.allQuestions, interviewState.currentQuestionIndex]);
 
   // Helper function to generate a basic improved answer for fallback
+  const generateBasicImprovedAnswer = (question: string, originalAnswer: string): string => {
+    // This is a simple fallback function to create an improved answer when the AI analysis fails
+    if (originalAnswer.length < 50) {
+      return `I would like to provide more context about this. ${originalAnswer} Additionally, I have experience in this area and have successfully handled similar situations in the past. For example, [insert specific example]. The key takeaway was [describe outcome or lesson learned].`;
+    } else if (originalAnswer.length < 200) {
+      return `${originalAnswer}\n\nTo elaborate further, I would add some specific metrics or results that demonstrate the impact of my actions. I would also structure my response using the STAR method (Situation, Task, Action, Result) to make it clearer and more compelling.`;
+    } else {
+      return `${originalAnswer}\n\nTo make this answer even stronger, I would ensure I've clearly connected my experience to the specific requirements of the role, and emphasized not just what I did but what I learned and how it shaped my professional development.`;
+    }
+  };
+
+  // Function to generate overall feedback based on score
+  const generateOverallFeedback = (score: number): string => {
+    if (score >= 90) {
+      return "Excellent performance! Your responses were clear, detailed, and highly relevant. You demonstrated strong communication skills and provided specific examples to support your points. You're well-prepared for professional interviews.";
+    } else if (score >= 75) {
+      return "Good performance! Your responses were generally effective and relevant. With some refinement in structure and more specific examples, you'll be very well-prepared for professional interviews.";
+    } else if (score >= 60) {
+      return "Satisfactory performance. Your responses covered the basics, but could benefit from more specific examples, better structure, and deeper insights. Continue practicing with the suggested improvements.";
+    } else {
+      return "Your interview needs improvement. Focus on providing more detailed and structured responses with specific examples from your experience. Practice using the STAR method for behavioral questions and work on communicating your value more effectively.";
+    }
+  };
+
+  // Voice recognition functions
+  const startVoiceRecognition = async () => {
+    try {
+      if (typeof window !== 'undefined' && 'SpeechRecognition' in window || 'webkitSpeechRecognition' in window) {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        
+        if (recognitionRef.current) {
+          recognitionRef.current.stop();
+        }
+        
+        const recognition = new SpeechRecognition();
+        recognition.continuous = true;
+        recognition.interimResults = true;
+        recognition.lang = 'en-US';
+        
+        recognition.onresult = (event) => {
+          let finalTranscript = '';
+          let interimTranscript = '';
+          
+          for (let i = event.resultIndex; i < event.results.length; i++) {
+            const transcript = event.results[i][0].transcript;
+            if (event.results[i].isFinal) {
+              finalTranscript += transcript;
+            } else {
+              interimTranscript += transcript;
+            }
+          }
+          
+          const fullTranscript = (finalTranscript || interimTranscript).trim();
+          
+          setInterviewState(prev => ({
+            ...prev,
+            transcription: fullTranscript
+          }));
+        };
+        
+        recognition.onerror = (event) => {
+          console.error('Speech recognition error:', event.error);
+          
+          stopVoiceRecognition();
+          
+          toast({
+            title: "Voice Recognition Error",
+            description: `Error: ${event.error}. Please try again or type your answer.`,
+            variant: "destructive",
+          });
+        };
+        
+        recognition.start();
+        recognitionRef.current = recognition;
+        
+        setInterviewState(prev => ({
+          ...prev,
+          isListening: true
+        }));
+      } else {
+        toast({
+          title: "Not Supported",
+          description: "Voice recognition is not supported in your browser.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error('Error starting speech recognition:', error);
+      
+      toast({
+        title: "Voice Recognition Error",
+        description: "Could not start voice recognition. Please try again or type your answer.",
+        variant: "destructive",
+      });
+    }
+  };
+  
+  const stopVoiceRecognition = () => {
+    if (recognitionRef.current) {
+      recognitionRef.current.stop();
+      recognitionRef.current = null;
+      
+      setInterviewState(prev => ({
+        ...prev,
+        isListening: false
+      }));
+    }
+  };
+
+  // Text to speech functions
+  const speakText = async (text: string) => {
+    if (typeof window !== 'undefined' && synthRef.current) {
+      // Cancel any ongoing speech
+      stopSpeaking();
+      
+      try {
+        // Create a new utterance
+        const utterance = new SpeechSynthesisUtterance(text);
+        
+        // Set properties
+        utterance.rate = 1.0;
+        utterance.pitch = 1.0;
+        utterance.volume = 1.0;
+        
+        // Try to use a female voice if available
+        const voices = synthRef.current.getVoices();
+        const femaleVoice = voices.find(voice => 
+          voice.name.includes('female') || 
+          voice.name.includes('Female') || 
+          voice.name.includes('Samantha') ||
+          voice.name.includes('Google UK English Female')
+        );
+        
+        if (femaleVoice) {
+          utterance.voice = femaleVoice;
+        }
+        
+        // Set events
+        utterance.onstart = () => {
+          setInterviewState(prev => ({
+            ...prev,
+            isSpeaking: true
+          }));
+        };
+        
+        utterance.onend = () => {
+          setInterviewState(prev => ({
+            ...prev,
+            isSpeaking: false,
+            questionSpoken: true
+          }));
+          utteranceRef.current = null;
+        };
+        
+        utterance.onerror = (event) => {
+          console.error('Speech synthesis error:', event);
+          setInterviewState(prev => ({
+            ...prev,
+            isSpeaking: false,
+            questionSpoken: true
+          }));
+          utteranceRef.current = null;
+        };
+        
+        // Store the utterance and speak
+        utteranceRef.current = utterance;
+        synthRef.current.speak(utterance);
+      } catch (error) {
+        console.error('Error speaking text:', error);
+        setInterviewState(prev => ({
+          ...prev,
+          isSpeaking: false,
+          questionSpoken: true
+        }));
+      }
+    } else {
+      console.log('Speech synthesis not available');
+      setInterviewState(prev => ({
+        ...prev,
+        questionSpoken: true
+      }));
+    }
+  };
+  
+  const stopSpeaking = () => {
+    if (typeof window !== 'undefined' && synthRef.current) {
+      synthRef.current.cancel();
+      
+      setInterviewState(prev => ({
+        ...prev,
+        isSpeaking: false
+      }));
+      
+      utteranceRef.current = null;
+    }
+  };
+
+  // Reset interview
+  const resetInterview = () => {
+    stopVoiceRecognition();
+    stopSpeaking();
+    
+    setInterviewState({
+      ...defaultInterviewState,
+      selectedCharacter: interviewState.selectedCharacter
+    });
+  };
+
+  // Set custom questions for the interview
+  const setCustomQuestions = (questions: string[]) => {
+    if (questions.length > 0) {
+      setInterviewState(prev => ({
+        ...prev,
+        allQuestions: questions,
+        currentQuestion: questions[0],
+      }));
+    }
+  };
+  
+  // Set interview character
+  const setInterviewCharacter = (character: typeof AI_CHARACTERS[0]) => {
+    setInterviewState(prev => ({
+      ...prev,
+      selectedCharacter: character
+    }));
+  };
+
+  return (
+    <InterviewContext.Provider
+      value={{
+        interviewState,
+        startInterview,
+        endInterview,
+        nextQuestion,
+        previousQuestion,
+        saveAnswer,
+        simulateEvaluation,
+        resetInterview,
+        startVoiceRecognition,
+        stopVoiceRecognition,
+        speakText,
+        stopSpeaking,
+        setCustomQuestions,
+        setInterviewCharacter,
+        generateFollowUpQuestion,
+      }}
+    >
+      {children}
+    </InterviewContext.Provider>
+  );
+}
