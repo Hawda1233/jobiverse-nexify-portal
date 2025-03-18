@@ -26,15 +26,6 @@ import {
   Save, 
   BarChart3,
   Edit,
-  Share2,
-  Clock,
-  Shield,
-  Bell,
-  Palette,
-  Languages,
-  Lock, 
-  History, 
-  LogOut, 
   Eye,
   Download,
   FileCheck,
@@ -43,7 +34,10 @@ import {
   Trophy,
   Heart,
   Settings,
-  BookOpen
+  BookOpen,
+  Share2,
+  Printer,
+  Languages
 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import Navbar from "@/components/Navbar";
@@ -834,3 +828,6 @@ const ResumeBuilder = () => {
                                 value={edu.startDate}
                                 onChange={(e) => handleEducationChange(edu.id, 'startDate', e.target.value)}
                               />
+                            </div>
+                            <div className="space-y-2">
+                              <Label>End Date</Label>
