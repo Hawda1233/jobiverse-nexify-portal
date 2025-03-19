@@ -383,9 +383,9 @@ const VirtualInterviewer: React.FC<VirtualInterviewerProps> = ({
                       {interviewState.category.charAt(0).toUpperCase() + interviewState.category.slice(1)}
                     </Badge>
                     <Badge variant={
-                      difficulty === "easy" ? "success" : 
+                      difficulty === "easy" ? "secondary" : 
                       difficulty === "hard" ? "destructive" : 
-                      "secondary"
+                      "outline"
                     }>
                       {difficulty.charAt(0).toUpperCase() + difficulty.slice(1)}
                     </Badge>
