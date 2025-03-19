@@ -18,6 +18,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
 
 // Default API key for the application
 const DEFAULT_API_KEY = "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";
@@ -84,6 +85,18 @@ const InterviewSimulator: React.FC = () => {
           </p>
           
           <div className="flex flex-wrap justify-center gap-2 mb-4">
+            <Badge variant="outline" className="bg-blue-500/10 text-blue-400 hover:bg-blue-500/20">
+              Google AI Powered
+            </Badge>
+            <Badge variant="outline" className="bg-green-500/10 text-green-400 hover:bg-green-500/20">
+              Smart Interview Analysis
+            </Badge>
+            <Badge variant="outline" className="bg-purple-500/10 text-purple-400 hover:bg-purple-500/20">
+              Realistic Interview Experience
+            </Badge>
+          </div>
+          
+          <div className="flex flex-wrap justify-center gap-2 mb-4">
             {storedApiKey && (
               <div className="flex flex-wrap items-center gap-2">
                 <span className="text-green-400 text-sm">✓ AI powered interview ready</span>
@@ -130,7 +143,7 @@ const InterviewSimulator: React.FC = () => {
           <DialogHeader>
             <DialogTitle>Custom OpenAI API Key (Optional)</DialogTitle>
             <DialogDescription>
-              We provide a built-in API key, but you can use your own for enhanced performance. It will be stored only in your browser.
+              We provide Google AI and a built-in OpenAI API key, but you can use your own OpenAI key for enhanced performance. It will be stored only in your browser.
             </DialogDescription>
           </DialogHeader>
           

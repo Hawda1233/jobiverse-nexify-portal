@@ -1,6 +1,9 @@
 import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from "react";
 import { toast } from "@/components/ui/use-toast";
 
+// Google AI API key
+const GOOGLE_AI_API_KEY = "AIzaSyAW-mL4hLOYBtwq6KdWshXFLR1ksCTp9fw";
+
 // Sample interview questions by category
 const INTERVIEW_QUESTIONS = {
   general: [
@@ -189,6 +192,40 @@ export function InterviewProvider({ children, apiKey = "" }: InterviewProviderPr
     };
   }, []);
 
+  const callGoogleAI = async (prompt: string): Promise<any> => {
+    try {
+      const response = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=" + GOOGLE_AI_API_KEY, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          contents: [
+            {
+              parts: [
+                { text: prompt }
+              ]
+            }
+          ],
+          generationConfig: {
+            temperature: 0.7,
+            maxOutputTokens: 1500,
+          }
+        })
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Google AI API request failed: ${response.statusText}`);
+      }
+      
+      const data = await response.json();
+      return data.candidates[0].content.parts[0].text;
+    } catch (error) {
+      console.error("Error calling Google AI API:", error);
+      throw error;
+    }
+  };
+
   const generateInterviewQuestions = async (category: string, difficulty: string = "medium", count: number = 8): Promise<string[]> => {
     try {
       setInterviewState(prev => ({
@@ -196,7 +233,24 @@ export function InterviewProvider({ children, apiKey = "" }: InterviewProviderPr
         isGeneratingQuestion: true
       }));
       
-      // Use OpenAI API if key is provided
+      // Try to use Google AI API first
+      try {
+        console.log("Using Google AI API for question generation");
+        const prompt = `You are an expert interviewer for ${category} interviews. Generate ${count} ${difficulty} difficulty interview questions that a professional interviewer would ask. Each question should be thorough and designed to assess a candidate's experience, skills, and thinking process. Format your response as a numbered list of questions.`;
+        
+        const response = await callGoogleAI(prompt);
+        
+        // Parse response into individual questions
+        const questions = response.split(/\d+\./).filter((q: string) => q.trim().length > 0).map((q: string) => q.trim());
+        
+        if (questions.length >= count / 2) {
+          return questions.slice(0, count);
+        }
+      } catch (error) {
+        console.error("Error with Google AI, falling back to OpenAI:", error);
+      }
+      
+      // If Google AI fails, try OpenAI API if key is provided
       if (apiKey) {
         try {
           console.log("Using provided API key for question generation");
@@ -279,7 +333,22 @@ export function InterviewProvider({ children, apiKey = "" }: InterviewProviderPr
       
       const currentQuestion = interviewState.currentQuestion;
       
-      // Use OpenAI API if key is provided
+      // Try Google AI first
+      try {
+        console.log("Using Google AI for follow-up generation");
+        const prompt = `Original question: "${currentQuestion}"\n\nCandidate's answer: "${previousAnswer}"\n\nAs a professional interviewer, provide a single, relevant follow-up question to dig deeper into their response. Make it sound natural, as a real interviewer would ask. Return only the follow-up question with no prefix or explanation.`;
+        
+        const followUpQuestion = await callGoogleAI(prompt);
+        
+        if (followUpQuestion) {
+          updateQuestionsWithFollowup(followUpQuestion);
+          return;
+        }
+      } catch (error) {
+        console.error("Error with Google AI, falling back to OpenAI:", error);
+      }
+      
+      // If Google AI fails, try OpenAI
       if (apiKey) {
         try {
           console.log("Using OpenAI API for follow-up generation");
@@ -561,6 +630,73 @@ export function InterviewProvider({ children, apiKey = "" }: InterviewProviderPr
     }));
   }, []);
 
+  const analyzeAnswerWithGoogleAI = async (question: string, answer: string): Promise<{ feedback: string | any; improvedAnswer: string }> => {
+    try {
+      console.log("Using Google AI for answer analysis");
+      
+      // First, generate detailed feedback
+      const feedbackPrompt = `You are an expert interview coach analyzing a candidate's response to this interview question: "${question}".
+
+Their answer was: "${answer}"
+
+Please provide detailed, actionable feedback in the following format:
+1. STRENGTHS: What specific parts of the answer were effective.
+2. WEAKNESSES: What areas need improvement.
+3. KEY POINTS MISSED: Important points or concepts that should have been included.
+4. IMPROVEMENT SUGGESTIONS: Concrete, actionable tips to make the answer stronger.
+
+Provide thorough, specific feedback for each category. Your goal is to help this candidate significantly improve their interview skills. Return your response in JSON format with these four categories.`;
+
+      const feedbackResponse = await callGoogleAI(feedbackPrompt);
+      
+      // Parse feedback response
+      let feedback;
+      try {
+        const jsonMatch = feedbackResponse.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          feedback = JSON.parse(jsonMatch[0]);
+        } else {
+          // If not valid JSON, create a structured format 
+          const sections = feedbackResponse.split(/STRENGTHS:|WEAKNESSES:|KEY POINTS MISSED:|IMPROVEMENT SUGGESTIONS:/).filter(s => s.trim().length > 0);
+          feedback = {
+            STRENGTHS: sections[0] || "Good attempt at answering the question.",
+            WEAKNESSES: sections[1] || "Could be more comprehensive with specific examples.",
+            "KEY POINTS MISSED": sections[2] || "Consider addressing the core requirements of the question more directly.",
+            "IMPROVEMENT SUGGESTIONS": sections[3] || "Structure your answer using the STAR method for clarity."
+          };
+        }
+      } catch (error) {
+        console.error("Error parsing feedback:", error);
+        feedback = {
+          STRENGTHS: "You provided a response to the question.",
+          WEAKNESSES: "Your response could be more structured and comprehensive.",
+          "KEY POINTS MISSED": "Consider addressing the key elements of the question more directly.",
+          "IMPROVEMENT SUGGESTIONS": "Use the STAR method (Situation, Task, Action, Result) for structured responses."
+        };
+      }
+      
+      // Next, generate an improved answer
+      const improvedAnswerPrompt = `As an expert interviewer, rewrite and significantly improve this candidate's answer to the question: "${question}".
+
+Original answer: "${answer}"
+
+Weaknesses identified: ${feedback.WEAKNESSES}
+Key points missed: ${feedback["KEY POINTS MISSED"]}
+
+Create a model answer that would impress a hiring manager. Make it realistic, professional, and include specific examples. The answer should demonstrate strong communication skills and thoughtfully address all aspects of the question. The improved answer should sound natural and conversational, not scripted.`;
+
+      const improvedAnswer = await callGoogleAI(improvedAnswerPrompt);
+      
+      return {
+        feedback,
+        improvedAnswer
+      };
+    } catch (error) {
+      console.error("Error with Google AI analysis:", error);
+      throw error;
+    }
+  };
+
   const analyzeAnswerWithOpenAI = async (question: string, answer: string): Promise<{ feedback: string | any; improvedAnswer: string }> => {
     try {
       // Use OpenAI API if key is provided
@@ -709,27 +845,53 @@ export function InterviewProvider({ children, apiKey = "" }: InterviewProviderPr
     
     try {
       const currentQuestion = interviewState.allQuestions[interviewState.currentQuestionIndex];
-      const { feedback, improvedAnswer } = await analyzeAnswerWithOpenAI(currentQuestion, answer);
       
-      setInterviewState(prev => ({
-        ...prev,
-        feedback: {
-          ...prev.feedback,
-          [prev.currentQuestionIndex]: feedback,
-        },
-        improvedAnswers: {
-          ...prev.improvedAnswers,
-          [prev.currentQuestionIndex]: improvedAnswer,
-        },
-        isAnalyzing: false
-      }));
+      // Try Google AI first
+      try {
+        const { feedback, improvedAnswer } = await analyzeAnswerWithGoogleAI(currentQuestion, answer);
+        
+        setInterviewState(prev => ({
+          ...prev,
+          feedback: {
+            ...prev.feedback,
+            [prev.currentQuestionIndex]: feedback,
+          },
+          improvedAnswers: {
+            ...prev.improvedAnswers,
+            [prev.currentQuestionIndex]: improvedAnswer,
+          },
+          isAnalyzing: false
+        }));
+        
+        return feedback;
+      } catch (error) {
+        console.error("Error with Google AI evaluation, falling back to OpenAI:", error);
+        
+        // Try OpenAI next
+        try {
+          const { feedback, improvedAnswer } = await analyzeAnswerWithOpenAI(currentQuestion, answer);
+          
+          setInterviewState(prev => ({
+            ...prev,
+            feedback: {
+              ...prev.feedback,
+              [prev.currentQuestionIndex]: feedback,
+            },
+            improvedAnswers: {
+              ...prev.improvedAnswers,
+              [prev.currentQuestionIndex]: improvedAnswer,
+            },
+            isAnalyzing: false
+          }));
+          
+          return feedback;
+        } catch (openAIError) {
+          console.error("Error with OpenAI evaluation, falling back to simple evaluation:", openAIError);
+          // Continue to fallback
+        }
+      }
       
-      return feedback;
-    } catch (error) {
-      console.error("Error with AI evaluation, falling back to simple evaluation:", error);
-      
-      await new Promise(resolve => setTimeout(resolve, 800));
-    
+      // Fallback to simple evaluation
       const answerLength = answer.length;
       const words = answer.split(/\s+/).filter(word => word.length > 0).length;
       const sentences = answer.split(/[.!?]+/).filter(sentence => sentence.length > 0).length;
@@ -790,6 +952,9 @@ export function InterviewProvider({ children, apiKey = "" }: InterviewProviderPr
       }));
 
       return feedback;
+    } catch (error) {
+      console.error("Error in simulateEvaluation:", error);
+      return "Sorry, there was an error evaluating your answer. Please try again.";
     }
   }, [interviewState.allQuestions, interviewState.currentQuestionIndex]);
 
@@ -1038,3 +1203,4 @@ export function InterviewProvider({ children, apiKey = "" }: InterviewProviderPr
     </InterviewContext.Provider>
   );
 }
+
