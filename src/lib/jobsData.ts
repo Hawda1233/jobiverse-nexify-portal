@@ -238,7 +238,7 @@ export const initialJobs: JobType[] = [
   }
 ];
 
-let allJobs: JobType[] = [...initialJobs];
+export let allJobs: JobType[] = [...initialJobs];
 
 export const addNewJob = (job: JobType): Promise<JobType> => {
   return new Promise((resolve) => {
@@ -258,7 +258,7 @@ export const deleteJob = (jobId: number): Promise<boolean> => {
   });
 };
 
-export const featuredJobs = () => allJobs.filter(job => job.featured);
+export const getFeaturedJobs = () => allJobs.filter(job => job.featured);
 
 export const categories = [
   { id: 1, name: 'Technology', jobCount: 8 },

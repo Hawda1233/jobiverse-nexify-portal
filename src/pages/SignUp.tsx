@@ -36,7 +36,8 @@ const SignUp = () => {
     setIsLoading(true);
 
     try {
-      await signup(email, password);
+      // Updated to pass false as the third argument (isHR)
+      await signup(email, password, false);
       toast({
         title: "Success!",
         description: "Your account has been created.",

@@ -7,9 +7,12 @@ import JobCard from '@/components/JobCard';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Award, BarChart, BriefcaseBusiness, CheckCircle, ChevronRight, Globe, Layers } from 'lucide-react';
-import { featuredJobs, categories } from '@/lib/jobsData';
+import { getFeaturedJobs, categories } from '@/lib/jobsData';
 
 const Index = () => {
+  // Get featured jobs using the getter function
+  const featuredJobs = getFeaturedJobs();
+  
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
