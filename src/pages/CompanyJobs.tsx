@@ -29,7 +29,7 @@ const CompanyJobs: React.FC = () => {
     setLoading(true);
     setTimeout(() => {
       const filtered = allJobs.filter(job => 
-        job.company?.toLowerCase() === companyName.toLowerCase()
+        job.companyName.toLowerCase() === companyName.toLowerCase()
       );
       setJobs(filtered);
       setLoading(false);
