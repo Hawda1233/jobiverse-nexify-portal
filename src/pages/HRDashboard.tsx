@@ -30,19 +30,39 @@ import {
   Trash, 
   Eye, 
   Users, 
-  Briefcase, 
+  Briefcase,
   LineChart,
   FileText,
   Clock,
   Building,
+  Calendar,
+  Video,
+  MessageSquare,
+  Mail
 } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { allJobs, JobType } from "@/lib/jobsData";
+import InterviewScheduler, { InterviewData } from "@/components/InterviewScheduler";
+import { format } from "date-fns";
+
+interface ScheduledInterview extends InterviewData {
+  id: string;
+  status: "scheduled" | "completed" | "cancelled";
+}
 
 const HRDashboard = () => {
   const [myJobs, setMyJobs] = useState<JobType[]>([]);
   const [activeTab, setActiveTab] = useState("overview");
+  const [showInterviewDialog, setShowInterviewDialog] = useState(false);
+  const [scheduledInterviews, setScheduledInterviews] = useState<ScheduledInterview[]>([]);
   const { userData } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -68,14 +88,94 @@ const HRDashboard = () => {
     // In a real app, you'd fetch this from the backend
     const hrJobs = allJobs.filter(job => job.companyName === userData.company);
     setMyJobs(hrJobs);
+
+    // Load previously scheduled interviews from localStorage
+    const savedInterviews = localStorage.getItem(`interviews_${userData.uid}`);
+    if (savedInterviews) {
+      try {
+        setScheduledInterviews(JSON.parse(savedInterviews));
+      } catch (e) {
+        console.error("Failed to parse saved interviews", e);
+      }
+    }
   }, [userData, navigate, toast]);
 
   // Stats for the overview dashboard
   const stats = {
     activeJobs: myJobs.length,
     totalApplications: 28, // Example data
-    interviewsScheduled: 8, // Example data
+    interviewsScheduled: scheduledInterviews.length,
     averageApplicants: myJobs.length ? Math.round(28 / myJobs.length) : 0, // Example calculation
+  };
+
+  const handleScheduleInterview = (data: InterviewData) => {
+    const newInterview: ScheduledInterview = {
+      ...data,
+      id: Date.now().toString(),
+      status: "scheduled",
+    };
+    
+    const updatedInterviews = [...scheduledInterviews, newInterview];
+    setScheduledInterviews(updatedInterviews);
+    
+    // Save to localStorage
+    if (userData?.uid) {
+      localStorage.setItem(`interviews_${userData.uid}`, JSON.stringify(updatedInterviews));
+    }
+    
+    setShowInterviewDialog(false);
+  };
+
+  const handleCancelInterview = (id: string) => {
+    // Update interview status to cancelled
+    const updatedInterviews = scheduledInterviews.map(interview => 
+      interview.id === id ? { ...interview, status: "cancelled" as const } : interview
+    );
+    
+    setScheduledInterviews(updatedInterviews);
+    
+    // Save to localStorage
+    if (userData?.uid) {
+      localStorage.setItem(`interviews_${userData.uid}`, JSON.stringify(updatedInterviews));
+    }
+    
+    toast({
+      title: "Interview Cancelled",
+      description: "The interview has been cancelled successfully.",
+    });
+  };
+
+  const handleStartInterview = (interview: ScheduledInterview) => {
+    // Navigate to the interview simulator with the selected interview data
+    navigate(`/interview-simulator?type=${interview.interviewType}&candidate=${encodeURIComponent(interview.candidateName)}&job=${encodeURIComponent(interview.jobTitle)}`);
+  };
+
+  const handleCompleteInterview = (id: string) => {
+    // Update interview status to completed
+    const updatedInterviews = scheduledInterviews.map(interview => 
+      interview.id === id ? { ...interview, status: "completed" as const } : interview
+    );
+    
+    setScheduledInterviews(updatedInterviews);
+    
+    // Save to localStorage
+    if (userData?.uid) {
+      localStorage.setItem(`interviews_${userData.uid}`, JSON.stringify(updatedInterviews));
+    }
+    
+    toast({
+      title: "Interview Completed",
+      description: "The interview has been marked as completed.",
+    });
+  };
+
+  const sendInterviewInvite = (interview: ScheduledInterview) => {
+    // In a real app, this would send an email to the candidate
+    // For now, we'll just show a toast
+    toast({
+      title: "Interview Invitation Sent",
+      description: `Invitation sent to ${interview.candidateName} at ${interview.candidateEmail}`,
+    });
   };
 
   if (!userData || userData.role !== "hr") {
@@ -93,10 +193,16 @@ const HRDashboard = () => {
               Manage your job postings and applicants
             </p>
           </div>
-          <Button onClick={() => navigate("/post-job")} className="mt-4 md:mt-0">
-            <PlusCircle className="mr-2 h-4 w-4" />
-            Post New Job
-          </Button>
+          <div className="mt-4 md:mt-0 space-x-3">
+            <Button onClick={() => setShowInterviewDialog(true)} variant="outline">
+              <Calendar className="mr-2 h-4 w-4" />
+              Schedule Interview
+            </Button>
+            <Button onClick={() => navigate("/post-job")}>
+              <PlusCircle className="mr-2 h-4 w-4" />
+              Post New Job
+            </Button>
+          </div>
         </div>
         
         <div className="mb-6">
@@ -116,10 +222,11 @@ const HRDashboard = () => {
         </div>
         
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid grid-cols-3 w-full max-w-md">
+          <TabsList className="grid grid-cols-1 sm:grid-cols-4 w-full max-w-4xl">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="jobs">Jobs</TabsTrigger>
             <TabsTrigger value="applications">Applications</TabsTrigger>
+            <TabsTrigger value="interviews">Interviews</TabsTrigger>
           </TabsList>
           
           <TabsContent value="overview" className="space-y-6">
@@ -190,6 +297,19 @@ const HRDashboard = () => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
+                  {scheduledInterviews.length > 0 ? (
+                    <div className="flex items-start space-x-4">
+                      <div className="bg-primary/10 p-2 rounded-full">
+                        <Calendar className="h-4 w-4 text-primary" />
+                      </div>
+                      <div>
+                        <p className="font-medium">New interview scheduled</p>
+                        <p className="text-sm text-muted-foreground">With {scheduledInterviews[scheduledInterviews.length - 1].candidateName}</p>
+                        <p className="text-xs text-muted-foreground">Just now</p>
+                      </div>
+                    </div>
+                  ) : null}
+                  
                   {myJobs.length > 0 ? (
                     <>
                       <div className="flex items-start space-x-4">
@@ -273,6 +393,10 @@ const HRDashboard = () => {
                                   <Edit className="mr-2 h-4 w-4" />
                                   Edit Job
                                 </DropdownMenuItem>
+                                <DropdownMenuItem>
+                                  <Calendar className="mr-2 h-4 w-4" />
+                                  Schedule Interview
+                                </DropdownMenuItem>
                                 <DropdownMenuItem className="text-red-600">
                                   <Trash className="mr-2 h-4 w-4" />
                                   Delete Job
@@ -331,8 +455,147 @@ const HRDashboard = () => {
               </CardContent>
             </Card>
           </TabsContent>
+
+          <TabsContent value="interviews">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <div>
+                  <CardTitle>Scheduled Interviews</CardTitle>
+                  <CardDescription>
+                    Manage your upcoming and past interviews
+                  </CardDescription>
+                </div>
+                <Button onClick={() => setShowInterviewDialog(true)}>
+                  <Calendar className="mr-2 h-4 w-4" />
+                  Schedule Interview
+                </Button>
+              </CardHeader>
+              <CardContent>
+                {scheduledInterviews.length > 0 ? (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Candidate</TableHead>
+                        <TableHead>Position</TableHead>
+                        <TableHead>Date & Time</TableHead>
+                        <TableHead>Type</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {scheduledInterviews.map((interview) => (
+                        <TableRow key={interview.id}>
+                          <TableCell>
+                            <div>
+                              <p className="font-medium">{interview.candidateName}</p>
+                              <p className="text-xs text-muted-foreground">{interview.candidateEmail}</p>
+                            </div>
+                          </TableCell>
+                          <TableCell>{interview.jobTitle}</TableCell>
+                          <TableCell>
+                            <div>
+                              <p>{format(interview.date, "MMM d, yyyy")}</p>
+                              <p className="text-xs text-muted-foreground">{interview.time} ({interview.duration} min)</p>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant="outline">
+                              {interview.interviewType.charAt(0).toUpperCase() + interview.interviewType.slice(1)}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <Badge 
+                              variant={
+                                interview.status === "scheduled" ? "outline" : 
+                                interview.status === "completed" ? "secondary" : "destructive"
+                              }
+                            >
+                              {interview.status.charAt(0).toUpperCase() + interview.status.slice(1)}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon">
+                                  <MoreVertical className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                <DropdownMenuSeparator />
+                                {interview.status === "scheduled" && (
+                                  <>
+                                    <DropdownMenuItem onClick={() => handleStartInterview(interview)}>
+                                      <Video className="mr-2 h-4 w-4" />
+                                      Start Interview
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => sendInterviewInvite(interview)}>
+                                      <Mail className="mr-2 h-4 w-4" />
+                                      Send Invite
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => handleCompleteInterview(interview.id)}>
+                                      <FileText className="mr-2 h-4 w-4" />
+                                      Mark as Completed
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem 
+                                      className="text-red-600"
+                                      onClick={() => handleCancelInterview(interview.id)}
+                                    >
+                                      <Trash className="mr-2 h-4 w-4" />
+                                      Cancel Interview
+                                    </DropdownMenuItem>
+                                  </>
+                                )}
+                                {interview.status === "completed" && (
+                                  <DropdownMenuItem onClick={() => navigate(`/interview-summary?id=${interview.id}`)}>
+                                    <Eye className="mr-2 h-4 w-4" />
+                                    View Summary
+                                  </DropdownMenuItem>
+                                )}
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                ) : (
+                  <div className="text-center py-8">
+                    <h3 className="text-lg font-medium mb-2">No interviews scheduled</h3>
+                    <p className="text-muted-foreground mb-4">
+                      Schedule interviews with candidates for your job postings
+                    </p>
+                    <Button onClick={() => setShowInterviewDialog(true)}>
+                      <Calendar className="mr-2 h-4 w-4" />
+                      Schedule Your First Interview
+                    </Button>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
         </Tabs>
       </div>
+
+      {/* Interview Scheduler Dialog */}
+      <Dialog open={showInterviewDialog} onOpenChange={setShowInterviewDialog}>
+        <DialogContent className="sm:max-w-[700px]">
+          <DialogHeader>
+            <DialogTitle>Schedule Interview</DialogTitle>
+            <DialogDescription>
+              Fill in the details to schedule an interview with a candidate.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <InterviewScheduler
+            onSchedule={handleScheduleInterview}
+            onCancel={() => setShowInterviewDialog(false)}
+            jobOptions={myJobs.map(job => ({ id: job.id, title: job.title }))}
+          />
+        </DialogContent>
+      </Dialog>
+      
       <Footer />
     </>
   );
