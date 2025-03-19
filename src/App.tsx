@@ -10,6 +10,9 @@ import Jobs from "./pages/Jobs";
 import JobDetails from "./pages/JobDetails";
 import SignIn from "./pages/SignIn";
 import SignUp from "./pages/SignUp";
+import HRSignUp from "./pages/HRSignUp";
+import PostJob from "./pages/PostJob";
+import HRDashboard from "./pages/HRDashboard";
 import NotFound from "./pages/NotFound";
 import InterviewSimulator from "./pages/InterviewSimulator";
 import Profile from "./pages/Profile";
@@ -33,7 +36,12 @@ const App = () => (
             <Route path="/interview" element={<InterviewSimulator />} />
             <Route path="/signin" element={<SignIn />} />
             <Route path="/signup" element={<SignUp />} />
+            <Route path="/hr-signup" element={<HRSignUp />} />
             <Route path="/profile" element={<Profile />} />
+            
+            {/* HR routes */}
+            <Route path="/hr-dashboard" element={<HRDashboard />} />
+            <Route path="/post-job" element={<PostJob />} />
             
             {/* Companies routes */}
             <Route path="/companies" element={<Jobs />} />

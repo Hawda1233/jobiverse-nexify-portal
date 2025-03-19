@@ -1,4 +1,3 @@
-
 export interface JobType {
   id: number;
   title: string;
@@ -12,9 +11,10 @@ export interface JobType {
   postedTime: string;
   experienceLevel: string;
   featured?: boolean;
+  postedBy?: string;
 }
 
-export const allJobs: JobType[] = [
+export const initialJobs: JobType[] = [
   {
     id: 1,
     title: "Senior Frontend Developer",
@@ -238,7 +238,27 @@ export const allJobs: JobType[] = [
   }
 ];
 
-export const featuredJobs = allJobs.filter(job => job.featured);
+let allJobs: JobType[] = [...initialJobs];
+
+export const addNewJob = (job: JobType): Promise<JobType> => {
+  return new Promise((resolve) => {
+    allJobs = [job, ...allJobs];
+    setTimeout(() => {
+      resolve(job);
+    }, 500);
+  });
+};
+
+export const deleteJob = (jobId: number): Promise<boolean> => {
+  return new Promise((resolve) => {
+    allJobs = allJobs.filter(job => job.id !== jobId);
+    setTimeout(() => {
+      resolve(true);
+    }, 500);
+  });
+};
+
+export const featuredJobs = () => allJobs.filter(job => job.featured);
 
 export const categories = [
   { id: 1, name: 'Technology', jobCount: 8 },

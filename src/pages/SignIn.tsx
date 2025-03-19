@@ -16,7 +16,7 @@ const SignIn = () => {
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
-  const { login, loginWithGoogle } = useAuth();
+  const { login, loginWithGoogle, userData } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -30,7 +30,13 @@ const SignIn = () => {
         title: "Success!",
         description: "You have been signed in.",
       });
-      navigate("/");
+      
+      // Redirect based on user role
+      if (userData?.role === "hr") {
+        navigate("/hr-dashboard");
+      } else {
+        navigate("/");
+      }
     } catch (error) {
       console.error(error);
       toast({
@@ -51,7 +57,13 @@ const SignIn = () => {
         title: "Success!",
         description: "You have been signed in with Google.",
       });
-      navigate("/");
+      
+      // Redirect based on user role
+      if (userData?.role === "hr") {
+        navigate("/hr-dashboard");
+      } else {
+        navigate("/");
+      }
     } catch (error) {
       console.error(error);
       toast({
@@ -156,12 +168,20 @@ const SignIn = () => {
                 {isGoogleLoading ? "Signing in with Google..." : "Sign in with Google"}
               </Button>
               
-              <p className="text-center text-sm text-muted-foreground">
-                Don't have an account?{" "}
-                <Link to="/signup" className="text-accent hover:underline">
-                  Sign up
-                </Link>
-              </p>
+              <div className="flex flex-col space-y-2 text-center text-sm text-muted-foreground">
+                <p>
+                  Don't have an account?{" "}
+                  <Link to="/signup" className="text-accent hover:underline">
+                    Sign up
+                  </Link>
+                </p>
+                <p>
+                  Are you a recruiter?{" "}
+                  <Link to="/hr-signup" className="text-accent hover:underline">
+                    Create an HR account
+                  </Link>
+                </p>
+              </div>
             </CardFooter>
           </form>
         </Card>
