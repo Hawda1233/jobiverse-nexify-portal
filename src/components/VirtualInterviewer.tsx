@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { AnimatePresence, motion } from "framer-motion";
 import AIInterviewerAvatar from "./AIInterviewerAvatar";
+import ImprovedAnswerSection from './ImprovedAnswerSection';
 
 interface VirtualInterviewerProps {
   topic?: string;
@@ -535,15 +536,10 @@ const VirtualInterviewer: React.FC<VirtualInterviewerProps> = ({ topic = "genera
                   )}
                   
                   {showImprovedAnswer && interviewState.improvedAnswers[interviewState.currentQuestionIndex] && (
-                    <div className="mt-4 pt-2 border-t">
-                      <h3 className="font-medium mb-2 flex items-center">
-                        <Award className="h-4 w-4 mr-1 text-yellow-500" /> 
-                        Improved Answer:
-                      </h3>
-                      <p className="p-3 bg-muted/50 rounded-md text-sm">
-                        {interviewState.improvedAnswers[interviewState.currentQuestionIndex]}
-                      </p>
-                    </div>
+                    <ImprovedAnswerSection
+                      improvedAnswer={interviewState.improvedAnswers[interviewState.currentQuestionIndex]}
+                      question={interviewState.currentQuestion}
+                    />
                   )}
                 </motion.div>
               </AnimatePresence>

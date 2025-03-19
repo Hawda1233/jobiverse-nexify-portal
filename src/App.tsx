@@ -13,7 +13,9 @@ import SignUp from "./pages/SignUp";
 import NotFound from "./pages/NotFound";
 import InterviewSimulator from "./pages/InterviewSimulator";
 import Profile from "./pages/Profile";
-// Companies and Resources pages will be implemented later
+import CompanyJobs from "./pages/CompanyJobs";
+import ResourcesPage from "./pages/ResourcesPage";
+import ResourceDetail from "./pages/ResourceDetail";
 
 const queryClient = new QueryClient();
 
@@ -34,12 +36,12 @@ const App = () => (
             <Route path="/profile" element={<Profile />} />
             
             {/* Companies routes */}
-            <Route path="/companies" element={<NotFound />} />
-            <Route path="/companies/:company" element={<NotFound />} />
+            <Route path="/companies" element={<Jobs />} />
+            <Route path="/companies/:company" element={<CompanyJobs />} />
             
             {/* Resources routes */}
-            <Route path="/resources" element={<NotFound />} />
-            <Route path="/resources/:topic" element={<NotFound />} />
+            <Route path="/resources" element={<ResourcesPage />} />
+            <Route path="/resources/:topic" element={<ResourceDetail />} />
             
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
