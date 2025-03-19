@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { jobsData } from "@/lib/jobsData";
+import { allJobs } from "@/lib/jobsData";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import JobCard from "@/components/JobCard";
@@ -11,7 +11,7 @@ import { Building, Briefcase, MapPin, ChevronLeft } from "lucide-react";
 // Filter jobs by company
 const CompanyJobs: React.FC = () => {
   const { company } = useParams<{ company: string }>();
-  const [jobs, setJobs] = useState(jobsData);
+  const [jobs, setJobs] = useState(allJobs);
   const [loading, setLoading] = useState(true);
   
   // Format company name for display
@@ -28,8 +28,8 @@ const CompanyJobs: React.FC = () => {
     // Simulate data fetching
     setLoading(true);
     setTimeout(() => {
-      const filtered = jobsData.filter(job => 
-        job.company.toLowerCase() === companyName.toLowerCase()
+      const filtered = allJobs.filter(job => 
+        job.company?.toLowerCase() === companyName.toLowerCase()
       );
       setJobs(filtered);
       setLoading(false);
