@@ -1,9 +1,10 @@
 
 import React from 'react';
-import { Award, Sparkles, Check, ThumbsUp, BookOpen } from 'lucide-react';
+import { Award, Sparkles, Check, ThumbsUp, BookOpen, Copy, Check as CheckIcon } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { toast } from "sonner";
 
 interface ImprovedAnswerSectionProps {
   improvedAnswer: string;
@@ -16,9 +17,18 @@ const ImprovedAnswerSection: React.FC<ImprovedAnswerSectionProps> = ({
 }) => {
   // Split by paragraphs for better readability
   const paragraphs = improvedAnswer.split('\n\n').filter(p => p.trim().length > 0);
+  
+  const [copied, setCopied] = React.useState(false);
+
+  const copyToClipboard = () => {
+    navigator.clipboard.writeText(improvedAnswer);
+    setCopied(true);
+    toast.success("Answer copied to clipboard");
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   return (
-    <div className="mt-4 pt-2 border-t">
+    <div className="mt-6 pt-4 border-t">
       <Card className="border-primary/20 bg-primary/5">
         <CardHeader className="pb-2">
           <CardTitle className="text-base flex items-center text-primary">
@@ -33,18 +43,34 @@ const ImprovedAnswerSection: React.FC<ImprovedAnswerSectionProps> = ({
           </div>
 
           <div className="space-y-3">
-            <Badge variant="outline" className="mb-1">Model Answer</Badge>
+            <div className="flex justify-between items-center">
+              <Badge variant="outline" className="mb-1">Model Answer</Badge>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="h-7 px-2 text-xs"
+                onClick={copyToClipboard}
+              >
+                {copied ? (
+                  <><CheckIcon className="h-3 w-3 mr-1 text-green-500" /> Copied</>
+                ) : (
+                  <><Copy className="h-3 w-3 mr-1" /> Copy</>
+                )}
+              </Button>
+            </div>
             
-            {paragraphs.map((paragraph, index) => (
-              <p key={index} className="text-sm">
-                {paragraph}
-              </p>
-            ))}
+            <div className="bg-background/40 p-3 rounded-md">
+              {paragraphs.map((paragraph, index) => (
+                <p key={index} className="text-sm mb-2 last:mb-0">
+                  {paragraph}
+                </p>
+              ))}
+            </div>
             
-            <div className="mt-4 pt-3 border-t border-dashed border-primary/20 flex justify-between items-center">
+            <div className="mt-4 pt-3 border-t border-dashed border-primary/20 flex flex-wrap justify-between items-center gap-2">
               <div className="flex items-center text-xs text-muted-foreground">
                 <BookOpen className="h-3 w-3 mr-1" />
-                <span>Powered by OpenAI GPT</span>
+                <span>Powered by OpenAI</span>
               </div>
               
               <div className="flex gap-2">
@@ -66,7 +92,7 @@ const ImprovedAnswerSection: React.FC<ImprovedAnswerSectionProps> = ({
         <div className="text-xs text-muted-foreground flex items-center">
           <Award className="h-3 w-3 mr-1 text-yellow-500" />
           <span>
-            Using this answer as inspiration can help you improve your interview skills
+            Use this model answer to improve your interview skills and practice delivery
           </span>
         </div>
       </div>

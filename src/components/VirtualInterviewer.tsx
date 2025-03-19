@@ -13,6 +13,7 @@ import ImprovedAnswerSection from './ImprovedAnswerSection';
 
 interface VirtualInterviewerProps {
   topic?: string;
+  difficulty?: string;
   onReset?: () => void;
 }
 
@@ -23,7 +24,11 @@ interface FeedbackStructure {
   "IMPROVEMENT SUGGESTIONS"?: string;
 }
 
-const VirtualInterviewer: React.FC<VirtualInterviewerProps> = ({ topic = "general", onReset }) => {
+const VirtualInterviewer: React.FC<VirtualInterviewerProps> = ({ 
+  topic = "general", 
+  difficulty = "medium",
+  onReset 
+}) => {
   const {
     interviewState,
     startInterview,
@@ -48,9 +53,9 @@ const VirtualInterviewer: React.FC<VirtualInterviewerProps> = ({ topic = "genera
 
   useEffect(() => {
     if (!interviewState.isStarted) {
-      startInterview(topic);
+      startInterview(topic, difficulty);
     }
-  }, [interviewState.isStarted, startInterview, topic]);
+  }, [interviewState.isStarted, startInterview, topic, difficulty]);
 
   useEffect(() => {
     if (interviewState.transcription) {
@@ -187,7 +192,7 @@ const VirtualInterviewer: React.FC<VirtualInterviewerProps> = ({ topic = "genera
         <CardHeader>
           <CardTitle className="text-2xl">Preparing Your Interview</CardTitle>
           <CardDescription>
-            Using AI to generate personalized interview questions...
+            Using AI to generate personalized {difficulty} difficulty interview questions...
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col items-center justify-center py-8">
@@ -195,7 +200,7 @@ const VirtualInterviewer: React.FC<VirtualInterviewerProps> = ({ topic = "genera
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
           </div>
           <p className="text-muted-foreground text-center max-w-sm">
-            Our AI is preparing challenging questions tailored to your selected topic. This may take a moment...
+            Our AI is preparing challenging {difficulty} level questions tailored to your selected topic. This may take a moment...
           </p>
         </CardContent>
       </Card>
@@ -271,7 +276,7 @@ const VirtualInterviewer: React.FC<VirtualInterviewerProps> = ({ topic = "genera
 
   return (
     <div className="flex flex-col md:flex-row gap-4 max-w-5xl mx-auto">
-      <div className="md:w-1/3">
+      <div className="md:w-1/3 w-full">
         <div className="sticky top-4">
           <Card className="bg-background/95 backdrop-blur-sm border-gray-800">
             <CardHeader className="pb-2">
@@ -323,7 +328,7 @@ const VirtualInterviewer: React.FC<VirtualInterviewerProps> = ({ topic = "genera
                 isListening={interviewState.isListening} 
               />
 
-              <div className="mt-4 relative rounded-lg overflow-hidden bg-gradient-to-b from-gray-800 to-gray-900 aspect-video w-full max-w-[280px] md:max-w-[320px] mx-auto shadow-lg border border-gray-700">
+              <div className="mt-4 relative rounded-lg overflow-hidden bg-gradient-to-b from-gray-800 to-gray-900 aspect-video w-full max-w-[280px] md:max-w-full mx-auto shadow-lg border border-gray-700">
                 <div className="absolute inset-0 flex items-center justify-center opacity-50">
                   <div className="bg-gray-900 rounded-full h-24 w-24 flex items-center justify-center">
                     <motion.div
@@ -366,16 +371,25 @@ const VirtualInterviewer: React.FC<VirtualInterviewerProps> = ({ topic = "genera
         </div>
       </div>
 
-      <div className="md:w-2/3">
+      <div className="md:w-2/3 w-full">
         <Card className="bg-background/95 backdrop-blur-sm border-gray-800">
           <CardHeader>
             <div className="flex justify-between items-center">
               <div>
                 <div className="flex items-center gap-2">
                   <CardTitle>Question {interviewState.currentQuestionIndex + 1}/{interviewState.allQuestions.length}</CardTitle>
-                  <Badge variant="outline" className="ml-2">
-                    {interviewState.category.charAt(0).toUpperCase() + interviewState.category.slice(1)}
-                  </Badge>
+                  <div className="flex gap-1 ml-2">
+                    <Badge variant="outline">
+                      {interviewState.category.charAt(0).toUpperCase() + interviewState.category.slice(1)}
+                    </Badge>
+                    <Badge variant={
+                      difficulty === "easy" ? "success" : 
+                      difficulty === "hard" ? "destructive" : 
+                      "secondary"
+                    }>
+                      {difficulty.charAt(0).toUpperCase() + difficulty.slice(1)}
+                    </Badge>
+                  </div>
                 </div>
                 <CardDescription>Answer as if you were in a real interview</CardDescription>
               </div>

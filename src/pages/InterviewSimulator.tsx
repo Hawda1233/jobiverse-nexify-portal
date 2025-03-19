@@ -19,27 +19,29 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
+// Default API key for the application
+const DEFAULT_API_KEY = "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";
+
 const InterviewSimulator: React.FC = () => {
   const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
+  const [selectedDifficulty, setSelectedDifficulty] = useState<string>("medium");
   const [openAIKey, setOpenAIKey] = useState<string>("");
   const [showApiKeyDialog, setShowApiKeyDialog] = useState<boolean>(false);
   const [storedApiKey, setStoredApiKey] = useState<string>(() => {
-    // Try to get the API key from localStorage on component mount
+    // Try to get the API key from localStorage or use default
     if (typeof window !== 'undefined') {
-      return localStorage.getItem('openai_api_key') || "";
+      return localStorage.getItem('openai_api_key') || DEFAULT_API_KEY;
     }
-    return "";
+    return DEFAULT_API_KEY;
   });
 
-  // Check for API key on component mount and show dialog if not set
+  // Check for API key on component mount but don't show dialog automatically
   useEffect(() => {
     const savedKey = localStorage.getItem('openai_api_key');
     if (!savedKey) {
-      // Wait a bit before showing the dialog to ensure the UI is rendered
-      const timer = setTimeout(() => {
-        setShowApiKeyDialog(true);
-      }, 1000);
-      return () => clearTimeout(timer);
+      // We have a default key, so no need to show dialog automatically
+      localStorage.setItem('openai_api_key', DEFAULT_API_KEY);
+      setStoredApiKey(DEFAULT_API_KEY);
     }
   }, []);
 
@@ -65,10 +67,10 @@ const InterviewSimulator: React.FC = () => {
   };
 
   const handleClearApiKey = () => {
-    localStorage.removeItem('openai_api_key');
-    setStoredApiKey("");
+    localStorage.setItem('openai_api_key', DEFAULT_API_KEY);
+    setStoredApiKey(DEFAULT_API_KEY);
     setOpenAIKey("");
-    toast.success("API Key has been removed");
+    toast.success("Using default API key");
   };
 
   return (
@@ -81,42 +83,42 @@ const InterviewSimulator: React.FC = () => {
             Practice with our intelligent interviewer that adapts to your responses and provides real-time feedback
           </p>
           
-          <div className="flex justify-center gap-2 mb-4">
-            {storedApiKey ? (
-              <div className="flex items-center gap-2">
-                <span className="text-green-400 text-sm">✓ OpenAI API Key configured</span>
+          <div className="flex flex-wrap justify-center gap-2 mb-4">
+            {storedApiKey && (
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-green-400 text-sm">✓ AI powered interview ready</span>
                 <Button 
                   variant="outline" 
                   size="sm" 
                   onClick={() => setShowApiKeyDialog(true)}
                 >
-                  Change Key
+                  Custom API Key
                 </Button>
-                <Button 
-                  variant="destructive" 
-                  size="sm" 
-                  onClick={handleClearApiKey}
-                >
-                  Clear Key
-                </Button>
+                {storedApiKey !== DEFAULT_API_KEY && (
+                  <Button 
+                    variant="destructive" 
+                    size="sm" 
+                    onClick={handleClearApiKey}
+                  >
+                    Use Default Key
+                  </Button>
+                )}
               </div>
-            ) : (
-              <Button 
-                onClick={() => setShowApiKeyDialog(true)}
-                variant="outline"
-              >
-                Set OpenAI API Key
-              </Button>
             )}
           </div>
         </div>
         
         <InterviewProvider apiKey={storedApiKey}>
           {!selectedTopic ? (
-            <InterviewSetup onTopicSelected={setSelectedTopic} />
+            <InterviewSetup 
+              onTopicSelected={setSelectedTopic} 
+              difficulty={selectedDifficulty}
+              onDifficultyChange={setSelectedDifficulty}
+            />
           ) : (
             <VirtualInterviewer 
-              topic={selectedTopic} 
+              topic={selectedTopic}
+              difficulty={selectedDifficulty}
               onReset={handleResetInterview}
             />
           )}
@@ -126,9 +128,9 @@ const InterviewSimulator: React.FC = () => {
       <Dialog open={showApiKeyDialog} onOpenChange={setShowApiKeyDialog}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Enter OpenAI API Key</DialogTitle>
+            <DialogTitle>Custom OpenAI API Key (Optional)</DialogTitle>
             <DialogDescription>
-              This key is required for enhanced AI feedback. It will be stored only in your browser.
+              We provide a built-in API key, but you can use your own for enhanced performance. It will be stored only in your browser.
             </DialogDescription>
           </DialogHeader>
           

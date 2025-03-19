@@ -105,6 +105,7 @@ type InterviewState = {
   isSpeaking: boolean;
   progress: number;
   category: string;
+  difficulty: string;
   questionSpoken: boolean;
   transcription: string;
   selectedCharacter: typeof AI_CHARACTERS[0];
@@ -115,7 +116,7 @@ type InterviewState = {
 
 type InterviewContextType = {
   interviewState: InterviewState;
-  startInterview: (category?: string) => void;
+  startInterview: (category?: string, difficulty?: string) => void;
   endInterview: () => void;
   nextQuestion: () => void;
   previousQuestion: () => void;
@@ -146,6 +147,7 @@ const defaultInterviewState: InterviewState = {
   isSpeaking: false,
   progress: 0,
   category: "general",
+  difficulty: "medium",
   questionSpoken: false,
   transcription: "",
   selectedCharacter: AI_CHARACTERS[0],
@@ -187,17 +189,17 @@ export function InterviewProvider({ children, apiKey = "" }: InterviewProviderPr
     };
   }, []);
 
-  const generateInterviewQuestions = async (category: string, count: number = 8): Promise<string[]> => {
+  const generateInterviewQuestions = async (category: string, difficulty: string = "medium", count: number = 8): Promise<string[]> => {
     try {
       setInterviewState(prev => ({
         ...prev,
         isGeneratingQuestion: true
       }));
       
-      // Use OpenAI API if key is provided, otherwise fallback to Perplexity
+      // Use OpenAI API if key is provided
       if (apiKey) {
         try {
-          console.log("Using OpenAI API for question generation");
+          console.log("Using provided API key for question generation");
           const response = await fetch("https://api.openai.com/v1/chat/completions", {
             method: "POST",
             headers: {
@@ -209,11 +211,11 @@ export function InterviewProvider({ children, apiKey = "" }: InterviewProviderPr
               messages: [
                 {
                   role: "system",
-                  content: `You are an expert interviewer for ${category} interviews. Generate ${count} challenging interview questions that a professional interviewer would ask. Each question should be thorough and designed to assess a candidate's experience, skills, and thinking process. Format your response as a JSON array of strings.`
+                  content: `You are an expert interviewer for ${category} interviews. Generate ${count} ${difficulty} difficulty interview questions that a professional interviewer would ask. Each question should be thorough and designed to assess a candidate's experience, skills, and thinking process. Format your response as a JSON array of strings.`
                 },
                 {
                   role: "user",
-                  content: `Please generate ${count} professional interview questions for the ${category} category. These should be questions a real interviewer would ask.`
+                  content: `Please generate ${count} professional ${difficulty} level interview questions for the ${category} category. These should be questions a real interviewer would ask.`
                 }
               ],
               temperature: 0.8,
@@ -246,67 +248,17 @@ export function InterviewProvider({ children, apiKey = "" }: InterviewProviderPr
             throw parseError;
           }
         } catch (error) {
-          console.error("Error with OpenAI, falling back to Perplexity:", error);
-          toast({
-            title: "OpenAI API Error",
-            description: "Could not connect to OpenAI. Falling back to default AI.",
-            variant: "destructive",
-          });
-          // Continue to Perplexity fallback
+          console.error("Error with API, falling back to default questions:", error);
+          // Continue to fallback questions
         }
       }
       
-      // Fallback to Perplexity
-      const perplexityKey = "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";
-      
-      const response = await fetch("https://api.perplexity.ai/chat/completions", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${perplexityKey}`
-        },
-        body: JSON.stringify({
-          model: "gpt-4o-mini",
-          messages: [
-            {
-              role: "system",
-              content: `You are an expert interviewer for ${category} interviews. Generate ${count} challenging interview questions that a professional interviewer would ask. Each question should be thorough and designed to assess a candidate's experience, skills, and thinking process. Format your response as a JSON array of strings.`
-            },
-            {
-              role: "user",
-              content: `Please generate ${count} professional interview questions for the ${category} category. These should be questions a real interviewer would ask.`
-            }
-          ],
-          temperature: 0.8,
-          max_tokens: 1000
-        })
-      });
-
-      if (!response.ok) {
-        console.error("API request failed:", response.statusText);
-        throw new Error(`API request failed: ${response.statusText}`);
-      }
-
-      const data = await response.json();
-      
-      try {
-        const contentText = data.choices[0].message.content;
-        const jsonMatch = contentText.match(/\[[\s\S]*\]/);
-        
-        if (jsonMatch) {
-          const questions = JSON.parse(jsonMatch[0]);
-          return Array.isArray(questions) ? questions : [];
-        } else {
-          const lines = contentText.split('\n').filter(line => 
-            line.trim().length > 0 && 
-            (line.includes('?') || /^\d+\./.test(line.trim()))
-          );
-          return lines.slice(0, count);
-        }
-      } catch (parseError) {
-        console.error("Error parsing API response:", parseError);
-        return [];
-      }
+      // Fallback to default questions if API fails or no key
+      const defaultQuestions = category in INTERVIEW_QUESTIONS 
+          ? INTERVIEW_QUESTIONS[category as keyof typeof INTERVIEW_QUESTIONS] 
+          : INTERVIEW_QUESTIONS.general;
+          
+      return defaultQuestions;
     } catch (error) {
       console.error("Error generating questions:", error);
       return [];
@@ -327,7 +279,7 @@ export function InterviewProvider({ children, apiKey = "" }: InterviewProviderPr
       
       const currentQuestion = interviewState.currentQuestion;
       
-      // Use OpenAI API if key is provided, otherwise fallback to Perplexity
+      // Use OpenAI API if key is provided
       if (apiKey) {
         try {
           console.log("Using OpenAI API for follow-up generation");
@@ -476,16 +428,16 @@ export function InterviewProvider({ children, apiKey = "" }: InterviewProviderPr
     nextQuestion();
   };
 
-  const startInterview = useCallback(async (category: string = "general") => {
+  const startInterview = useCallback(async (category: string = "general", difficulty: string = "medium") => {
     let questions = [];
     
     try {
       toast({
         title: "Generating Questions",
-        description: "Using AI to prepare personalized interview questions...",
+        description: `Using AI to prepare personalized ${difficulty} difficulty interview questions...`,
       });
       
-      const generatedQuestions = await generateInterviewQuestions(category);
+      const generatedQuestions = await generateInterviewQuestions(category, difficulty);
       
       if (generatedQuestions.length >= 4) {
         questions = generatedQuestions;
@@ -513,13 +465,14 @@ export function InterviewProvider({ children, apiKey = "" }: InterviewProviderPr
       currentQuestion: questions[0],
       allQuestions: questions,
       category,
+      difficulty,
       progress: 0,
       questionSpoken: false,
     }));
     
     toast({
       title: "Interview Started",
-      description: "The interview has begun. Good luck!",
+      description: `Your ${difficulty} difficulty ${category} interview has begun. Good luck!`,
     });
     
     speakText(questions[0]);
@@ -610,7 +563,7 @@ export function InterviewProvider({ children, apiKey = "" }: InterviewProviderPr
 
   const analyzeAnswerWithOpenAI = async (question: string, answer: string): Promise<{ feedback: string | any; improvedAnswer: string }> => {
     try {
-      // Use OpenAI API if key is provided, otherwise fallback to Perplexity
+      // Use OpenAI API if key is provided
       if (apiKey) {
         try {
           console.log("Using OpenAI API for answer analysis");
