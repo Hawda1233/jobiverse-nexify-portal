@@ -1,9 +1,10 @@
+
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { useInterview } from "@/contexts/InterviewContext";
-import { Mic, MicOff, Send, ArrowRight, ArrowLeft, RotateCcw, Volume2, VolumeX, Video, VideoOff, Loader2, ThumbsUp, ThumbsDown, Award, Check } from "lucide-react";
+import { Mic, MicOff, Send, ArrowRight, ArrowLeft, RotateCcw, Volume2, VolumeX, Video, VideoOff, Loader2, ThumbsUp, ThumbsDown, Award, Check, Download, Headphones } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -42,6 +43,7 @@ const VirtualInterviewer: React.FC<VirtualInterviewerProps> = ({
     speakText,
     stopSpeaking,
     generateFollowUpQuestion,
+    getCurrentSkillLevel,
   } = useInterview();
 
   const [answer, setAnswer] = useState("");
@@ -174,6 +176,33 @@ const VirtualInterviewer: React.FC<VirtualInterviewerProps> = ({
     setShowImprovedAnswer(!showImprovedAnswer);
   };
   
+  const generateInterviewReport = () => {
+    const reportData = {
+      interviewDate: new Date().toLocaleString(),
+      candidate: "User",
+      topic: interviewState.category,
+      difficulty: difficulty,
+      questions: interviewState.allQuestions,
+      answers: interviewState.answers,
+      feedback: interviewState.feedback,
+      improvedAnswers: interviewState.improvedAnswers,
+      overallScore: interviewState.score,
+      skillLevel: getCurrentSkillLevel()
+    };
+    
+    // Convert to JSON and create downloadable file
+    const reportBlob = new Blob([JSON.stringify(reportData, null, 2)], {type: 'application/json'});
+    const reportUrl = URL.createObjectURL(reportBlob);
+    
+    // Create a link and trigger download
+    const link = document.createElement('a');
+    link.href = reportUrl;
+    link.download = `interview-report-${new Date().toISOString().slice(0, 10)}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+  
   useEffect(() => {
     if (interviewState.isListening && interviewState.answers[interviewState.currentQuestionIndex]) {
       setAnswer(interviewState.answers[interviewState.currentQuestionIndex]);
@@ -220,6 +249,16 @@ const VirtualInterviewer: React.FC<VirtualInterviewerProps> = ({
           <div className="text-center mb-4">
             <div className="text-5xl font-bold mb-2">{interviewState.score}/100</div>
             <p className="text-sm text-muted-foreground">Overall Score</p>
+            
+            <div className="mt-4 flex justify-center">
+              <Badge variant={
+                interviewState.currentSkillLevel === "beginner" ? "secondary" : 
+                interviewState.currentSkillLevel === "expert" ? "default" : 
+                "outline"
+              } className="text-md">
+                {interviewState.currentSkillLevel.charAt(0).toUpperCase() + interviewState.currentSkillLevel.slice(1)} Level
+              </Badge>
+            </div>
           </div>
           
           <div className="space-y-1 mb-4">
@@ -247,7 +286,12 @@ const VirtualInterviewer: React.FC<VirtualInterviewerProps> = ({
                   </p>
                   <div className="mt-2 pt-2 border-t">
                     <p className="text-sm font-medium">Feedback:</p>
-                    <p className="text-sm">{interviewState.feedback[index]}</p>
+                    <p className="text-sm">{typeof interviewState.feedback[index] === 'string' 
+                      ? interviewState.feedback[index] 
+                      : Object.entries(interviewState.feedback[index] as Record<string, string>)
+                          .map(([key, value]) => `${key}: ${value}`)
+                          .join('\n')
+                    }</p>
                   </div>
                   {interviewState.improvedAnswers[index] && (
                     <div className="mt-2 pt-2 border-t">
@@ -259,6 +303,10 @@ const VirtualInterviewer: React.FC<VirtualInterviewerProps> = ({
               )
             ))}
           </div>
+          
+          <Button onClick={generateInterviewReport} className="w-full">
+            <Download className="mr-2 h-4 w-4" /> Download Interview Report
+          </Button>
         </CardContent>
         <CardFooter className="flex gap-3">
           <Button onClick={handleRestart} className="w-full">
@@ -293,8 +341,15 @@ const VirtualInterviewer: React.FC<VirtualInterviewerProps> = ({
                           size="icon"
                           className="h-7 w-7"
                           onClick={handleToggleSpeech}
+                          disabled={interviewState.isGeneratingVoice}
                         >
-                          {interviewState.isSpeaking || autoPlay ? <Volume2 className="h-3 w-3" /> : <VolumeX className="h-3 w-3" />}
+                          {interviewState.isGeneratingVoice ? (
+                            <Loader2 className="h-3 w-3 animate-spin" />
+                          ) : interviewState.isSpeaking || autoPlay ? (
+                            <Volume2 className="h-3 w-3" />
+                          ) : (
+                            <VolumeX className="h-3 w-3" />
+                          )}
                         </Button>
                       </TooltipTrigger>
                       <TooltipContent>
@@ -366,6 +421,27 @@ const VirtualInterviewer: React.FC<VirtualInterviewerProps> = ({
                   </div>
                 </div>
               </div>
+              
+              {/* Skill Level Indicator */}
+              <div className="mt-4 p-3 bg-muted rounded-lg">
+                <h3 className="text-sm font-medium mb-2 flex items-center gap-2">
+                  <Award className="h-4 w-4" /> Current Skill Level
+                </h3>
+                <div className="w-full bg-secondary rounded-full h-2.5">
+                  <div 
+                    className={`h-2.5 rounded-full ${
+                      interviewState.currentSkillLevel === "beginner" ? "w-1/3 bg-blue-500" :
+                      interviewState.currentSkillLevel === "intermediate" ? "w-2/3 bg-green-500" :
+                      "w-full bg-purple-500"
+                    }`}
+                  ></div>
+                </div>
+                <div className="flex justify-between text-xs mt-1 text-muted-foreground">
+                  <span>Beginner</span>
+                  <span>Intermediate</span>
+                  <span>Expert</span>
+                </div>
+              </div>
             </CardContent>
           </Card>
         </div>
@@ -423,10 +499,27 @@ const VirtualInterviewer: React.FC<VirtualInterviewerProps> = ({
                   </div>
                 ) : (
                   <>
-                    <h3 className="font-medium mb-2">
-                      {interviewState.selectedCharacter.name}:
-                    </h3>
+                    <div className="flex justify-between items-center mb-2">
+                      <h3 className="font-medium">
+                        {interviewState.selectedCharacter.name}:
+                      </h3>
+                      {!interviewState.isSpeaking && !interviewState.isGeneratingVoice && (
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={() => speakText(interviewState.currentQuestion)}
+                          className="h-7 px-2"
+                        >
+                          <Headphones className="h-3 w-3 mr-1" /> Listen
+                        </Button>
+                      )}
+                    </div>
                     <p>{interviewState.currentQuestion}</p>
+                    {interviewState.isGeneratingVoice && (
+                      <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
+                        <Loader2 className="h-3 w-3 animate-spin" /> Generating voice...
+                      </div>
+                    )}
                   </>
                 )}
               </motion.div>
