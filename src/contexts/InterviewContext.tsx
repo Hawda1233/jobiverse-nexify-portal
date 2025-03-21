@@ -1,6 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from "react";
 import { toast } from "@/components/ui/use-toast";
-import { generateSpeech, playAudioBuffer, analyzeInterviewResponse, getAdvancedChatCompletion } from "@/utils/openAIService";
 
 // Google AI API key
 const GOOGLE_AI_API_KEY = "AIzaSyAW-mL4hLOYBtwq6KdWshXFLR1ksCTp9fw";
@@ -67,7 +66,6 @@ export const AI_CHARACTERS = [
     description: "A straightforward corporate recruiter focused on qualifications and experience.",
     imageUrl: "https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=150&h=150",
     style: "professional",
-    voice: "nova" as const
   },
   {
     id: "friendly",
@@ -76,7 +74,6 @@ export const AI_CHARACTERS = [
     description: "A warm and encouraging interviewer who creates a comfortable atmosphere.",
     imageUrl: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=150&h=150",
     style: "friendly",
-    voice: "nova" as const
   },
   {
     id: "technical",
@@ -85,7 +82,6 @@ export const AI_CHARACTERS = [
     description: "A detail-oriented interviewer who digs deep into technical skills and problem-solving.",
     imageUrl: "https://images.unsplash.com/photo-1566492031773-4f4e44671857?auto=format&fit=crop&w=150&h=150",
     style: "technical",
-    voice: "onyx" as const
   },
   {
     id: "executive",
@@ -94,7 +90,6 @@ export const AI_CHARACTERS = [
     description: "A senior leader who evaluates leadership potential and strategic thinking.",
     imageUrl: "https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=150&h=150",
     style: "executive",
-    voice: "shimmer" as const
   }
 ];
 
@@ -120,9 +115,6 @@ type InterviewState = {
   isAnalyzing: boolean;
   isGeneratingQuestion: boolean;
   followUpMode: boolean;
-  currentSkillLevel: string;
-  isGeneratingVoice: boolean;
-  isUsingOpenAI: boolean;
 };
 
 type InterviewContextType = {
@@ -141,8 +133,6 @@ type InterviewContextType = {
   setCustomQuestions: (questions: string[]) => void;
   setInterviewCharacter: (character: typeof AI_CHARACTERS[0]) => void;
   generateFollowUpQuestion: (previousAnswer: string) => Promise<void>;
-  getCurrentSkillLevel: () => string;
-  useTTS: (text: string) => Promise<void>;
 };
 
 const defaultInterviewState: InterviewState = {
@@ -167,9 +157,6 @@ const defaultInterviewState: InterviewState = {
   isAnalyzing: false,
   isGeneratingQuestion: false,
   followUpMode: false,
-  currentSkillLevel: "intermediate",
-  isGeneratingVoice: false,
-  isUsingOpenAI: true
 };
 
 const InterviewContext = createContext<InterviewContextType | undefined>(undefined);
@@ -185,10 +172,9 @@ export function useInterview() {
 interface InterviewProviderProps {
   children: React.ReactNode;
   apiKey?: string;
-  googleApiKey?: string;
 }
 
-export function InterviewProvider({ children, apiKey = "", googleApiKey = GOOGLE_AI_API_KEY }: InterviewProviderProps) {
+export function InterviewProvider({ children, apiKey = "" }: InterviewProviderProps) {
   const [interviewState, setInterviewState] = useState<InterviewState>(defaultInterviewState);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const synthRef = useRef<SpeechSynthesis | null>(null);
@@ -347,41 +333,9 @@ export function InterviewProvider({ children, apiKey = "", googleApiKey = GOOGLE
       
       const currentQuestion = interviewState.currentQuestion;
       
-      if (apiKey && interviewState.isUsingOpenAI) {
-        try {
-          console.log("Using OpenAI for follow-up generation");
-          
-          const systemMessage = `You are a professional ${interviewState.selectedCharacter.style} interviewer. 
-          Based on the candidate's previous answer, generate a single, relevant follow-up question to dig deeper into their response.
-          Make it sound natural and conversational, as a real interviewer would ask. The follow-up should be challenging but fair, and relevant to their previous answer.
-          Your question should help assess their knowledge, skills, and fit for the role further.
-          Return only the follow-up question with no prefix or explanation.`;
-          
-          const response = await getAdvancedChatCompletion(
-            [
-              { role: "system", content: systemMessage },
-              { role: "user", content: `Original question: "${currentQuestion}"\n\nCandidate's answer: "${previousAnswer}"\n\nProvide a single, relevant follow-up question that digs deeper into their response.` }
-            ],
-            apiKey,
-            { 
-              temperature: 0.7,
-              skillLevel: interviewState.currentSkillLevel as 'beginner' | 'intermediate' | 'expert'
-            }
-          );
-          
-          const followUpQuestion = response.choices[0].message.content.trim();
-          
-          if (followUpQuestion) {
-            updateQuestionsWithFollowup(followUpQuestion);
-            return;
-          }
-        } catch (error) {
-          console.error("Error with OpenAI, falling back to Google AI:", error);
-        }
-      }
-      
-      // Try Google AI if OpenAI fails or is not available
+      // Try Google AI first
       try {
+        console.log("Using Google AI for follow-up generation");
         const prompt = `Original question: "${currentQuestion}"\n\nCandidate's answer: "${previousAnswer}"\n\nAs a professional interviewer, provide a single, relevant follow-up question to dig deeper into their response. Make it sound natural, as a real interviewer would ask. Return only the follow-up question with no prefix or explanation.`;
         
         const followUpQuestion = await callGoogleAI(prompt);
@@ -391,16 +345,88 @@ export function InterviewProvider({ children, apiKey = "", googleApiKey = GOOGLE
           return;
         }
       } catch (error) {
-        console.error("Error with Google AI, falling back to default question:");
-        toast({
-          title: "Error",
-          description: "Could not generate a follow-up question. Please continue with the next question.",
-          variant: "destructive",
-        });
-        setInterviewState(prev => ({
-          ...prev,
-          followUpMode: false
-        }));
+        console.error("Error with Google AI, falling back to OpenAI:", error);
+      }
+      
+      // If Google AI fails, try OpenAI
+      if (apiKey) {
+        try {
+          console.log("Using OpenAI API for follow-up generation");
+          const response = await fetch("https://api.openai.com/v1/chat/completions", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${apiKey}`
+            },
+            body: JSON.stringify({
+              model: "gpt-4o-mini",
+              messages: [
+                {
+                  role: "system",
+                  content: "You are a professional interviewer asking follow-up questions. Based on the candidate's previous answer, generate a single, relevant follow-up question to dig deeper or clarify their response. Make it sound natural, as a real interviewer would ask. Return only the follow-up question with no prefix or explanation."
+                },
+                {
+                  role: "user",
+                  content: `Original question: "${currentQuestion}"\n\nCandidate's answer: "${previousAnswer}"\n\nProvide a relevant follow-up question to dig deeper into their response.`
+                }
+              ],
+              temperature: 0.7,
+              max_tokens: 150
+            })
+          });
+
+          if (!response.ok) {
+            throw new Error(`OpenAI API request failed: ${response.statusText}`);
+          }
+
+          const data = await response.json();
+          const followUpQuestion = data.choices[0].message.content.trim();
+          
+          if (followUpQuestion) {
+            updateQuestionsWithFollowup(followUpQuestion);
+            return;
+          }
+        } catch (error) {
+          console.error("Error with OpenAI, falling back to Perplexity:", error);
+          // Continue to Perplexity fallback
+        }
+      }
+      
+      // Fallback to Perplexity
+      const perplexityKey = "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";
+      
+      const response = await fetch("https://api.perplexity.ai/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${perplexityKey}`
+        },
+        body: JSON.stringify({
+          model: "gpt-4o-mini",
+          messages: [
+            {
+              role: "system",
+              content: "You are a professional interviewer asking follow-up questions. Based on the candidate's previous answer, generate a single, relevant follow-up question to dig deeper or clarify their response. Make it sound natural, as a real interviewer would ask. Return only the follow-up question with no prefix or explanation."
+            },
+            {
+              role: "user",
+              content: `Original question: "${currentQuestion}"\n\nCandidate's answer: "${previousAnswer}"\n\nProvide a relevant follow-up question to dig deeper into their response.`
+            }
+          ],
+          temperature: 0.7,
+          max_tokens: 150
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`API request failed: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      const followUpQuestion = data.choices[0].message.content.trim();
+      
+      if (followUpQuestion) {
+        updateQuestionsWithFollowup(followUpQuestion);
       }
     } catch (error) {
       console.error("Error generating follow-up question:", error);
@@ -604,46 +630,6 @@ export function InterviewProvider({ children, apiKey = "", googleApiKey = GOOGLE
     }));
   }, []);
 
-  const analyzeAnswerWithOpenAI = async (question: string, answer: string): Promise<{ feedback: string | any; improvedAnswer: string }> => {
-    try {
-      console.log("Using OpenAI for answer analysis");
-      
-      const result = await analyzeInterviewResponse(
-        question,
-        answer,
-        apiKey,
-        {
-          skillLevel: interviewState.currentSkillLevel as 'beginner' | 'intermediate' | 'expert',
-          jobRole: interviewState.category
-        }
-      );
-      
-      // Update current skill level based on the analysis
-      if (result.skillLevel) {
-        setInterviewState(prev => ({
-          ...prev,
-          currentSkillLevel: result.skillLevel
-        }));
-      }
-      
-      // Structure feedback in the expected format
-      const feedback = {
-        STRENGTHS: result.strengths.join('\n- '),
-        WEAKNESSES: result.weaknesses.join('\n- '),
-        "KEY POINTS MISSED": result.missedPoints.join('\n- '),
-        "IMPROVEMENT SUGGESTIONS": result.improvementTips.join('\n- ')
-      };
-      
-      return {
-        feedback,
-        improvedAnswer: result.improvedAnswer
-      };
-    } catch (error) {
-      console.error("Error with OpenAI analysis:", error);
-      throw error;
-    }
-  };
-
   const analyzeAnswerWithGoogleAI = async (question: string, answer: string): Promise<{ feedback: string | any; improvedAnswer: string }> => {
     try {
       console.log("Using Google AI for answer analysis");
@@ -711,6 +697,145 @@ Create a model answer that would impress a hiring manager. Make it realistic, pr
     }
   };
 
+  const analyzeAnswerWithOpenAI = async (question: string, answer: string): Promise<{ feedback: string | any; improvedAnswer: string }> => {
+    try {
+      // Use OpenAI API if key is provided
+      if (apiKey) {
+        try {
+          console.log("Using OpenAI API for answer analysis");
+          const response = await fetch("https://api.openai.com/v1/chat/completions", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${apiKey}`
+            },
+            body: JSON.stringify({
+              model: "gpt-4o-mini",
+              messages: [
+                {
+                  role: "system",
+                  content: `You are an expert interview coach specializing in providing detailed, constructive feedback.
+                  
+                  Analyze the candidate's interview answer and provide:
+                  
+                  1) STRENGTHS: What specific parts of the answer were effective.
+                  2) WEAKNESSES: What specific areas need improvement.
+                  3) KEY POINTS MISSED: Important points or concepts that should have been included.
+                  4) IMPROVEMENT SUGGESTIONS: Concrete, actionable tips to make the answer stronger.
+                  5) IMPROVED ANSWER: A rewritten version that addresses all the weaknesses and incorporates the missed key points.
+                  
+                  Be extremely detailed and constructive. Your feedback should help the candidate significantly improve their interview skills. If it's a short or incomplete answer, be honest but provide guidance on structure and content for a proper response.
+                  
+                  Format your response as a JSON object with 'feedback' (containing all feedback points in a structured format) and 'improvedAnswer' fields.`
+                },
+                {
+                  role: "user",
+                  content: `Question: ${question}\n\nCandidate's Answer: ${answer}\n\nPlease analyze this answer and provide detailed feedback and an improved version.`
+                }
+              ],
+              temperature: 0.7,
+              max_tokens: 1500
+            })
+          });
+
+          if (!response.ok) {
+            throw new Error(`OpenAI API request failed: ${response.statusText}`);
+          }
+
+          const data = await response.json();
+          
+          try {
+            const contentText = data.choices[0].message.content;
+            const jsonMatch = contentText.match(/\{[\s\S]*\}/);
+            
+            if (jsonMatch) {
+              const jsonContent = JSON.parse(jsonMatch[0]);
+              return {
+                feedback: jsonContent.feedback || "No specific feedback available.",
+                improvedAnswer: jsonContent.improvedAnswer || "No improved answer available."
+              };
+            } else {
+              throw new Error("Could not extract JSON from OpenAI response");
+            }
+          } catch (parseError) {
+            console.error("Error parsing OpenAI API response:", parseError);
+            throw parseError;
+          }
+        } catch (error) {
+          console.error("Error with OpenAI, falling back to Perplexity:", error);
+          // Continue to Perplexity fallback
+        }
+      }
+      
+      // Fallback to Perplexity
+      const perplexityKey = "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";
+      
+      const response = await fetch("https://api.perplexity.ai/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${perplexityKey}`
+        },
+        body: JSON.stringify({
+          model: "gpt-4o-mini",
+          messages: [
+            {
+              role: "system",
+              content: `You are an expert interview coach specializing in providing detailed, constructive feedback.
+              
+              Analyze the candidate's interview answer and provide:
+              
+              1) STRENGTHS: What specific parts of the answer were effective.
+              2) WEAKNESSES: What specific areas need improvement.
+              3) KEY POINTS MISSED: Important points or concepts that should have been included.
+              4) IMPROVEMENT SUGGESTIONS: Concrete, actionable tips to make the answer stronger.
+              5) IMPROVED ANSWER: A rewritten version that addresses all the weaknesses and incorporates the missed key points.
+              
+              Format your response as a JSON object with 'feedback' (containing all feedback points in a structured format) and 'improvedAnswer' fields.`
+            },
+            {
+              role: "user",
+              content: `Question: ${question}\n\nCandidate's Answer: ${answer}\n\nPlease analyze this answer and provide detailed feedback and an improved version.`
+            }
+          ],
+          temperature: 0.7,
+          max_tokens: 1500
+        })
+      });
+
+      if (!response.ok) {
+        console.error("API request failed:", response.statusText);
+        throw new Error(`API request failed: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      
+      try {
+        const contentText = data.choices[0].message.content;
+        const jsonMatch = contentText.match(/\{[\s\S]*\}/);
+        
+        if (jsonMatch) {
+          const jsonContent = JSON.parse(jsonMatch[0]);
+          return {
+            feedback: jsonContent.feedback || "No specific feedback available.",
+            improvedAnswer: jsonContent.improvedAnswer || "No improved answer available."
+          };
+        } else {
+          throw new Error("Could not extract JSON from response");
+        }
+      } catch (parseError) {
+        console.error("Error parsing API response:", parseError);
+        return {
+          feedback: data.choices[0].message.content || "Analysis unavailable.",
+          improvedAnswer: "No improved answer available."
+        };
+      }
+    } catch (error) {
+      console.error("Error calling AI API:", error);
+      throw error;
+    }
+  };
+
   const simulateEvaluation = useCallback(async (answer: string): Promise<string | any> => {
     setInterviewState(prev => ({
       ...prev,
@@ -721,31 +846,7 @@ Create a model answer that would impress a hiring manager. Make it realistic, pr
     try {
       const currentQuestion = interviewState.allQuestions[interviewState.currentQuestionIndex];
       
-      // Use OpenAI first if API key is provided and option is enabled
-      if (apiKey && interviewState.isUsingOpenAI) {
-        try {
-          const { feedback, improvedAnswer } = await analyzeAnswerWithOpenAI(currentQuestion, answer);
-          
-          setInterviewState(prev => ({
-            ...prev,
-            feedback: {
-              ...prev.feedback,
-              [prev.currentQuestionIndex]: feedback,
-            },
-            improvedAnswers: {
-              ...prev.improvedAnswers,
-              [prev.currentQuestionIndex]: improvedAnswer,
-            },
-            isAnalyzing: false
-          }));
-          
-          return feedback;
-        } catch (error) {
-          console.error("Error with OpenAI evaluation, falling back to Google AI:", error);
-        }
-      }
-      
-      // Try Google AI next
+      // Try Google AI first
       try {
         const { feedback, improvedAnswer } = await analyzeAnswerWithGoogleAI(currentQuestion, answer);
         
@@ -764,14 +865,98 @@ Create a model answer that would impress a hiring manager. Make it realistic, pr
         
         return feedback;
       } catch (error) {
-        console.error("Error with Google AI evaluation, falling back to simple evaluation:", error);
-        // Continue to fallback
+        console.error("Error with Google AI evaluation, falling back to OpenAI:", error);
+        
+        // Try OpenAI next
+        try {
+          const { feedback, improvedAnswer } = await analyzeAnswerWithOpenAI(currentQuestion, answer);
+          
+          setInterviewState(prev => ({
+            ...prev,
+            feedback: {
+              ...prev.feedback,
+              [prev.currentQuestionIndex]: feedback,
+            },
+            improvedAnswers: {
+              ...prev.improvedAnswers,
+              [prev.currentQuestionIndex]: improvedAnswer,
+            },
+            isAnalyzing: false
+          }));
+          
+          return feedback;
+        } catch (openAIError) {
+          console.error("Error with OpenAI evaluation, falling back to simple evaluation:", openAIError);
+          // Continue to fallback
+        }
       }
+      
+      // Fallback to simple evaluation
+      const answerLength = answer.length;
+      const words = answer.split(/\s+/).filter(word => word.length > 0).length;
+      const sentences = answer.split(/[.!?]+/).filter(sentence => sentence.length > 0).length;
+      
+      let feedback = {
+        "STRENGTHS": "You provided a response.",
+        "WEAKNESSES": "Your answer was quite brief. Consider providing more details.",
+        "KEY POINTS MISSED": "You didn't include specific examples or structured your response well.",
+        "IMPROVEMENT SUGGESTIONS": "Try using the STAR method (Situation, Task, Action, Result) for behavioral questions."
+      };
+      
+      if (answerLength < 50 || words < 10) {
+        feedback = {
+          "STRENGTHS": "You attempted to answer the question.",
+          "WEAKNESSES": "Your answer was too brief and lacked substance. It doesn't give the interviewer enough information about your skills and experience.",
+          "KEY POINTS MISSED": "You didn't include specific examples, details about your experience, or demonstrate relevant skills.",
+          "IMPROVEMENT SUGGESTIONS": "Expand your answer to at least 3-5 sentences. Include a specific example that demonstrates your abilities. Use the STAR method if applicable."
+        };
+      } else if (answerLength < 200 || words < 40) {
+        feedback = {
+          "STRENGTHS": "You provided some relevant information in your answer.",
+          "WEAKNESSES": "While you gave some information, your answer could benefit from more details and specific examples.",
+          "KEY POINTS MISSED": "Your answer lacked depth and specific examples that showcase your skills and experience.",
+          "IMPROVEMENT SUGGESTIONS": "Elaborate with concrete examples from your past experience. Quantify your achievements when possible."
+        };
+      } else {
+        if (sentences < 3) {
+          feedback = {
+            "STRENGTHS": "You provided a substantial amount of information in your answer.",
+            "WEAKNESSES": "Your answer could benefit from better structure and flow between ideas.",
+            "KEY POINTS MISSED": "Your response may lack a clear beginning, middle, and end structure.",
+            "IMPROVEMENT SUGGESTIONS": "Try structuring your answer with a clear introduction, main points, and conclusion. Break up long sentences for clarity."
+          };
+        } else {
+          feedback = {
+            "STRENGTHS": "Excellent response! You provided comprehensive information with good structure.",
+            "WEAKNESSES": "Minor areas for improvement could include being more concise in some areas.",
+            "KEY POINTS MISSED": "Consider adding more quantifiable results if applicable.",
+            "IMPROVEMENT SUGGESTIONS": "Continue to refine your delivery and consider preparing additional examples for similar questions."
+          };
+        }
+      }
+
+      // Generate a basic improved answer
+      const improvedAnswer = generateBasicImprovedAnswer(interviewState.currentQuestion, answer);
+
+      setInterviewState(prev => ({
+        ...prev,
+        feedback: {
+          ...prev.feedback,
+          [prev.currentQuestionIndex]: feedback,
+        },
+        improvedAnswers: {
+          ...prev.improvedAnswers,
+          [prev.currentQuestionIndex]: improvedAnswer,
+        },
+        isAnalyzing: false
+      }));
+
+      return feedback;
     } catch (error) {
       console.error("Error in simulateEvaluation:", error);
       return "Sorry, there was an error evaluating your answer. Please try again.";
     }
-  }, [interviewState.allQuestions, interviewState.currentQuestionIndex, apiKey, interviewState.isUsingOpenAI]);
+  }, [interviewState.allQuestions, interviewState.currentQuestionIndex]);
 
   const generateBasicImprovedAnswer = (question: string, originalAnswer: string): string => {
     // This is a simple fallback function to create an improved answer when the AI analysis fails
@@ -878,3 +1063,144 @@ Create a model answer that would impress a hiring manager. Make it realistic, pr
         isListening: false
       }));
     }
+  };
+
+  const speakText = async (text: string) => {
+    if (typeof window !== 'undefined' && synthRef.current) {
+      // Cancel any ongoing speech
+      stopSpeaking();
+      
+      try {
+        // Create a new utterance
+        const utterance = new SpeechSynthesisUtterance(text);
+        
+        // Set properties
+        utterance.rate = 1.0;
+        utterance.pitch = 1.0;
+        utterance.volume = 1.0;
+        
+        // Try to use a female voice if available
+        const voices = synthRef.current.getVoices();
+        const femaleVoice = voices.find(voice => 
+          voice.name.includes('female') || 
+          voice.name.includes('Female') || 
+          voice.name.includes('Samantha') ||
+          voice.name.includes('Google UK English Female')
+        );
+        
+        if (femaleVoice) {
+          utterance.voice = femaleVoice;
+        }
+        
+        // Set events
+        utterance.onstart = () => {
+          setInterviewState(prev => ({
+            ...prev,
+            isSpeaking: true
+          }));
+        };
+        
+        utterance.onend = () => {
+          setInterviewState(prev => ({
+            ...prev,
+            isSpeaking: false,
+            questionSpoken: true
+          }));
+          utteranceRef.current = null;
+        };
+        
+        utterance.onerror = (event) => {
+          console.error('Speech synthesis error:', event);
+          setInterviewState(prev => ({
+            ...prev,
+            isSpeaking: false,
+            questionSpoken: true
+          }));
+          utteranceRef.current = null;
+        };
+        
+        // Store the utterance and speak
+        utteranceRef.current = utterance;
+        synthRef.current.speak(utterance);
+      } catch (error) {
+        console.error('Error speaking text:', error);
+        setInterviewState(prev => ({
+          ...prev,
+          isSpeaking: false,
+          questionSpoken: true
+        }));
+      }
+    } else {
+      console.log('Speech synthesis not available');
+      setInterviewState(prev => ({
+        ...prev,
+        questionSpoken: true
+      }));
+    }
+  };
+  
+  const stopSpeaking = () => {
+    if (typeof window !== 'undefined' && synthRef.current) {
+      synthRef.current.cancel();
+      
+      setInterviewState(prev => ({
+        ...prev,
+        isSpeaking: false
+      }));
+      
+      utteranceRef.current = null;
+    }
+  };
+
+  const resetInterview = () => {
+    stopVoiceRecognition();
+    stopSpeaking();
+    
+    setInterviewState({
+      ...defaultInterviewState,
+      selectedCharacter: interviewState.selectedCharacter
+    });
+  };
+
+  const setCustomQuestions = (questions: string[]) => {
+    if (questions.length > 0) {
+      setInterviewState(prev => ({
+        ...prev,
+        allQuestions: questions,
+        currentQuestion: questions[0],
+      }));
+    }
+  };
+  
+  const setInterviewCharacter = (character: typeof AI_CHARACTERS[0]) => {
+    setInterviewState(prev => ({
+      ...prev,
+      selectedCharacter: character
+    }));
+  };
+
+  return (
+    <InterviewContext.Provider
+      value={{
+        interviewState,
+        startInterview,
+        endInterview,
+        nextQuestion,
+        previousQuestion,
+        saveAnswer,
+        simulateEvaluation,
+        resetInterview,
+        startVoiceRecognition,
+        stopVoiceRecognition,
+        speakText,
+        stopSpeaking,
+        setCustomQuestions,
+        setInterviewCharacter,
+        generateFollowUpQuestion,
+      }}
+    >
+      {children}
+    </InterviewContext.Provider>
+  );
+}
+

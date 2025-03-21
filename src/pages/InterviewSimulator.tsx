@@ -20,9 +20,8 @@ import {
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 
-// Default API keys for the application
-const DEFAULT_GOOGLE_AI_KEY = "AIzaSyAW-mL4hLOYBtwq6KdWshXFLR1ksCTp9fw";
-const DEFAULT_OPENAI_KEY = "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";
+// Default API key for the application
+const DEFAULT_API_KEY = "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";
 
 const InterviewSimulator: React.FC = () => {
   const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
@@ -32,9 +31,9 @@ const InterviewSimulator: React.FC = () => {
   const [storedApiKey, setStoredApiKey] = useState<string>(() => {
     // Try to get the API key from localStorage or use default
     if (typeof window !== 'undefined') {
-      return localStorage.getItem('openai_api_key') || DEFAULT_OPENAI_KEY;
+      return localStorage.getItem('openai_api_key') || DEFAULT_API_KEY;
     }
-    return DEFAULT_OPENAI_KEY;
+    return DEFAULT_API_KEY;
   });
 
   // Check for API key on component mount but don't show dialog automatically
@@ -42,8 +41,8 @@ const InterviewSimulator: React.FC = () => {
     const savedKey = localStorage.getItem('openai_api_key');
     if (!savedKey) {
       // We have a default key, so no need to show dialog automatically
-      localStorage.setItem('openai_api_key', DEFAULT_OPENAI_KEY);
-      setStoredApiKey(DEFAULT_OPENAI_KEY);
+      localStorage.setItem('openai_api_key', DEFAULT_API_KEY);
+      setStoredApiKey(DEFAULT_API_KEY);
     }
   }, []);
 
@@ -69,8 +68,8 @@ const InterviewSimulator: React.FC = () => {
   };
 
   const handleClearApiKey = () => {
-    localStorage.setItem('openai_api_key', DEFAULT_OPENAI_KEY);
-    setStoredApiKey(DEFAULT_OPENAI_KEY);
+    localStorage.setItem('openai_api_key', DEFAULT_API_KEY);
+    setStoredApiKey(DEFAULT_API_KEY);
     setOpenAIKey("");
     toast.success("Using default API key");
   };
@@ -90,13 +89,10 @@ const InterviewSimulator: React.FC = () => {
               Google AI Powered
             </Badge>
             <Badge variant="outline" className="bg-green-500/10 text-green-400 hover:bg-green-500/20">
-              OpenAI Enhanced
+              Smart Interview Analysis
             </Badge>
             <Badge variant="outline" className="bg-purple-500/10 text-purple-400 hover:bg-purple-500/20">
-              Real-time Voice Feedback
-            </Badge>
-            <Badge variant="outline" className="bg-amber-500/10 text-amber-400 hover:bg-amber-500/20">
-              Adaptive Difficulty
+              Realistic Interview Experience
             </Badge>
           </div>
           
@@ -111,7 +107,7 @@ const InterviewSimulator: React.FC = () => {
                 >
                   Custom API Key
                 </Button>
-                {storedApiKey !== DEFAULT_OPENAI_KEY && (
+                {storedApiKey !== DEFAULT_API_KEY && (
                   <Button 
                     variant="destructive" 
                     size="sm" 
@@ -125,10 +121,7 @@ const InterviewSimulator: React.FC = () => {
           </div>
         </div>
         
-        <InterviewProvider 
-          apiKey={storedApiKey} 
-          googleApiKey={DEFAULT_GOOGLE_AI_KEY}
-        >
+        <InterviewProvider apiKey={storedApiKey}>
           {!selectedTopic ? (
             <InterviewSetup 
               onTopicSelected={setSelectedTopic} 
@@ -150,7 +143,7 @@ const InterviewSimulator: React.FC = () => {
           <DialogHeader>
             <DialogTitle>Custom OpenAI API Key (Optional)</DialogTitle>
             <DialogDescription>
-              We provide built-in Google AI and OpenAI API keys, but you can use your own OpenAI key for enhanced performance. It will be stored only in your browser.
+              We provide Google AI and a built-in OpenAI API key, but you can use your own OpenAI key for enhanced performance. It will be stored only in your browser.
             </DialogDescription>
           </DialogHeader>
           
