@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { BriefcaseBusiness, Facebook, Instagram, Linkedin, Twitter } from 'lucide-react';
+import { BriefcaseBusiness, Facebook, Instagram, Linkedin, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
@@ -20,7 +20,7 @@ const Footer = () => {
               Revolutionizing the way people find their dream careers and employers discover ideal candidates.
             </p>
             <div className="flex gap-4">
-              <SocialButton icon={<Twitter className="h-4 w-4" />} />
+              <SocialButton icon={<X className="h-4 w-4" />} />
               <SocialButton icon={<Linkedin className="h-4 w-4" />} />
               <SocialButton icon={<Facebook className="h-4 w-4" />} />
               <SocialButton icon={<Instagram className="h-4 w-4" />} />
@@ -68,7 +68,7 @@ const Footer = () => {
         
         <div className="mt-8 flex flex-col md:flex-row justify-between items-center gap-4">
           <div className="text-sm text-muted-foreground">
-            © 2023 Nexify. All rights reserved.
+            © 2025 Nexify. All rights reserved.
           </div>
           <div className="flex flex-wrap justify-center gap-4 text-sm">
             <Link to="/about" className="text-muted-foreground hover:text-foreground transition-colors">About</Link>
