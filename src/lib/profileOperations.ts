@@ -61,9 +61,21 @@ export const getEmployerProfile = async (uid: string) => {
     
     if (docSnap.exists()) {
       const data = docSnap.data();
-      return { 
-        ...data, 
-        id: docSnap.id,
+      // Make sure all required fields are present in the returned data
+      return {
+        uid, // Use the provided uid to ensure this field is always set
+        fullName: data.fullName || "",
+        email: data.email || "",
+        company: data.company || "",
+        industry: data.industry || "",
+        position: data.position,
+        phone: data.phone,
+        website: data.website,
+        description: data.description,
+        location: data.location,
+        companySize: data.companySize,
+        foundedYear: data.foundedYear,
+        logo: data.logo,
         createdAt: data.createdAt?.toDate() || new Date(),
         updatedAt: data.updatedAt?.toDate() || new Date()
       } as EmployerProfileData;
@@ -131,9 +143,21 @@ export const getCandidateProfile = async (uid: string) => {
     
     if (docSnap.exists()) {
       const data = docSnap.data();
-      return { 
-        ...data, 
-        id: docSnap.id,
+      // Make sure all required fields are present in the returned data
+      return {
+        uid, // Use the provided uid to ensure this field is always set
+        email: data.email || "",
+        fullName: data.fullName,
+        skills: data.skills,
+        experience: data.experience,
+        education: data.education,
+        resume: data.resume,
+        phone: data.phone,
+        location: data.location,
+        bio: data.bio,
+        portfolio: data.portfolio,
+        linkedIn: data.linkedIn,
+        github: data.github,
         createdAt: data.createdAt?.toDate() || new Date(),
         updatedAt: data.updatedAt?.toDate() || new Date()
       } as CandidateProfileData;
