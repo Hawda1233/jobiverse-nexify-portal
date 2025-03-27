@@ -1,5 +1,5 @@
 
-import React, { Suspense, useState } from 'react';
+import React, { Suspense } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, Environment, Stars } from '@react-three/drei';
 import Character3D from './Character3D';
@@ -28,20 +28,12 @@ const Scene3D = ({
   showCharacter = true,
   showStars = true
 }: Scene3DProps) => {
-  const [renderError, setRenderError] = useState(false);
-
-  // If there was a critical render error, show fallback UI
-  if (renderError) {
-    return <Scene3DFallback />;
-  }
-
   return (
     <div style={{ height, width: '100%', position: 'relative' }}>
       <Canvas 
         camera={{ position: [0, 0, 5], fov: 50 }}
         onError={(error) => {
           console.error("Canvas error:", error);
-          setRenderError(true);
         }}
       >
         <Suspense fallback={null}>
