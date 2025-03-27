@@ -1,7 +1,6 @@
+
 import React from 'react';
-import Navbar from '@/components/Navbar';
 import Hero from '@/components/Hero';
-import Footer from '@/components/Footer';
 import JobCard from '@/components/JobCard';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
@@ -14,8 +13,6 @@ const Index = () => {
   
   return (
     <div className="min-h-screen flex flex-col">
-      <Navbar />
-      
       <main className="flex-grow">
         <Hero />
         
@@ -124,8 +121,6 @@ const Index = () => {
           </div>
         </section>
       </main>
-      
-      <Footer />
     </div>
   );
 };
