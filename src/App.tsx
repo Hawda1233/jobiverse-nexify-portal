@@ -19,6 +19,7 @@ import Profile from "./pages/Profile";
 import CompanyJobs from "./pages/CompanyJobs";
 import ResourcesPage from "./pages/ResourcesPage";
 import ResourceDetail from "./pages/ResourceDetail";
+import ComparisonTool from "./pages/ComparisonTool";
 
 const queryClient = new QueryClient();
 
@@ -50,6 +51,9 @@ const App = () => (
             {/* Resources routes */}
             <Route path="/resources" element={<ResourcesPage />} />
             <Route path="/resources/:topic" element={<ResourceDetail />} />
+            
+            {/* Comparison Tool route */}
+            <Route path="/comparison" element={<ComparisonTool />} />
             
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />

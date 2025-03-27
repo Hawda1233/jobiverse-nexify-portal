@@ -1,8 +1,9 @@
+
 import React, { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { Menu, X, User, BriefcaseBusiness, Bell, LogOut, Briefcase, Building, BookOpen } from 'lucide-react';
+import { Menu, X, User, BriefcaseBusiness, Bell, LogOut, Briefcase, Building, BookOpen, Scale } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import {
@@ -175,6 +176,15 @@ const Navbar = () => {
                   </NavigationMenuLink>
                 </Link>
               </NavigationMenuItem>
+              
+              <NavigationMenuItem>
+                <Link to="/comparison">
+                  <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+                    <Scale className="mr-1 h-4 w-4" />
+                    Compare Companies
+                  </NavigationMenuLink>
+                </Link>
+              </NavigationMenuItem>
             </NavigationMenuList>
           </NavigationMenu>
         </div>
@@ -253,6 +263,12 @@ const Navbar = () => {
             <MobileNavLink to="/companies" active={location.pathname.includes('/companies')}>Companies</MobileNavLink>
             <MobileNavLink to="/resources" active={location.pathname.includes('/resources')}>Resources</MobileNavLink>
             <MobileNavLink to="/interview" active={location.pathname === '/interview'}>Interview Simulator</MobileNavLink>
+            <MobileNavLink to="/comparison" active={location.pathname === '/comparison'}>
+              <div className="flex items-center">
+                <Scale className="mr-2 h-4 w-4" />
+                Compare Companies
+              </div>
+            </MobileNavLink>
           </nav>
           
           <Button 
