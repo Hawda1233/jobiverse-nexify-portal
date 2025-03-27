@@ -43,7 +43,7 @@ const SignUp = () => {
         title: "Success!",
         description: "Your account has been created.",
       });
-      navigate("/");
+      navigate("/dashboard");
     } catch (error) {
       console.error(error);
       toast({
@@ -65,7 +65,7 @@ const SignUp = () => {
         title: "Success!",
         description: "Your account has been created with Google.",
       });
-      navigate("/profile");
+      navigate("/dashboard");
     } catch (error) {
       console.error("Google sign up error:", error);
       toast({

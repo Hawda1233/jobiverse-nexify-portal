@@ -36,7 +36,7 @@ const SignIn = () => {
       if (userData?.role === "hr") {
         navigate("/hr-dashboard");
       } else {
-        navigate("/");
+        navigate("/dashboard");
       }
     } catch (error) {
       console.error(error);
@@ -63,7 +63,7 @@ const SignIn = () => {
       if (userData?.role === "hr") {
         navigate("/hr-dashboard");
       } else {
-        navigate("/");
+        navigate("/dashboard");
       }
     } catch (error) {
       console.error(error);

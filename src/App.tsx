@@ -24,6 +24,8 @@ import About from "./pages/About";
 import Contact from "./pages/Contact";
 import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
+import JobseekerDashboard from "./pages/JobseekerDashboard";
+import Applications from "./pages/Applications";
 
 const queryClient = new QueryClient();
 
@@ -43,6 +45,10 @@ const App = () => (
             <Route path="/signup" element={<SignUp />} />
             <Route path="/hr-signup" element={<HRSignUp />} />
             <Route path="/profile" element={<Profile />} />
+            
+            {/* Dashboard routes */}
+            <Route path="/dashboard" element={<JobseekerDashboard />} />
+            <Route path="/applications" element={<Applications />} />
             
             {/* HR routes */}
             <Route path="/hr-dashboard" element={<HRDashboard />} />

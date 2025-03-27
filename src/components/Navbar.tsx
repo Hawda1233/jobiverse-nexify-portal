@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { Menu, X, User, BriefcaseBusiness, Bell, LogOut, Briefcase, Building, BookOpen, Scale } from 'lucide-react';
+import { Menu, X, User, BriefcaseBusiness, Bell, LogOut, Briefcase, Building, BookOpen, Scale, LayoutDashboard, ClipboardList } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import {
@@ -214,9 +214,11 @@ const Navbar = () => {
                   Profile
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => navigate('/dashboard')}>
+                  <LayoutDashboard className="mr-2 h-4 w-4" />
                   Dashboard
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => navigate('/applications')}>
+                  <ClipboardList className="mr-2 h-4 w-4" />
                   My Applications
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
@@ -260,6 +262,22 @@ const Navbar = () => {
                 Companies Review
               </div>
             </MobileNavLink>
+            {currentUser && (
+              <>
+                <MobileNavLink to="/dashboard" active={location.pathname === '/dashboard'}>
+                  <div className="flex items-center">
+                    <LayoutDashboard className="mr-2 h-4 w-4" />
+                    Dashboard
+                  </div>
+                </MobileNavLink>
+                <MobileNavLink to="/applications" active={location.pathname === '/applications'}>
+                  <div className="flex items-center">
+                    <ClipboardList className="mr-2 h-4 w-4" />
+                    Applications
+                  </div>
+                </MobileNavLink>
+              </>
+            )}
           </nav>
           
           <Button 
