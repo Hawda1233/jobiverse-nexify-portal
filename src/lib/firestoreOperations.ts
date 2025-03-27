@@ -8,7 +8,7 @@ const jobsCollection = collection(db, "jobs");
 const applicationsCollection = collection(db, "applications");
 
 // Add a new job to Firestore
-export const addJobToFirestore = async (jobData: Omit<JobType, "id">) => {
+export const addJobToFirestore = async (jobData: Omit<JobType, "id" | "postedTime">) => {
   try {
     const docRef = await addDoc(jobsCollection, {
       ...jobData,
@@ -17,7 +17,14 @@ export const addJobToFirestore = async (jobData: Omit<JobType, "id">) => {
       active: true,
     });
     
-    return { id: docRef.id, ...jobData };
+    // Format the posted time
+    const postedTime = formatPostedTime(new Date());
+    
+    return { 
+      id: parseInt(docRef.id, 10) || Math.floor(Math.random() * 10000), // Convert to number or use random fallback
+      ...jobData,
+      postedTime 
+    };
   } catch (error) {
     console.error("Error adding job:", error);
     throw error;
@@ -34,7 +41,7 @@ export const getJobsFromFirestore = async () => {
     querySnapshot.forEach((doc) => {
       const data = doc.data();
       jobs.push({
-        id: doc.id,
+        id: parseInt(doc.id, 10) || Math.floor(Math.random() * 10000), // Convert to number or use random fallback
         title: data.title,
         companyName: data.companyName,
         location: data.location,
@@ -66,7 +73,7 @@ export const getJobsByHR = async (userId: string) => {
     querySnapshot.forEach((doc) => {
       const data = doc.data();
       jobs.push({
-        id: doc.id,
+        id: parseInt(doc.id, 10) || Math.floor(Math.random() * 10000), // Convert to number or use random fallback
         title: data.title,
         companyName: data.companyName,
         location: data.location,

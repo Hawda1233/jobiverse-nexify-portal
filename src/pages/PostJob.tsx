@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -96,140 +97,136 @@ const PostJob = () => {
   };
 
   return (
-    <>
-      <Navbar />
-      <div className="container mx-auto px-4 py-12">
-        <Card className="w-full max-w-4xl mx-auto">
-          <CardHeader>
-            <CardTitle className="text-2xl font-bold">Post a New Job</CardTitle>
-            <CardDescription>
-              Fill out the form below to post a new job listing
-            </CardDescription>
-          </CardHeader>
-          <form onSubmit={handleSubmit}>
-            <CardContent className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label htmlFor="title">Job Title</Label>
-                  <Input
-                    id="title"
-                    placeholder="e.g. Senior Frontend Developer"
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    required
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="location">Location</Label>
-                  <Input
-                    id="location"
-                    placeholder="e.g. Mumbai, India"
-                    value={location}
-                    onChange={(e) => setLocation(e.target.value)}
-                    required
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="jobType">Job Type</Label>
-                  <Select value={jobType} onValueChange={setJobType} required>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select job type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {jobTypes.map((type) => (
-                        <SelectItem key={type} value={type}>
-                          {type}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="salary">Salary Range (Optional)</Label>
-                  <Input
-                    id="salary"
-                    placeholder="e.g. ₹10L - ₹15L"
-                    value={salary}
-                    onChange={(e) => setSalary(e.target.value)}
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="category">Category</Label>
-                  <Select value={category} onValueChange={setCategory} required>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select category" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {categories.map((cat) => (
-                        <SelectItem key={cat.id} value={cat.name}>
-                          {cat.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="experienceLevel">Experience Level</Label>
-                  <Select value={experienceLevel} onValueChange={setExperienceLevel} required>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select experience level" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {experienceLevels.map((level) => (
-                        <SelectItem key={level} value={level}>
-                          {level}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              
+    <div className="container mx-auto px-4 py-12">
+      <Card className="w-full max-w-4xl mx-auto">
+        <CardHeader>
+          <CardTitle className="text-2xl font-bold">Post a New Job</CardTitle>
+          <CardDescription>
+            Fill out the form below to post a new job listing
+          </CardDescription>
+        </CardHeader>
+        <form onSubmit={handleSubmit}>
+          <CardContent className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
-                <Label htmlFor="description">Job Description</Label>
-                <Textarea
-                  id="description"
-                  placeholder="Enter detailed job description, requirements, and responsibilities..."
-                  className="min-h-[200px]"
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
+                <Label htmlFor="title">Job Title</Label>
+                <Input
+                  id="title"
+                  placeholder="e.g. Senior Frontend Developer"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
                   required
                 />
               </div>
               
-              <div className="flex items-center space-x-2">
-                <Checkbox 
-                  id="featured"
-                  checked={isFeatured}
-                  onCheckedChange={(checked) => setIsFeatured(checked as boolean)}
+              <div className="space-y-2">
+                <Label htmlFor="location">Location</Label>
+                <Input
+                  id="location"
+                  placeholder="e.g. Mumbai, India"
+                  value={location}
+                  onChange={(e) => setLocation(e.target.value)}
+                  required
                 />
-                <Label htmlFor="featured" className="cursor-pointer">
-                  Feature this job (promotes visibility)
-                </Label>
               </div>
-            </CardContent>
-            <CardFooter className="flex justify-end space-x-4">
-              <Button 
-                type="button" 
-                variant="outline" 
-                onClick={() => navigate("/hr-dashboard")}
-              >
-                Cancel
-              </Button>
-              <Button type="submit" disabled={isLoading}>
-                {isLoading ? "Posting job..." : "Post Job"}
-              </Button>
-            </CardFooter>
-          </form>
-        </Card>
-      </div>
-      <Footer />
-    </>
+              
+              <div className="space-y-2">
+                <Label htmlFor="jobType">Job Type</Label>
+                <Select value={jobType} onValueChange={setJobType} required>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select job type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {jobTypes.map((type) => (
+                      <SelectItem key={type} value={type}>
+                        {type}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="salary">Salary Range (Optional)</Label>
+                <Input
+                  id="salary"
+                  placeholder="e.g. ₹10L - ₹15L"
+                  value={salary}
+                  onChange={(e) => setSalary(e.target.value)}
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="category">Category</Label>
+                <Select value={category} onValueChange={setCategory} required>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories.map((cat) => (
+                      <SelectItem key={cat.id} value={cat.name}>
+                        {cat.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="experienceLevel">Experience Level</Label>
+                <Select value={experienceLevel} onValueChange={setExperienceLevel} required>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select experience level" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {experienceLevels.map((level) => (
+                      <SelectItem key={level} value={level}>
+                        {level}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="description">Job Description</Label>
+              <Textarea
+                id="description"
+                placeholder="Enter detailed job description, requirements, and responsibilities..."
+                className="min-h-[200px]"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                required
+              />
+            </div>
+            
+            <div className="flex items-center space-x-2">
+              <Checkbox 
+                id="featured"
+                checked={isFeatured}
+                onCheckedChange={(checked) => setIsFeatured(checked as boolean)}
+              />
+              <Label htmlFor="featured" className="cursor-pointer">
+                Feature this job (promotes visibility)
+              </Label>
+            </div>
+          </CardContent>
+          <CardFooter className="flex justify-end space-x-4">
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={() => navigate("/hr-dashboard")}
+            >
+              Cancel
+            </Button>
+            <Button type="submit" disabled={isLoading}>
+              {isLoading ? "Posting job..." : "Post Job"}
+            </Button>
+          </CardFooter>
+        </form>
+      </Card>
+    </div>
   );
 };
 

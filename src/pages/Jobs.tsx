@@ -106,8 +106,6 @@ const Jobs = () => {
         <div className="absolute bottom-0 left-0 bg-secondary w-[600px] h-[600px] rounded-full -translate-x-1/3 translate-y-1/3" />
       </div>
       
-      <Navbar />
-      
       <main className="flex-grow pt-24 pb-16">
         <div className="container mx-auto px-4 md:px-6">
           <motion.div 
@@ -281,8 +279,6 @@ const Jobs = () => {
           </div>
         </div>
       </main>
-      
-      <Footer />
     </div>
   );
 };
