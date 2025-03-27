@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from "react";
 import { toast } from "@/components/ui/use-toast";
 
@@ -1203,4 +1204,3 @@ Create a model answer that would impress a hiring manager. Make it realistic, pr
     </InterviewContext.Provider>
   );
 }
-
