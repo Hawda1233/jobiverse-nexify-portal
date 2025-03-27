@@ -9,11 +9,13 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArrowRight, Mail, Lock, Briefcase, User } from "lucide-react";
+import { saveCandidateProfile } from "@/lib/profileOperations";
 
 const SignUp = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [fullName, setFullName] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const { signup, loginWithGoogle } = useAuth();
@@ -35,7 +37,15 @@ const SignUp = () => {
     setIsLoading(true);
 
     try {
-      await signup(email, password, false);
+      const userCredential = await signup(email, password, false);
+      
+      // Create candidate profile
+      await saveCandidateProfile({
+        uid: userCredential.user.uid,
+        email,
+        fullName: fullName || null
+      });
+      
       toast({
         title: "Success!",
         description: "Your account has been created.",
@@ -57,7 +67,18 @@ const SignUp = () => {
     setIsGoogleLoading(true);
     try {
       const result = await loginWithGoogle();
-      console.log("Google sign up successful:", result);
+      
+      // Create basic candidate profile if user doesn't exist
+      try {
+        await saveCandidateProfile({
+          uid: result.user.uid,
+          email: result.user.email || '',
+          fullName: result.user.displayName || undefined
+        });
+      } catch (profileError) {
+        console.error("Error creating profile:", profileError);
+      }
+      
       toast({
         title: "Success!",
         description: "Your account has been created with Google.",
@@ -100,6 +121,21 @@ const SignUp = () => {
           <TabsContent value="jobseeker">
             <form onSubmit={handleSubmit}>
               <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="fullName">Full Name</Label>
+                  <div className="relative">
+                    <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      id="fullName"
+                      placeholder="John Doe"
+                      type="text"
+                      className="pl-10"
+                      value={fullName}
+                      onChange={(e) => setFullName(e.target.value)}
+                    />
+                  </div>
+                </div>
+                
                 <div className="space-y-2">
                   <Label htmlFor="email">Email</Label>
                   <div className="relative">
