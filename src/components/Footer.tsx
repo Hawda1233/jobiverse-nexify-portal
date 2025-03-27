@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { BriefcaseBusiness, Facebook, Instagram, Linkedin, X } from 'lucide-react';
+import { BriefcaseBusiness, Facebook, Instagram, Linkedin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
@@ -21,7 +21,13 @@ const Footer = () => {
             </p>
             <div className="flex gap-4">
               <SocialButton 
-                icon={<X className="h-4 w-4 font-bold" />} 
+                icon={
+                  <div className="flex items-center justify-center w-full h-full">
+                    <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+                    </svg>
+                  </div>
+                } 
                 className="bg-black text-white hover:bg-black/90 hover:text-white border-none"
               />
               <SocialButton icon={<Linkedin className="h-4 w-4" />} />
