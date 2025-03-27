@@ -1,0 +1,56 @@
+
+import React, { Suspense } from 'react';
+import { Canvas } from '@react-three/fiber';
+import { OrbitControls, Environment, Stars } from '@react-three/drei';
+import Character3D from './Character3D';
+
+interface Scene3DProps {
+  height?: string;
+  enableControls?: boolean;
+  characterPath?: string;
+  showCharacter?: boolean;
+  showStars?: boolean;
+}
+
+const Scene3D: React.FC<Scene3DProps> = ({ 
+  height = '400px', 
+  enableControls = false,
+  characterPath = '/models/robot.glb',
+  showCharacter = true,
+  showStars = true
+}) => {
+  return (
+    <div style={{ height, width: '100%', position: 'relative' }}>
+      <Canvas camera={{ position: [0, 0, 5], fov: 50 }}>
+        <Suspense fallback={null}>
+          <ambientLight intensity={0.5} />
+          <spotLight position={[10, 10, 10]} angle={0.15} penumbra={1} intensity={1} castShadow />
+          <pointLight position={[-10, -10, -10]} intensity={0.5} />
+          
+          {showCharacter && (
+            <Character3D modelPath={characterPath} />
+          )}
+          
+          {showStars && (
+            <Stars radius={100} depth={50} count={5000} factor={4} saturation={0} fade speed={1} />
+          )}
+          
+          <Environment preset="city" />
+          
+          {enableControls && (
+            <OrbitControls 
+              enableZoom={true} 
+              enablePan={false} 
+              enableRotate={true} 
+              autoRotate={false}
+              minDistance={3}
+              maxDistance={10}
+            />
+          )}
+        </Suspense>
+      </Canvas>
+    </div>
+  );
+};
+
+export default Scene3D;

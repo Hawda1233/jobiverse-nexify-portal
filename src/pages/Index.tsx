@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Award, BarChart, BriefcaseBusiness, CheckCircle, ChevronRight, Globe, Layers } from 'lucide-react';
 import { getFeaturedJobs, categories } from '@/lib/jobsData';
+import Scene3D from '@/components/3d/Scene3D';
 
 const Index = () => {
   // Get featured jobs using the getter function
@@ -19,6 +20,30 @@ const Index = () => {
       
       <main className="flex-grow">
         <Hero />
+        
+        {/* 3D Character section */}
+        <section className="py-12 bg-gradient-to-b from-slate-900 to-slate-800 text-white">
+          <div className="container mx-auto px-4 md:px-6">
+            <div className="text-center mb-8">
+              <h2 className="text-3xl font-bold mb-3">Meet Your Virtual Career Assistant</h2>
+              <p className="text-gray-300 max-w-2xl mx-auto">
+                Interact with our AI-powered 3D assistant to help guide your career journey
+              </p>
+            </div>
+            
+            <div className="max-w-4xl mx-auto">
+              <Scene3D height="400px" enableControls={true} showStars={true} />
+            </div>
+            
+            <div className="text-center mt-8">
+              <Link to="/interview">
+                <Button size="lg" className="bg-accent hover:bg-accent/90">
+                  Try Interview Simulator <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </section>
         
         {/* Featured jobs section */}
         <section className="py-16 bg-secondary/30">
@@ -126,18 +151,21 @@ const Index = () => {
         </section>
         
         {/* CTA section */}
-        <section className="py-20">
-          <div className="container mx-auto px-4 md:px-6">
-            <div className="max-w-3xl mx-auto text-center">
-              <h2 className="text-3xl font-bold mb-4">Ready to Start Your Journey?</h2>
-              <p className="text-muted-foreground mb-8 max-w-xl mx-auto">
+        <section className="py-20 relative overflow-hidden">
+          <div className="absolute inset-0 -z-10">
+            <Scene3D height="100%" showCharacter={false} showStars={true} />
+          </div>
+          <div className="container mx-auto px-4 md:px-6 relative z-10">
+            <div className="max-w-3xl mx-auto text-center bg-black/30 backdrop-blur-sm p-10 rounded-xl">
+              <h2 className="text-3xl font-bold mb-4 text-white">Ready to Start Your Journey?</h2>
+              <p className="text-gray-300 mb-8 max-w-xl mx-auto">
                 Join thousands of professionals who have found their dream careers through Nexify's innovative platform.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Button size="lg" className="px-8">
+                <Button size="lg" className="px-8 bg-accent hover:bg-accent/90">
                   Find Jobs
                 </Button>
-                <Button size="lg" variant="outline" className="px-8">
+                <Button size="lg" variant="outline" className="px-8 border-white/50 text-white hover:bg-white/10">
                   For Employers
                 </Button>
               </div>
