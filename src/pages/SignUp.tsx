@@ -149,7 +149,7 @@ const SignUp = () => {
               className="flex items-center gap-2 data-[state=active]:bg-accent data-[state=active]:text-white"
             >
               <Briefcase className="h-4 w-4" />
-              <span>Employer</span>
+              <span>HR Professional</span>
             </TabsTrigger>
           </TabsList>
           
@@ -274,20 +274,20 @@ const SignUp = () => {
               <div className="bg-accent/10 rounded-full w-16 h-16 mx-auto flex items-center justify-center mb-4">
                 <Briefcase className="h-8 w-8 text-accent" />
               </div>
-              <h3 className="text-lg font-medium mb-2">Create an Employer Account</h3>
+              <h3 className="text-lg font-medium mb-2">Create an HR Account</h3>
               <p className="text-muted-foreground mb-6">
-                Sign up as an employer to post jobs and find candidates
+                Sign up as an HR professional to post jobs and find candidates
               </p>
               <Button 
                 className="w-full bg-accent hover:bg-accent/90" 
                 onClick={() => navigate('/hr-signup')}
               >
-                Create Employer Account
+                Create HR Account
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
               
               <div className="mt-6 text-sm text-muted-foreground">
-                Already have an employer account?{" "}
+                Already have an HR account?{" "}
                 <Link to="/signin?tab=employer" className="text-accent hover:underline">
                   Sign in
                 </Link>

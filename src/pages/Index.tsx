@@ -40,13 +40,13 @@ const Index = () => {
           </div>
         </section>
         
-        {/* Account section - NEW */}
+        {/* Account section - UPDATED HR wording */}
         <section className="py-12 bg-accent/5">
           <div className="container mx-auto px-4 md:px-6">
             <div className="text-center mb-10">
               <h2 className="text-3xl font-bold mb-3">Join Nexify Today</h2>
               <p className="text-muted-foreground max-w-2xl mx-auto">
-                Create an account as a job seeker or employer to unlock all features
+                Create an account as a job seeker or HR professional to unlock all features
               </p>
             </div>
             
@@ -74,18 +74,18 @@ const Index = () => {
                 <div className="w-16 h-16 rounded-full bg-accent/10 flex items-center justify-center mb-4">
                   <BriefcaseBusiness className="h-8 w-8 text-accent" />
                 </div>
-                <h3 className="text-xl font-bold mb-3">Employers</h3>
+                <h3 className="text-xl font-bold mb-3">HR Professionals</h3>
                 <p className="text-muted-foreground mb-6">
                   Post jobs, find qualified candidates quickly, and manage applications all in one place
                 </p>
                 <Link to="/signup?tab=employer" className="w-full">
                   <Button className="w-full bg-accent hover:bg-accent/90">
-                    Create Employer Account
+                    Create HR Account
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>
                 </Link>
                 <Link to="/signin?tab=employer" className="mt-3 text-sm text-accent hover:underline">
-                  Already have an account? Sign in
+                  Already have an HR account? Sign in
                 </Link>
               </div>
             </div>

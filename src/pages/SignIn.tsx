@@ -145,7 +145,7 @@ const SignIn = () => {
           </div>
           <CardTitle className="text-2xl font-bold text-center">Welcome Back</CardTitle>
           <CardDescription className="text-center">
-            Sign in to your {activeTab === "jobseeker" ? "job seeker" : "employer"} account
+            Sign in to your {activeTab === "jobseeker" ? "job seeker" : "HR"} account
           </CardDescription>
         </CardHeader>
         
@@ -163,7 +163,7 @@ const SignIn = () => {
               className="flex items-center gap-2 data-[state=active]:bg-accent data-[state=active]:text-white"
             >
               <Briefcase className="h-4 w-4" />
-              <span>Employer</span>
+              <span>HR Professional</span>
             </TabsTrigger>
           </TabsList>
           
@@ -275,7 +275,7 @@ const SignIn = () => {
                     <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
                       id="email-employer"
-                      placeholder="company@example.com"
+                      placeholder="hr@company.com"
                       type="email"
                       className="pl-10"
                       value={email}
@@ -313,7 +313,7 @@ const SignIn = () => {
                   className="w-full bg-accent hover:bg-accent/90" 
                   disabled={isLoading}
                 >
-                  {isLoading ? "Signing in..." : "Sign In as Employer"}
+                  {isLoading ? "Signing in..." : "Sign In as HR Professional"}
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
                 
@@ -356,7 +356,7 @@ const SignIn = () => {
                 </Button>
                 
                 <p className="text-center text-sm text-muted-foreground">
-                  Don't have an employer account?{" "}
+                  Don't have an HR account?{" "}
                   <Link to="/signup?tab=employer" className="text-accent hover:underline">
                     Sign up
                   </Link>
