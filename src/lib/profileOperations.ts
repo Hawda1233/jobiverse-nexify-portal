@@ -60,7 +60,13 @@ export const getEmployerProfile = async (uid: string) => {
     const docSnap = await getDoc(profileRef);
     
     if (docSnap.exists()) {
-      return { id: docSnap.id, ...docSnap.data() } as EmployerProfileData;
+      const data = docSnap.data();
+      return { 
+        ...data, 
+        id: docSnap.id,
+        createdAt: data.createdAt?.toDate() || new Date(),
+        updatedAt: data.updatedAt?.toDate() || new Date()
+      } as EmployerProfileData;
     } else {
       return null;
     }
@@ -124,7 +130,13 @@ export const getCandidateProfile = async (uid: string) => {
     const docSnap = await getDoc(profileRef);
     
     if (docSnap.exists()) {
-      return { id: docSnap.id, ...docSnap.data() } as CandidateProfileData;
+      const data = docSnap.data();
+      return { 
+        ...data, 
+        id: docSnap.id,
+        createdAt: data.createdAt?.toDate() || new Date(),
+        updatedAt: data.updatedAt?.toDate() || new Date()
+      } as CandidateProfileData;
     } else {
       return null;
     }

@@ -9,13 +9,14 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArrowRight, Mail, Lock, Briefcase, User } from "lucide-react";
+import { getEmployerProfile, getCandidateProfile } from "@/lib/profileOperations";
 
 const SignIn = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
-  const { login, loginWithGoogle, userData } = useAuth();
+  const { login, loginWithGoogle, userData, updateUserRole } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -24,17 +25,52 @@ const SignIn = () => {
     setIsLoading(true);
 
     try {
-      await login(email, password);
-      toast({
-        title: "Success!",
-        description: "You have been signed in.",
-      });
+      const userCredential = await login(email, password);
       
-      // Redirect based on user role
-      if (userData?.role === "hr" || isHR) {
-        navigate("/hr-dashboard");
+      // Check if user has a profile in the corresponding collection
+      if (isHR) {
+        const employerProfile = await getEmployerProfile(userCredential.user.uid);
+        
+        if (employerProfile) {
+          // Update user role to HR if they have an employer profile
+          await updateUserRole("hr", {
+            company: employerProfile.company,
+            industry: employerProfile.industry
+          });
+          
+          toast({
+            title: "Success!",
+            description: "Welcome back to your employer account.",
+          });
+          
+          navigate("/hr-dashboard");
+        } else {
+          toast({
+            title: "Profile not found",
+            description: "You don't have an employer profile. Redirecting to create one.",
+            variant: "destructive",
+          });
+          
+          navigate("/hr-signup");
+        }
       } else {
-        navigate("/dashboard");
+        // Check for candidate profile
+        const candidateProfile = await getCandidateProfile(userCredential.user.uid);
+        
+        if (candidateProfile) {
+          await updateUserRole("candidate");
+          
+          toast({
+            title: "Success!",
+            description: "Welcome back to your account.",
+          });
+          
+          navigate("/dashboard");
+        } else {
+          // Create a basic candidate profile if none exists
+          // This is handled in the AuthContext
+          navigate("/dashboard");
+        }
       }
     } catch (error) {
       console.error(error);
@@ -51,22 +87,49 @@ const SignIn = () => {
   const handleGoogleSignIn = async (isHR: boolean = false) => {
     setIsGoogleLoading(true);
     try {
-      await loginWithGoogle();
+      const result = await loginWithGoogle();
       
-      // If HR tab is selected, update user role to HR
-      if (isHR && userData && userData.role !== "hr") {
-        // You might want to implement a role update function if needed
-      }
-      
-      toast({
-        title: "Success!",
-        description: "You have been signed in with Google.",
-      });
-      
-      // Redirect based on user role or selected tab
-      if (userData?.role === "hr" || isHR) {
-        navigate("/hr-dashboard");
+      // Check if the user should be directed to HR or candidate dashboard
+      if (isHR) {
+        const employerProfile = await getEmployerProfile(result.user.uid);
+        
+        if (employerProfile) {
+          await updateUserRole("hr", {
+            company: employerProfile.company,
+            industry: employerProfile.industry
+          });
+          
+          toast({
+            title: "Success!",
+            description: "Signed in to your employer account with Google.",
+          });
+          
+          navigate("/hr-dashboard");
+        } else {
+          toast({
+            title: "Profile not found",
+            description: "You don't have an employer profile yet. Please complete your profile.",
+          });
+          
+          // Create a basic profile and redirect to complete it
+          navigate("/hr-signup");
+        }
       } else {
+        const candidateProfile = await getCandidateProfile(result.user.uid);
+        
+        if (!candidateProfile) {
+          // Basic profile will be created in AuthContext
+          toast({
+            title: "Welcome!",
+            description: "Your account has been created. Complete your profile to get started.",
+          });
+        } else {
+          toast({
+            title: "Success!",
+            description: "You have been signed in with Google.",
+          });
+        }
+        
         navigate("/dashboard");
       }
     } catch (error) {

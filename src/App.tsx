@@ -3,8 +3,9 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Outlet } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Outlet, Navigate } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
+import { useAuth } from "@/contexts/AuthContext";
 import Index from "./pages/Index";
 import Jobs from "./pages/Jobs";
 import JobDetails from "./pages/JobDetails";
@@ -32,6 +33,27 @@ import { ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const queryClient = new QueryClient();
+
+// Auth route component for protecting routes
+const ProtectedRoute = ({ requiredRole, children }: { requiredRole?: "candidate" | "hr", children: React.ReactNode }) => {
+  const { currentUser, userData, loading } = useAuth();
+
+  if (loading) {
+    return <div className="flex h-screen items-center justify-center">Loading...</div>;
+  }
+
+  if (!currentUser) {
+    return <Navigate to="/signin" replace />;
+  }
+
+  if (requiredRole && userData?.role !== requiredRole) {
+    return requiredRole === "hr" ? 
+      <Navigate to="/dashboard" replace /> : 
+      <Navigate to="/hr-dashboard" replace />;
+  }
+
+  return <>{children}</>;
+};
 
 // Layout component that includes Navbar and Footer
 const MainLayout = () => (
@@ -63,6 +85,66 @@ const CleanLayout = () => {
   );
 };
 
+const AppRoutes = () => {
+  return (
+    <Routes>
+      {/* Routes with navbar and footer */}
+      <Route element={<MainLayout />}>
+        <Route path="/" element={<Index />} />
+        <Route path="/jobs" element={<Jobs />} />
+        <Route path="/companies" element={<Jobs />} />
+        <Route path="/resources" element={<ResourcesPage />} />
+        <Route path="/comparison" element={<ComparisonTool />} />
+        <Route path="/about" element={<About />} />
+        <Route path="/contact" element={<Contact />} />
+        <Route path="/privacy" element={<Privacy />} />
+        <Route path="/terms" element={<Terms />} />
+      </Route>
+      
+      {/* Routes with only back button */}
+      <Route element={<CleanLayout />}>
+        <Route path="/jobs/:id" element={<JobDetails />} />
+        <Route path="/interview" element={<InterviewSimulator />} />
+        <Route path="/signin" element={<SignIn />} />
+        <Route path="/signup" element={<SignUp />} />
+        <Route path="/hr-signup" element={<HRSignUp />} />
+        
+        {/* Protected routes */}
+        <Route path="/profile" element={
+          <ProtectedRoute>
+            <Profile />
+          </ProtectedRoute>
+        } />
+        <Route path="/dashboard" element={
+          <ProtectedRoute requiredRole="candidate">
+            <JobseekerDashboard />
+          </ProtectedRoute>
+        } />
+        <Route path="/applications" element={
+          <ProtectedRoute requiredRole="candidate">
+            <Applications />
+          </ProtectedRoute>
+        } />
+        <Route path="/hr-dashboard" element={
+          <ProtectedRoute requiredRole="hr">
+            <HRDashboard />
+          </ProtectedRoute>
+        } />
+        <Route path="/post-job" element={
+          <ProtectedRoute requiredRole="hr">
+            <PostJob />
+          </ProtectedRoute>
+        } />
+        
+        <Route path="/companies/:company" element={<CompanyJobs />} />
+        <Route path="/resources/:topic" element={<ResourceDetail />} />
+        <Route path="/resources/company/:companyId" element={<ResourceDetail />} />
+        <Route path="*" element={<NotFound />} />
+      </Route>
+    </Routes>
+  );
+};
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
@@ -70,38 +152,7 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
-          <Routes>
-            {/* Routes with navbar and footer */}
-            <Route element={<MainLayout />}>
-              <Route path="/" element={<Index />} />
-              <Route path="/jobs" element={<Jobs />} />
-              <Route path="/companies" element={<Jobs />} />
-              <Route path="/resources" element={<ResourcesPage />} />
-              <Route path="/comparison" element={<ComparisonTool />} />
-              <Route path="/about" element={<About />} />
-              <Route path="/contact" element={<Contact />} />
-              <Route path="/privacy" element={<Privacy />} />
-              <Route path="/terms" element={<Terms />} />
-            </Route>
-            
-            {/* Routes with only back button */}
-            <Route element={<CleanLayout />}>
-              <Route path="/jobs/:id" element={<JobDetails />} />
-              <Route path="/interview" element={<InterviewSimulator />} />
-              <Route path="/signin" element={<SignIn />} />
-              <Route path="/signup" element={<SignUp />} />
-              <Route path="/hr-signup" element={<HRSignUp />} />
-              <Route path="/profile" element={<Profile />} />
-              <Route path="/dashboard" element={<JobseekerDashboard />} />
-              <Route path="/applications" element={<Applications />} />
-              <Route path="/hr-dashboard" element={<HRDashboard />} />
-              <Route path="/post-job" element={<PostJob />} />
-              <Route path="/companies/:company" element={<CompanyJobs />} />
-              <Route path="/resources/:topic" element={<ResourceDetail />} />
-              <Route path="/resources/company/:companyId" element={<ResourceDetail />} />
-              <Route path="*" element={<NotFound />} />
-            </Route>
-          </Routes>
+          <AppRoutes />
         </BrowserRouter>
       </TooltipProvider>
     </AuthProvider>

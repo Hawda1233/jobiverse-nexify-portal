@@ -12,6 +12,7 @@ import {
 } from "firebase/auth";
 import { auth, googleProvider, addAuthDomain } from "../lib/firebase";
 import { useToast } from "@/hooks/use-toast";
+import { saveCandidateProfile, saveEmployerProfile } from "@/lib/profileOperations";
 
 // New interface for user data including role
 interface UserData {
@@ -57,7 +58,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   // Create user data in local storage
-  const createUserData = (user: User, role: "candidate" | "hr" = "candidate", data?: { company?: string, industry?: string }) => {
+  const createUserData = async (user: User, role: "candidate" | "hr" = "candidate", data?: { company?: string, industry?: string }) => {
     if (!user) return;
     
     const userData: UserData = {
@@ -72,6 +73,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Store user data in localStorage
     localStorage.setItem(`user_data_${user.uid}`, JSON.stringify(userData));
     setUserData(userData);
+    
+    // Also create the appropriate profile in Firestore
+    try {
+      if (role === "hr" && data?.company) {
+        await saveEmployerProfile({
+          uid: user.uid,
+          fullName: user.displayName || "",
+          email: user.email || "",
+          company: data.company,
+          industry: data.industry || "",
+        });
+      } else {
+        await saveCandidateProfile({
+          uid: user.uid,
+          email: user.email || "",
+          fullName: user.displayName || undefined,
+        });
+      }
+    } catch (error) {
+      console.error("Error creating profile:", error);
+    }
   };
 
   // Load user data from local storage
@@ -106,7 +128,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
     
     // Create user data with role
-    createUserData(
+    await createUserData(
       userCredential.user, 
       isHR ? "hr" : "candidate",
       isHR ? { company: data?.company, industry: data?.industry } : undefined
@@ -119,51 +141,53 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return signInWithEmailAndPassword(auth, email, password);
   }
 
-  function loginWithGoogle() {
-    return signInWithPopup(auth, googleProvider)
-      .then((result) => {
-        // Check if user data exists, if not create it
-        const userData = loadUserData(result.user);
-        if (!userData) {
-          createUserData(result.user);
-        }
-        return result;
-      })
-      .catch((error) => {
-        console.error("Google sign-in error:", error);
-        
-        // Handle common Firebase errors
-        if (error.code === 'auth/unauthorized-domain') {
-          toast({
-            title: "Authentication Error",
-            description: "This domain is not authorized for Google authentication. We've attempted to fix this. Please try again or use email sign-in.",
-            variant: "destructive",
-          });
-        } else if (error.code === 'auth/popup-closed-by-user') {
-          toast({
-            title: "Sign-in Cancelled",
-            description: "You closed the Google sign-in popup. Try again when you're ready.",
-            variant: "default",
-          });
-        } else if (error.code === 'auth/popup-blocked') {
-          toast({
-            title: "Popup Blocked",
-            description: "Pop-up was blocked by your browser. Please allow pop-ups for this website and try again.",
-            variant: "destructive",
-          });
-        } else {
-          toast({
-            title: "Authentication Error",
-            description: `Error: ${error.message || "There was a problem signing in with Google. Please try again later."}`,
-            variant: "destructive",
-          });
-        }
-        
-        throw error;
-      });
+  async function loginWithGoogle() {
+    try {
+      const result = await signInWithPopup(auth, googleProvider);
+      
+      // Check if user data exists, if not create it
+      const userData = loadUserData(result.user);
+      if (!userData) {
+        await createUserData(result.user);
+      }
+      return result;
+    } catch (error: any) {
+      console.error("Google sign-in error:", error);
+      
+      // Handle common Firebase errors
+      if (error.code === 'auth/unauthorized-domain') {
+        toast({
+          title: "Authentication Error",
+          description: "This domain is not authorized for Google authentication. We've attempted to fix this. Please try again or use email sign-in.",
+          variant: "destructive",
+        });
+      } else if (error.code === 'auth/popup-closed-by-user') {
+        toast({
+          title: "Sign-in Cancelled",
+          description: "You closed the Google sign-in popup. Try again when you're ready.",
+          variant: "default",
+        });
+      } else if (error.code === 'auth/popup-blocked') {
+        toast({
+          title: "Popup Blocked",
+          description: "Pop-up was blocked by your browser. Please allow pop-ups for this website and try again.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Authentication Error",
+          description: `Error: ${error.message || "There was a problem signing in with Google. Please try again later."}`,
+          variant: "destructive",
+        });
+      }
+      
+      throw error;
+    }
   }
 
   function logout() {
+    // Clear user data from state
+    setUserData(null);
     return signOut(auth);
   }
 
@@ -180,6 +204,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       localStorage.setItem(`user_data_${currentUser.uid}`, JSON.stringify(updatedUserData));
       setUserData(updatedUserData);
+      
+      // Also update the appropriate profile in Firestore if needed
+      if (role === "hr" && data?.company) {
+        try {
+          await saveEmployerProfile({
+            uid: currentUser.uid,
+            fullName: currentUser.displayName || "",
+            email: currentUser.email || "",
+            company: data.company,
+            industry: data.industry || "",
+          });
+        } catch (error) {
+          console.error("Error updating employer profile:", error);
+        }
+      }
     }
   }
 
