@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Outlet } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
 import Index from "./pages/Index";
 import Jobs from "./pages/Jobs";
@@ -26,8 +26,40 @@ import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
 import JobseekerDashboard from "./pages/JobseekerDashboard";
 import Applications from "./pages/Applications";
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
+import { ChevronLeft } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 const queryClient = new QueryClient();
+
+// Layout component that includes Navbar and Footer
+const MainLayout = () => (
+  <>
+    <Navbar />
+    <Outlet />
+    <Footer />
+  </>
+);
+
+// Layout for pages that don't need Navbar/Footer
+const CleanLayout = () => {
+  return (
+    <div>
+      <div className="fixed top-4 left-4 z-50">
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={() => window.history.back()}
+          className="rounded-full bg-background/60 backdrop-blur-sm"
+        >
+          <ChevronLeft className="h-5 w-5" />
+        </Button>
+      </div>
+      <Outlet />
+    </div>
+  );
+};
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -37,43 +69,36 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/jobs" element={<Jobs />} />
-            <Route path="/jobs/:id" element={<JobDetails />} />
-            <Route path="/interview" element={<InterviewSimulator />} />
-            <Route path="/signin" element={<SignIn />} />
-            <Route path="/signup" element={<SignUp />} />
-            <Route path="/hr-signup" element={<HRSignUp />} />
-            <Route path="/profile" element={<Profile />} />
+            {/* Routes with navbar and footer */}
+            <Route element={<MainLayout />}>
+              <Route path="/" element={<Index />} />
+              <Route path="/jobs" element={<Jobs />} />
+              <Route path="/companies" element={<Jobs />} />
+              <Route path="/resources" element={<ResourcesPage />} />
+              <Route path="/comparison" element={<ComparisonTool />} />
+              <Route path="/about" element={<About />} />
+              <Route path="/contact" element={<Contact />} />
+              <Route path="/privacy" element={<Privacy />} />
+              <Route path="/terms" element={<Terms />} />
+            </Route>
             
-            {/* Dashboard routes */}
-            <Route path="/dashboard" element={<JobseekerDashboard />} />
-            <Route path="/applications" element={<Applications />} />
-            
-            {/* HR routes */}
-            <Route path="/hr-dashboard" element={<HRDashboard />} />
-            <Route path="/post-job" element={<PostJob />} />
-            
-            {/* Companies routes */}
-            <Route path="/companies" element={<Jobs />} />
-            <Route path="/companies/:company" element={<CompanyJobs />} />
-            
-            {/* Resources routes */}
-            <Route path="/resources" element={<ResourcesPage />} />
-            <Route path="/resources/:topic" element={<ResourceDetail />} />
-            <Route path="/resources/company/:companyId" element={<ResourceDetail />} />
-            
-            {/* Comparison Tool route */}
-            <Route path="/comparison" element={<ComparisonTool />} />
-            
-            {/* About and Policy routes */}
-            <Route path="/about" element={<About />} />
-            <Route path="/contact" element={<Contact />} />
-            <Route path="/privacy" element={<Privacy />} />
-            <Route path="/terms" element={<Terms />} />
-            
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
+            {/* Routes with only back button */}
+            <Route element={<CleanLayout />}>
+              <Route path="/jobs/:id" element={<JobDetails />} />
+              <Route path="/interview" element={<InterviewSimulator />} />
+              <Route path="/signin" element={<SignIn />} />
+              <Route path="/signup" element={<SignUp />} />
+              <Route path="/hr-signup" element={<HRSignUp />} />
+              <Route path="/profile" element={<Profile />} />
+              <Route path="/dashboard" element={<JobseekerDashboard />} />
+              <Route path="/applications" element={<Applications />} />
+              <Route path="/hr-dashboard" element={<HRDashboard />} />
+              <Route path="/post-job" element={<PostJob />} />
+              <Route path="/companies/:company" element={<CompanyJobs />} />
+              <Route path="/resources/:topic" element={<ResourceDetail />} />
+              <Route path="/resources/company/:companyId" element={<ResourceDetail />} />
+              <Route path="*" element={<NotFound />} />
+            </Route>
           </Routes>
         </BrowserRouter>
       </TooltipProvider>
