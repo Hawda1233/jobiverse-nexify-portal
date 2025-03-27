@@ -1,4 +1,3 @@
-
 import React from 'react';
 import Navbar from '@/components/Navbar';
 import Hero from '@/components/Hero';
@@ -19,40 +18,6 @@ const Index = () => {
       
       <main className="flex-grow">
         <Hero />
-        
-        {/* Virtual Assistant section */}
-        <section className="py-12 bg-gradient-to-b from-slate-900 to-slate-800 text-white">
-          <div className="container mx-auto px-4 md:px-6">
-            <div className="text-center mb-8">
-              <h2 className="text-3xl font-bold mb-3">Meet Your Virtual Career Assistant</h2>
-              <p className="text-gray-300 max-w-2xl mx-auto">
-                Interact with our AI-powered assistant to help guide your career journey
-              </p>
-            </div>
-            
-            <div className="max-w-4xl mx-auto">
-              <div className="bg-gradient-to-br from-slate-800 to-slate-900 h-[400px] rounded-lg flex items-center justify-center">
-                <div className="text-center">
-                  <h3 className="text-xl font-semibold mb-3">AI Career Assistant</h3>
-                  <p className="text-gray-300 mb-5 max-w-md mx-auto">
-                    Get personalized career advice and interview tips from our virtual assistant
-                  </p>
-                  <Button size="lg" className="bg-accent hover:bg-accent/90">
-                    Try it now
-                  </Button>
-                </div>
-              </div>
-            </div>
-            
-            <div className="flex justify-center mt-8">
-              <Link to="/interview">
-                <Button size="lg" className="bg-accent hover:bg-accent/90">
-                  Try Interview Simulator <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
-              </Link>
-            </div>
-          </div>
-        </section>
         
         {/* Featured jobs section */}
         <section className="py-16 bg-secondary/30">
@@ -155,26 +120,6 @@ const Index = () => {
                 title="Career Resources"
                 description="Access guides, templates, and advice to help you advance in your career."
               />
-            </div>
-          </div>
-        </section>
-        
-        {/* CTA section */}
-        <section className="py-20 bg-gradient-to-br from-gray-900 to-gray-800 relative overflow-hidden">
-          <div className="container mx-auto px-4 md:px-6 relative z-10">
-            <div className="max-w-3xl mx-auto text-center bg-black/30 backdrop-blur-sm p-10 rounded-xl">
-              <h2 className="text-3xl font-bold mb-4 text-white">Ready to Start Your Journey?</h2>
-              <p className="text-gray-300 mb-8 max-w-xl mx-auto">
-                Join thousands of professionals who have found their dream careers through Nexify's innovative platform.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Button size="lg" className="px-8 bg-accent hover:bg-accent/90">
-                  Find Jobs
-                </Button>
-                <Button size="lg" variant="outline" className="px-8 border-white/50 text-white hover:bg-white/10">
-                  For Employers
-                </Button>
-              </div>
             </div>
           </div>
         </section>
