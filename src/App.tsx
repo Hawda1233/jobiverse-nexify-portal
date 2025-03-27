@@ -37,7 +37,9 @@ const queryClient = new QueryClient();
 const MainLayout = () => (
   <>
     <Navbar />
-    <Outlet />
+    <div className="min-h-screen pt-20">
+      <Outlet />
+    </div>
     <Footer />
   </>
 );
@@ -45,7 +47,7 @@ const MainLayout = () => (
 // Layout for pages that don't need Navbar/Footer
 const CleanLayout = () => {
   return (
-    <div>
+    <div className="min-h-screen">
       <div className="fixed top-4 left-4 z-50">
         <Button
           variant="outline"
