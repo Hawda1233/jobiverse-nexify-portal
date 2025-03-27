@@ -20,7 +20,10 @@ const Footer = () => {
               Revolutionizing the way people find their dream careers and employers discover ideal candidates.
             </p>
             <div className="flex gap-4">
-              <SocialButton icon={<X className="h-4 w-4" />} />
+              <SocialButton 
+                icon={<X className="h-4 w-4 font-bold" />} 
+                className="bg-black text-white hover:bg-black/90 hover:text-white border-none"
+              />
               <SocialButton icon={<Linkedin className="h-4 w-4" />} />
               <SocialButton icon={<Facebook className="h-4 w-4" />} />
               <SocialButton icon={<Instagram className="h-4 w-4" />} />
@@ -100,12 +103,17 @@ const FooterLink = ({ href, children }: FooterLinkProps) => {
   );
 };
 
-const SocialButton = ({ icon }: { icon: React.ReactNode }) => {
+interface SocialButtonProps {
+  icon: React.ReactNode;
+  className?: string;
+}
+
+const SocialButton = ({ icon, className }: SocialButtonProps) => {
   return (
     <Button 
       variant="outline" 
       size="icon" 
-      className="h-9 w-9 rounded-full bg-background hover:bg-accent hover:text-accent-foreground transition-colors"
+      className={`h-9 w-9 rounded-full bg-background hover:bg-accent hover:text-accent-foreground transition-colors ${className || ''}`}
     >
       {icon}
     </Button>
