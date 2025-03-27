@@ -21,6 +21,7 @@ export interface EmployerProfileData {
   companySize?: string;
   foundedYear?: number;
   logo?: string;
+  emailVerified?: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -76,6 +77,7 @@ export const getEmployerProfile = async (uid: string) => {
         companySize: data.companySize,
         foundedYear: data.foundedYear,
         logo: data.logo,
+        emailVerified: data.emailVerified,
         createdAt: data.createdAt?.toDate() || new Date(),
         updatedAt: data.updatedAt?.toDate() || new Date()
       } as EmployerProfileData;
@@ -106,6 +108,7 @@ export interface CandidateProfileData {
   preferredJobTypes?: string[];
   preferredLocations?: string[];
   preferredCategories?: string[]; 
+  emailVerified?: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -164,6 +167,7 @@ export const getCandidateProfile = async (uid: string) => {
         preferredJobTypes: data.preferredJobTypes || [],
         preferredLocations: data.preferredLocations || [],
         preferredCategories: data.preferredCategories || [],
+        emailVerified: data.emailVerified,
         createdAt: data.createdAt?.toDate() || new Date(),
         updatedAt: data.updatedAt?.toDate() || new Date()
       } as CandidateProfileData;
