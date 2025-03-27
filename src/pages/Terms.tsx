@@ -2,7 +2,7 @@
 import React from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import { FileText } from 'lucide-react';
+import { Scroll, ShieldCheck, FileCheck } from 'lucide-react';
 
 const Terms = () => {
   return (
@@ -11,122 +11,103 @@ const Terms = () => {
       <main className="flex-grow py-16 mt-20">
         <div className="container mx-auto px-4 md:px-6">
           <div className="max-w-3xl mx-auto">
-            <div className="flex items-center gap-3 mb-6">
-              <FileText className="h-8 w-8 text-primary" />
-              <h1 className="text-4xl font-bold">Terms of Service</h1>
-            </div>
-            
-            <div className="text-sm text-muted-foreground mb-8">
-              Last Updated: June 1, 2025
-            </div>
+            <h1 className="text-4xl font-bold mb-6">Terms of Service</h1>
             
             <div className="prose prose-lg max-w-none">
-              <p className="lead">
-                Welcome to Nexify. These Terms of Service ("Terms") govern your access to and use of the Nexify website, apps, and services. Please read these Terms carefully before using our services.
+              <p className="text-xl text-muted-foreground mb-8">
+                Last Updated: March 30, 2024 | Effective Date: March 30, 2024
               </p>
               
-              <h2 className="text-2xl font-semibold mt-8 mb-4">1. Acceptance of Terms</h2>
-              <p>
-                By accessing or using our services, you agree to be bound by these Terms and our Privacy Policy. If you do not agree to these Terms, you may not access or use our services.
+              <p className="mb-6">
+                Welcome to Nexify, a platform founded on March 30, 2024. These Terms of Service ("Terms") govern your access to and use of the Nexify website, services, and applications (collectively, the "Services"). By accessing or using our Services, you agree to be bound by these Terms.
               </p>
               
-              <h2 className="text-2xl font-semibold mt-8 mb-4">2. Eligibility</h2>
-              <p>
-                You must be at least 18 years old to use our services. By using our services, you represent and warrant that you meet this requirement and that you have the right, authority, and capacity to enter into these Terms.
+              <h2 className="text-2xl font-semibold mb-4 flex items-center">
+                <FileCheck className="mr-2 h-6 w-6 text-primary" />
+                Acceptance of Terms
+              </h2>
+              <p className="mb-6">
+                By accessing or using the Services, you represent that you have read, understood, and agree to be bound by these Terms. If you do not agree to these Terms, please do not use our Services.
               </p>
               
-              <h2 className="text-2xl font-semibold mt-8 mb-4">3. Account Registration</h2>
-              <p>
-                To access certain features of our services, you may be required to create an account. You agree to provide accurate, current, and complete information during the registration process and to update such information to keep it accurate, current, and complete.
-              </p>
-              <p>
-                You are responsible for safeguarding your account credentials and for all activities that occur under your account. You agree to notify us immediately of any unauthorized use of your account.
+              <h2 className="text-2xl font-semibold mb-4 flex items-center">
+                <Scroll className="mr-2 h-6 w-6 text-primary" />
+                User Accounts
+              </h2>
+              <p className="mb-6">
+                To access certain features of our Services, you may need to create an account. You are responsible for maintaining the confidentiality of your account information, including your password, and for all activity that occurs under your account. You agree to notify us immediately of any unauthorized use of your account.
               </p>
               
-              <h2 className="text-2xl font-semibold mt-8 mb-4">4. User Conduct</h2>
-              <p>
-                When using our services, you agree not to:
+              <h2 className="text-2xl font-semibold mb-4 flex items-center">
+                <ShieldCheck className="mr-2 h-6 w-6 text-primary" />
+                Privacy Policy
+              </h2>
+              <p className="mb-6">
+                Your privacy is important to us. Our Privacy Policy explains how we collect, use, and protect your personal information. By using our Services, you consent to the collection, use, and disclosure of your information as described in our Privacy Policy.
               </p>
-              <ul className="list-disc pl-6 space-y-2">
-                <li>Violate any applicable laws or regulations</li>
-                <li>Infringe the rights of others, including privacy and intellectual property rights</li>
-                <li>Post false, inaccurate, misleading, deceptive, or offensive content</li>
-                <li>Create multiple accounts or impersonate any person or entity</li>
-                <li>Use our services for any illegal or unauthorized purpose</li>
-                <li>Interfere with or disrupt the operation of our services</li>
-                <li>Attempt to gain unauthorized access to our systems or user accounts</li>
-                <li>Collect or harvest data from our services without our consent</li>
-                <li>Transmit viruses, malware, or other harmful code</li>
+              
+              <h2 className="text-2xl font-semibold mb-4 flex items-center">
+                <FileCheck className="mr-2 h-6 w-6 text-primary" />
+                User Content
+              </h2>
+              <p className="mb-6">
+                You retain ownership of any content you submit, post, or display on or through our Services ("User Content"). By submitting User Content, you grant us a worldwide, non-exclusive, royalty-free license to use, reproduce, modify, adapt, publish, translate, and distribute your User Content.
+              </p>
+              
+              <h2 className="text-2xl font-semibold mb-4 flex items-center">
+                <FileCheck className="mr-2 h-6 w-6 text-primary" />
+                Prohibited Conduct
+              </h2>
+              <p className="mb-6">
+                You agree not to engage in any of the following activities:
+              </p>
+              <ul className="space-y-2 mb-6 list-disc pl-6">
+                <li>Violating any applicable laws or regulations</li>
+                <li>Impersonating any person or entity</li>
+                <li>Harassing, threatening, or intimidating other users</li>
+                <li>Posting or transmitting unauthorized commercial communications</li>
+                <li>Interfering with the proper working of the Services</li>
+                <li>Attempting to access areas of the Services that you are not authorized to access</li>
               </ul>
               
-              <h2 className="text-2xl font-semibold mt-8 mb-4">5. Job Listings and Applications</h2>
-              <p>
-                <strong>For Employers:</strong> You are solely responsible for the job listings you post, including their accuracy and legality. All job postings must comply with applicable employment and anti-discrimination laws.
-              </p>
-              <p>
-                <strong>For Job Seekers:</strong> You are responsible for the content of your profile and applications. You agree that all information provided is accurate, and you have all necessary rights to the content you submit.
-              </p>
-              
-              <h2 className="text-2xl font-semibold mt-8 mb-4">6. Fees and Payments</h2>
-              <p>
-                Some of our services may require payment. By using our paid services, you agree to pay all fees and charges associated with your account on a timely basis and according to the pricing and terms in effect when the charges were incurred.
-              </p>
-              <p>
-                All payments are non-refundable unless explicitly stated otherwise or required by law.
+              <h2 className="text-2xl font-semibold mb-4 flex items-center">
+                <FileCheck className="mr-2 h-6 w-6 text-primary" />
+                Termination
+              </h2>
+              <p className="mb-6">
+                We reserve the right to terminate or suspend your account and access to the Services at our sole discretion, without notice, for conduct that we believe violates these Terms or is harmful to other users of the Services, us, or third parties, or for any other reason.
               </p>
               
-              <h2 className="text-2xl font-semibold mt-8 mb-4">7. Intellectual Property Rights</h2>
-              <p>
-                Our services and their contents, features, and functionality are owned by Nexify and are protected by copyright, trademark, and other intellectual property laws.
-              </p>
-              <p>
-                You may not use, reproduce, distribute, modify, or create derivative works of our content without our explicit permission.
-              </p>
-              
-              <h2 className="text-2xl font-semibold mt-8 mb-4">8. Termination</h2>
-              <p>
-                We may terminate or suspend your account and access to our services at our sole discretion, without notice, for any reason, including if you violate these Terms.
-              </p>
-              <p>
-                You may terminate your account at any time by following the instructions on our website or contacting us.
+              <h2 className="text-2xl font-semibold mb-4 flex items-center">
+                <FileCheck className="mr-2 h-6 w-6 text-primary" />
+                Changes to Terms
+              </h2>
+              <p className="mb-6">
+                We may modify these Terms at any time. If we make changes, we will provide notice by posting the updated Terms on our Services and updating the "Last Updated" date. Your continued use of the Services after such notice constitutes your acceptance of the modified Terms.
               </p>
               
-              <h2 className="text-2xl font-semibold mt-8 mb-4">9. Disclaimer of Warranties</h2>
-              <p>
-                Our services are provided "as is" and "as available" without any warranties of any kind, either express or implied, including but not limited to the implied warranties of merchantability, fitness for a particular purpose, or non-infringement.
+              <h2 className="text-2xl font-semibold mb-4 flex items-center">
+                <FileCheck className="mr-2 h-6 w-6 text-primary" />
+                Contact Information
+              </h2>
+              <p className="mb-6">
+                If you have any questions about these Terms, please contact us at:
               </p>
-              <p>
-                We do not guarantee that our services will be uninterrupted, secure, or error-free, or that any defects will be corrected.
-              </p>
+              <address className="not-italic mb-6">
+                Nexify<br />
+                Walchand Institute of Technology<br />
+                Walchand Hirachand Marg<br />
+                Ashok Chowk, Solapur<br />
+                Maharashtra, India<br />
+                PIN: 413005<br />
+                Email: nexify@gmail.com
+              </address>
               
-              <h2 className="text-2xl font-semibold mt-8 mb-4">10. Limitation of Liability</h2>
-              <p>
-                To the maximum extent permitted by law, Nexify shall not be liable for any indirect, incidental, special, consequential, or punitive damages, including but not limited to loss of profits, data, or use, arising out of or in connection with these Terms or our services.
-              </p>
-              
-              <h2 className="text-2xl font-semibold mt-8 mb-4">11. Indemnification</h2>
-              <p>
-                You agree to indemnify, defend, and hold harmless Nexify, its affiliates, officers, directors, employees, and agents from and against any claims, liabilities, damages, losses, costs, or expenses arising out of or in connection with your use of our services or violation of these Terms.
-              </p>
-              
-              <h2 className="text-2xl font-semibold mt-8 mb-4">12. Governing Law</h2>
-              <p>
-                These Terms shall be governed by and construed in accordance with the laws of India, without regard to its conflict of law provisions.
-              </p>
-              
-              <h2 className="text-2xl font-semibold mt-8 mb-4">13. Changes to Terms</h2>
-              <p>
-                We may update these Terms from time to time. We will notify you of any changes by posting the new Terms on this page and updating the "Last Updated" date.
-              </p>
-              
-              <h2 className="text-2xl font-semibold mt-8 mb-4">14. Contact Us</h2>
-              <p>
-                If you have questions or concerns about these Terms, please contact us at:
-              </p>
-              <p>
-                Email: nexify@gmail.com<br />
-                Address: Walchand Institute of Technology, Walchand Hirachand Marg, Ashok Chowk, Solapur, Maharashtra, India - 413005
-              </p>
+              <div className="bg-muted/30 p-6 rounded-lg border mt-10">
+                <p className="text-center text-muted-foreground">
+                  By using Nexify, you acknowledge that you have read, understood, and agree to be bound by these Terms of Service.
+                </p>
+              </div>
             </div>
           </div>
         </div>
