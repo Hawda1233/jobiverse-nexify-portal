@@ -15,11 +15,11 @@ const Terms = () => {
             
             <div className="prose prose-lg max-w-none">
               <p className="text-xl text-muted-foreground mb-8">
-                Last Updated: March 30, 2024 | Effective Date: March 30, 2024
+                Last Updated: March 30, 2025 | Effective Date: March 30, 2025
               </p>
               
               <p className="mb-6">
-                Welcome to Nexify, a platform founded on March 30, 2024. These Terms of Service ("Terms") govern your access to and use of the Nexify website, services, and applications (collectively, the "Services"). By accessing or using our Services, you agree to be bound by these Terms.
+                Welcome to Nexify, a platform founded on March 30, 2025. These Terms of Service ("Terms") govern your access to and use of the Nexify website, services, and applications (collectively, the "Services"). By accessing or using our Services, you agree to be bound by these Terms.
               </p>
               
               <h2 className="text-2xl font-semibold mb-4 flex items-center">
