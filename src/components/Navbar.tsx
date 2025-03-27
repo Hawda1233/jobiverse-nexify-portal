@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
@@ -172,7 +173,7 @@ const Navbar = () => {
                 <Link to="/comparison">
                   <NavigationMenuLink className={navigationMenuTriggerStyle()}>
                     <Scale className="mr-1 h-4 w-4" />
-                    Compare Companies
+                    Companies Review
                   </NavigationMenuLink>
                 </Link>
               </NavigationMenuItem>
@@ -256,7 +257,7 @@ const Navbar = () => {
             <MobileNavLink to="/comparison" active={location.pathname === '/comparison'}>
               <div className="flex items-center">
                 <Scale className="mr-2 h-4 w-4" />
-                Compare Companies
+                Companies Review
               </div>
             </MobileNavLink>
           </nav>
