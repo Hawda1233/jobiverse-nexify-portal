@@ -48,13 +48,14 @@ const Character3D = ({
     );
   }, []);
   
-  // Try to load the model but handle error gracefully with a more detailed error handler
-  const { scene, nodes, animations } = useGLTF(modelPath, true, 
-    (error) => {
-      console.error('Error loading 3D model:', error);
-      setModelError(true);
-    }
-  ) || { scene: null, nodes: null, animations: null };
+  // Try to load the model with proper error handling
+  // useGLTF accepts (path, useDraco, useMeshOpt, onProgress)
+  try {
+    var { scene, nodes, animations } = useGLTF(modelPath);
+  } catch (error) {
+    console.error('Error loading 3D model:', error);
+    setModelError(true);
+  }
   
   useFrame(({ clock }) => {
     if (groupRef.current) {
