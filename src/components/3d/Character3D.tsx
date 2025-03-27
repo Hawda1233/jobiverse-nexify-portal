@@ -48,11 +48,37 @@ const Character3D = ({
     );
   }, []);
   
-  // Load the model with error handling using useEffect to prevent render loop
-  const { scene } = useGLTF(modelPath, undefined, undefined, undefined, (error) => {
-    console.error('Error loading 3D model:', error);
-    setModelError(true);
-  });
+  // Use a separate effect to handle model loading errors
+  useEffect(() => {
+    const errorHandler = (error: Error) => {
+      console.error('Error loading 3D model:', error);
+      setModelError(true);
+    };
+
+    // Attempt to load the model
+    const xhr = new XMLHttpRequest();
+    xhr.open('GET', modelPath, true);
+    xhr.responseType = 'arraybuffer';
+    
+    xhr.onload = () => {
+      if (xhr.status !== 200) {
+        errorHandler(new Error(`Failed to load model: ${xhr.statusText}`));
+      }
+    };
+    
+    xhr.onerror = () => {
+      errorHandler(new Error('Network error occurred while loading the model'));
+    };
+    
+    xhr.send();
+
+    return () => {
+      xhr.abort(); // Clean up on unmount
+    };
+  }, [modelPath]);
+  
+  // Load the model (this will still try to load it, but we'll show fallback if there's an error)
+  const { scene } = useGLTF(modelPath);
   
   useFrame(({ clock }) => {
     if (groupRef.current) {
