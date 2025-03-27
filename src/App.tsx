@@ -37,7 +37,7 @@ const queryClient = new QueryClient();
 const MainLayout = () => (
   <>
     <Navbar />
-    <div className="min-h-screen pt-20">
+    <div className="min-h-screen pt-20 pb-20">
       <Outlet />
     </div>
     <Footer />
