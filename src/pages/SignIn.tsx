@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
@@ -9,7 +9,6 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArrowRight, Mail, Lock, Briefcase, User } from "lucide-react";
-import { getEmployerProfile, getCandidateProfile } from "@/lib/profileOperations";
 
 const SignIn = () => {
   const [email, setEmail] = useState("");
@@ -21,63 +20,64 @@ const SignIn = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const handleSubmit = async (e: React.FormEvent, isHR: boolean = false) => {
+  // Read the tab from URL if it exists
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const tab = params.get('tab');
+    if (tab === 'employer') {
+      setActiveTab('employer');
+    }
+  }, []);
+
+  // Update URL when tab changes
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    if (activeTab === 'employer') {
+      url.searchParams.set('tab', 'employer');
+    } else {
+      url.searchParams.delete('tab');
+    }
+    window.history.replaceState({}, '', url.toString());
+  }, [activeTab]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
-      const userCredential = await login(email, password);
-      
-      // Check if user has a profile in the corresponding collection
-      if (isHR) {
-        const employerProfile = await getEmployerProfile(userCredential.user.uid);
-        
-        if (employerProfile) {
-          // Update user role to HR if they have an employer profile
-          await updateUserRole("hr", {
-            company: employerProfile.company,
-            industry: employerProfile.industry
-          });
-          
-          toast({
-            title: "Success!",
-            description: "Welcome back to your employer account.",
-          });
-          
-          navigate("/hr-dashboard");
-        } else {
-          toast({
-            title: "Profile not found",
-            description: "You don't have an employer profile. Redirecting to create one.",
-            variant: "destructive",
-          });
-          
-          navigate("/hr-signup");
+      await login(email, password);
+
+      // Additional logic to handle role switching if necessary
+      if (activeTab === "employer" && userData?.role !== "hr") {
+        // Need to switch to HR role
+        try {
+          await updateUserRole("hr");
+        } catch (error) {
+          console.error("Error updating role:", error);
         }
-      } else {
-        // Check for candidate profile
-        const candidateProfile = await getCandidateProfile(userCredential.user.uid);
-        
-        if (candidateProfile) {
+        navigate("/hr-dashboard");
+      } else if (activeTab === "jobseeker" && userData?.role !== "candidate") {
+        // Need to switch to candidate role
+        try {
           await updateUserRole("candidate");
-          
-          toast({
-            title: "Success!",
-            description: "Welcome back to your account.",
-          });
-          
-          navigate("/dashboard");
-        } else {
-          // Create a basic candidate profile if none exists
-          // This is handled in the AuthContext
-          navigate("/dashboard");
+        } catch (error) {
+          console.error("Error updating role:", error);
         }
+        navigate("/dashboard");
+      } else {
+        // Go to appropriate dashboard based on current role
+        navigate(userData?.role === "hr" ? "/hr-dashboard" : "/dashboard");
       }
+
+      toast({
+        title: "Success!",
+        description: "You have successfully logged in.",
+      });
     } catch (error) {
-      console.error(error);
+      console.error("Login error:", error);
       toast({
         title: "Error",
-        description: "Failed to sign in. Please check your credentials.",
+        description: "Incorrect email or password. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -85,97 +85,97 @@ const SignIn = () => {
     }
   };
 
-  const handleGoogleSignIn = async (isHR: boolean = false) => {
+  const handleGoogleSignIn = async () => {
     setIsGoogleLoading(true);
     try {
-      const result = await loginWithGoogle();
-      
-      // Check if the user should be directed to HR or candidate dashboard
-      if (isHR) {
-        const employerProfile = await getEmployerProfile(result.user.uid);
-        
-        if (employerProfile) {
-          await updateUserRole("hr", {
-            company: employerProfile.company,
-            industry: employerProfile.industry
-          });
-          
-          toast({
-            title: "Success!",
-            description: "Signed in to your employer account with Google.",
-          });
-          
-          navigate("/hr-dashboard");
-        } else {
-          toast({
-            title: "Profile not found",
-            description: "You don't have an employer profile yet. Please complete your profile.",
-          });
-          
-          // Create a basic profile and redirect to complete it
-          navigate("/hr-signup");
+      await loginWithGoogle();
+
+      // Additional logic to handle role switching if necessary
+      if (activeTab === "employer" && userData?.role !== "hr") {
+        // Need to switch to HR role
+        try {
+          await updateUserRole("hr");
+        } catch (error) {
+          console.error("Error updating role:", error);
         }
-      } else {
-        const candidateProfile = await getCandidateProfile(result.user.uid);
-        
-        if (!candidateProfile) {
-          // Basic profile will be created in AuthContext
-          toast({
-            title: "Welcome!",
-            description: "Your account has been created. Complete your profile to get started.",
-          });
-        } else {
-          toast({
-            title: "Success!",
-            description: "You have been signed in with Google.",
-          });
+        navigate("/hr-dashboard");
+      } else if (activeTab === "jobseeker" && userData?.role !== "candidate") {
+        // Need to switch to candidate role
+        try {
+          await updateUserRole("candidate");
+        } catch (error) {
+          console.error("Error updating role:", error);
         }
-        
         navigate("/dashboard");
+      } else {
+        // Go to appropriate dashboard based on current role
+        navigate(userData?.role === "hr" ? "/hr-dashboard" : "/dashboard");
       }
-    } catch (error) {
-      console.error(error);
+
       toast({
-        title: "Error",
-        description: "Failed to sign in with Google.",
-        variant: "destructive",
+        title: "Success!",
+        description: "You have successfully logged in with Google.",
       });
+    } catch (error) {
+      console.error("Google sign-in error:", error);
+
+      if (error instanceof Error) {
+        toast({
+          title: "Error",
+          description: error.message || "Failed to log in with Google. Please try again.",
+          variant: "destructive",
+        });
+      }
     } finally {
       setIsGoogleLoading(false);
     }
   };
 
   return (
-    <div className="container mx-auto px-4 py-24 flex items-center justify-center min-h-[calc(100vh-80px)]">
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle className="text-2xl font-bold">Sign In</CardTitle>
-          <CardDescription>
-            Enter your credentials to access your account
+    <div className="container mx-auto px-4 py-16 flex items-center justify-center min-h-[calc(100vh-80px)]">
+      <Card className="w-full max-w-md shadow-lg">
+        <CardHeader className="space-y-1">
+          <div className="flex justify-center mb-2">
+            <div className="w-16 h-16 rounded-full bg-accent/10 flex items-center justify-center">
+              {activeTab === "jobseeker" ? 
+                <User className="h-8 w-8 text-accent" /> : 
+                <Briefcase className="h-8 w-8 text-accent" />
+              }
+            </div>
+          </div>
+          <CardTitle className="text-2xl font-bold text-center">Welcome Back</CardTitle>
+          <CardDescription className="text-center">
+            Sign in to your {activeTab === "jobseeker" ? "job seeker" : "employer"} account
           </CardDescription>
         </CardHeader>
         
         <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as "jobseeker" | "employer")} className="w-full">
           <TabsList className="grid w-full grid-cols-2 mb-4">
-            <TabsTrigger value="jobseeker" className="flex items-center gap-2">
+            <TabsTrigger 
+              value="jobseeker" 
+              className="flex items-center gap-2 data-[state=active]:bg-accent data-[state=active]:text-white"
+            >
               <User className="h-4 w-4" />
               <span>Job Seeker</span>
             </TabsTrigger>
-            <TabsTrigger value="employer" className="flex items-center gap-2">
+            <TabsTrigger 
+              value="employer" 
+              className="flex items-center gap-2 data-[state=active]:bg-accent data-[state=active]:text-white"
+            >
               <Briefcase className="h-4 w-4" />
               <span>Employer</span>
             </TabsTrigger>
           </TabsList>
           
           <TabsContent value="jobseeker">
-            <form onSubmit={(e) => handleSubmit(e, false)}>
+            <form onSubmit={handleSubmit}>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="email-jobseeker">Email</Label>
+                  <Label htmlFor="email">Email</Label>
                   <div className="relative">
                     <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
-                      id="email-jobseeker"
+                      id="email"
                       placeholder="you@example.com"
                       type="email"
                       className="pl-10"
@@ -187,15 +187,18 @@ const SignIn = () => {
                 </div>
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <Label htmlFor="password-jobseeker">Password</Label>
-                    <Link to="/forgot-password" className="text-sm text-accent hover:underline">
+                    <Label htmlFor="password">Password</Label>
+                    <Link
+                      to="/forgot-password"
+                      className="text-xs text-accent hover:underline"
+                    >
                       Forgot password?
                     </Link>
                   </div>
                   <div className="relative">
                     <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
-                      id="password-jobseeker"
+                      id="password"
                       type="password"
                       className="pl-10"
                       value={password}
@@ -206,8 +209,12 @@ const SignIn = () => {
                 </div>
               </CardContent>
               <CardFooter className="flex flex-col space-y-4">
-                <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? "Signing in..." : "Sign In as Job Seeker"}
+                <Button 
+                  type="submit" 
+                  className="w-full" 
+                  disabled={isLoading}
+                >
+                  {isLoading ? "Signing in..." : "Sign In"}
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
                 
@@ -224,7 +231,7 @@ const SignIn = () => {
                   type="button" 
                   variant="outline" 
                   className="w-full"
-                  onClick={() => handleGoogleSignIn(false)}
+                  onClick={handleGoogleSignIn}
                   disabled={isGoogleLoading}
                 >
                   <svg className="h-4 w-4 mr-2" viewBox="0 0 24 24">
@@ -249,28 +256,26 @@ const SignIn = () => {
                   {isGoogleLoading ? "Signing in with Google..." : "Sign in with Google"}
                 </Button>
                 
-                <div className="text-center text-sm text-muted-foreground">
-                  <p>
-                    Don't have an account?{" "}
-                    <Link to="/signup" className="text-accent hover:underline">
-                      Sign up
-                    </Link>
-                  </p>
-                </div>
+                <p className="text-center text-sm text-muted-foreground">
+                  Don't have an account?{" "}
+                  <Link to="/signup" className="text-accent hover:underline">
+                    Sign up
+                  </Link>
+                </p>
               </CardFooter>
             </form>
           </TabsContent>
           
           <TabsContent value="employer">
-            <form onSubmit={(e) => handleSubmit(e, true)}>
+            <form onSubmit={handleSubmit}>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="email-employer">Work Email</Label>
+                  <Label htmlFor="email-employer">Email</Label>
                   <div className="relative">
                     <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
                       id="email-employer"
-                      placeholder="you@company.com"
+                      placeholder="company@example.com"
                       type="email"
                       className="pl-10"
                       value={email}
@@ -282,7 +287,10 @@ const SignIn = () => {
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <Label htmlFor="password-employer">Password</Label>
-                    <Link to="/forgot-password" className="text-sm text-accent hover:underline">
+                    <Link
+                      to="/forgot-password"
+                      className="text-xs text-accent hover:underline"
+                    >
                       Forgot password?
                     </Link>
                   </div>
@@ -300,7 +308,11 @@ const SignIn = () => {
                 </div>
               </CardContent>
               <CardFooter className="flex flex-col space-y-4">
-                <Button type="submit" className="w-full" disabled={isLoading}>
+                <Button 
+                  type="submit" 
+                  className="w-full bg-accent hover:bg-accent/90" 
+                  disabled={isLoading}
+                >
                   {isLoading ? "Signing in..." : "Sign In as Employer"}
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
@@ -318,7 +330,7 @@ const SignIn = () => {
                   type="button" 
                   variant="outline" 
                   className="w-full"
-                  onClick={() => handleGoogleSignIn(true)}
+                  onClick={handleGoogleSignIn}
                   disabled={isGoogleLoading}
                 >
                   <svg className="h-4 w-4 mr-2" viewBox="0 0 24 24">
@@ -343,14 +355,12 @@ const SignIn = () => {
                   {isGoogleLoading ? "Signing in with Google..." : "Sign in with Google"}
                 </Button>
                 
-                <div className="text-center text-sm text-muted-foreground">
-                  <p>
-                    Don't have an employer account?{" "}
-                    <Link to="/hr-signup" className="text-accent hover:underline">
-                      Create an employer account
-                    </Link>
-                  </p>
-                </div>
+                <p className="text-center text-sm text-muted-foreground">
+                  Don't have an employer account?{" "}
+                  <Link to="/signup?tab=employer" className="text-accent hover:underline">
+                    Sign up
+                  </Link>
+                </p>
               </CardFooter>
             </form>
           </TabsContent>

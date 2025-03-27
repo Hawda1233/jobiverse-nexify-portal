@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
@@ -22,6 +22,26 @@ const SignUp = () => {
   const { signup, loginWithGoogle } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  // Read the tab from URL if it exists
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const tab = params.get('tab');
+    if (tab === 'employer') {
+      setActiveTab('employer');
+    }
+  }, []);
+
+  // Update URL when tab changes
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    if (activeTab === 'employer') {
+      url.searchParams.set('tab', 'employer');
+    } else {
+      url.searchParams.delete('tab');
+    }
+    window.history.replaceState({}, '', url.toString());
+  }, [activeTab]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -98,22 +118,36 @@ const SignUp = () => {
   };
 
   return (
-    <div className="container mx-auto px-4 py-24 flex items-center justify-center min-h-[calc(100vh-80px)]">
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle className="text-2xl font-bold">Create an Account</CardTitle>
-          <CardDescription>
-            Join Nexify to find your dream job or hire talent
+    <div className="container mx-auto px-4 py-16 flex items-center justify-center min-h-[calc(100vh-80px)]">
+      <Card className="w-full max-w-md shadow-lg">
+        <CardHeader className="space-y-1">
+          <div className="flex justify-center mb-2">
+            <div className="w-16 h-16 rounded-full bg-accent/10 flex items-center justify-center">
+              {activeTab === "jobseeker" ? 
+                <User className="h-8 w-8 text-accent" /> : 
+                <Briefcase className="h-8 w-8 text-accent" />
+              }
+            </div>
+          </div>
+          <CardTitle className="text-2xl font-bold text-center">Create an Account</CardTitle>
+          <CardDescription className="text-center">
+            Join Nexify to {activeTab === "jobseeker" ? "find your dream job" : "hire top talent"}
           </CardDescription>
         </CardHeader>
         
         <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as "jobseeker" | "employer")} className="w-full">
           <TabsList className="grid w-full grid-cols-2 mb-4">
-            <TabsTrigger value="jobseeker" className="flex items-center gap-2">
+            <TabsTrigger 
+              value="jobseeker" 
+              className="flex items-center gap-2 data-[state=active]:bg-accent data-[state=active]:text-white"
+            >
               <User className="h-4 w-4" />
               <span>Job Seeker</span>
             </TabsTrigger>
-            <TabsTrigger value="employer" className="flex items-center gap-2">
+            <TabsTrigger 
+              value="employer" 
+              className="flex items-center gap-2 data-[state=active]:bg-accent data-[state=active]:text-white"
+            >
               <Briefcase className="h-4 w-4" />
               <span>Employer</span>
             </TabsTrigger>
@@ -237,13 +271,15 @@ const SignUp = () => {
           
           <TabsContent value="employer">
             <div className="p-6 text-center">
-              <Briefcase className="mx-auto h-12 w-12 text-primary mb-4" />
+              <div className="bg-accent/10 rounded-full w-16 h-16 mx-auto flex items-center justify-center mb-4">
+                <Briefcase className="h-8 w-8 text-accent" />
+              </div>
               <h3 className="text-lg font-medium mb-2">Create an Employer Account</h3>
               <p className="text-muted-foreground mb-6">
                 Sign up as an employer to post jobs and find candidates
               </p>
               <Button 
-                className="w-full" 
+                className="w-full bg-accent hover:bg-accent/90" 
                 onClick={() => navigate('/hr-signup')}
               >
                 Create Employer Account
@@ -252,7 +288,7 @@ const SignUp = () => {
               
               <div className="mt-6 text-sm text-muted-foreground">
                 Already have an employer account?{" "}
-                <Link to="/signin" className="text-accent hover:underline">
+                <Link to="/signin?tab=employer" className="text-accent hover:underline">
                   Sign in
                 </Link>
               </div>

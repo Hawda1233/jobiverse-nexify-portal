@@ -4,7 +4,7 @@ import Hero from '@/components/Hero';
 import JobCard from '@/components/JobCard';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Award, BarChart, BriefcaseBusiness, CheckCircle, ChevronRight, Globe, Layers } from 'lucide-react';
+import { ArrowRight, Award, BarChart, BriefcaseBusiness, CheckCircle, ChevronRight, Globe, Layers, User } from 'lucide-react';
 import { getFeaturedJobs, categories } from '@/lib/jobsData';
 
 const Index = () => {
@@ -36,6 +36,58 @@ const Index = () => {
               {featuredJobs.slice(0, 6).map((job) => (
                 <JobCard key={job.id} job={job} featured={job.id % 2 === 0} />
               ))}
+            </div>
+          </div>
+        </section>
+        
+        {/* Account section - NEW */}
+        <section className="py-12 bg-accent/5">
+          <div className="container mx-auto px-4 md:px-6">
+            <div className="text-center mb-10">
+              <h2 className="text-3xl font-bold mb-3">Join Nexify Today</h2>
+              <p className="text-muted-foreground max-w-2xl mx-auto">
+                Create an account as a job seeker or employer to unlock all features
+              </p>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+              <div className="neo-blur rounded-xl p-8 flex flex-col items-center text-center card-hover">
+                <div className="w-16 h-16 rounded-full bg-accent/10 flex items-center justify-center mb-4">
+                  <User className="h-8 w-8 text-accent" />
+                </div>
+                <h3 className="text-xl font-bold mb-3">Job Seekers</h3>
+                <p className="text-muted-foreground mb-6">
+                  Find your dream job with AI-powered matching, apply with one click, and track your applications
+                </p>
+                <Link to="/signup" className="w-full">
+                  <Button className="w-full">
+                    Create Job Seeker Account
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
+                </Link>
+                <Link to="/signin" className="mt-3 text-sm text-accent hover:underline">
+                  Already have an account? Sign in
+                </Link>
+              </div>
+              
+              <div className="neo-blur rounded-xl p-8 flex flex-col items-center text-center card-hover">
+                <div className="w-16 h-16 rounded-full bg-accent/10 flex items-center justify-center mb-4">
+                  <BriefcaseBusiness className="h-8 w-8 text-accent" />
+                </div>
+                <h3 className="text-xl font-bold mb-3">Employers</h3>
+                <p className="text-muted-foreground mb-6">
+                  Post jobs, find qualified candidates quickly, and manage applications all in one place
+                </p>
+                <Link to="/signup?tab=employer" className="w-full">
+                  <Button className="w-full bg-accent hover:bg-accent/90">
+                    Create Employer Account
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
+                </Link>
+                <Link to="/signin?tab=employer" className="mt-3 text-sm text-accent hover:underline">
+                  Already have an account? Sign in
+                </Link>
+              </div>
             </div>
           </div>
         </section>
