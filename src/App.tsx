@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -57,7 +58,7 @@ const ProtectedRoute = ({ requiredRole, children }: { requiredRole?: "candidate"
 const MainLayout = () => (
   <>
     <Navbar />
-    <div className="min-h-screen pt-20 pb-20">
+    <div className="min-h-screen">
       <Outlet />
     </div>
     <Footer />

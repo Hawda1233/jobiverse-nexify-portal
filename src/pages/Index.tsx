@@ -1,3 +1,4 @@
+
 import React, { lazy, Suspense } from 'react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
@@ -9,7 +10,7 @@ const Hero = lazy(() => import('@/components/Hero'));
 const JobCard = lazy(() => import('@/components/JobCard'));
 
 const HeroFallback = () => (
-  <div className="py-24 mt-10 flex items-center justify-center">
+  <div className="py-24 flex items-center justify-center">
     <div className="animate-pulse space-y-8 w-full max-w-4xl mx-auto">
       <div className="h-8 bg-slate-200 rounded w-1/3 mx-auto"></div>
       <div className="h-16 bg-slate-200 rounded w-2/3 mx-auto"></div>

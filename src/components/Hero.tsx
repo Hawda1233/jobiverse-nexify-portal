@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { motion } from 'framer-motion';
 import { ArrowRight, Search, MapPin, Briefcase, Zap, BrainCircuit, Box } from 'lucide-react';
@@ -6,7 +7,7 @@ import SearchBar from './SearchBar';
 
 const Hero = () => {
   return (
-    <section className="relative py-24 mt-10 overflow-hidden">
+    <section className="relative py-20 overflow-hidden">
       {/* Abstract background shapes */}
       <div className="absolute inset-0 -z-10 overflow-hidden">
         <div className="absolute top-0 right-0 bg-accent/5 w-[800px] h-[800px] rounded-full translate-x-1/2 -translate-y-1/2" />
