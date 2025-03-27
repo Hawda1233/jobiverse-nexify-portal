@@ -1,7 +1,4 @@
-
 import React from 'react';
-import Navbar from '@/components/Navbar';
-import Footer from '@/components/Footer';
 import { Mail, MapPin, Phone, Send } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,9 +8,8 @@ import { Card } from '@/components/ui/card';
 
 const Contact = () => {
   return (
-    <div className="min-h-screen flex flex-col">
-      <Navbar />
-      <main className="flex-grow py-16 mt-20">
+    <div className="min-h-screen">
+      <main className="py-16 mt-20">
         <div className="container mx-auto px-4 md:px-6">
           <div className="max-w-6xl mx-auto">
             <h1 className="text-4xl font-bold mb-6">Contact Us</h1>
@@ -120,7 +116,6 @@ const Contact = () => {
           </div>
         </div>
       </main>
-      <Footer />
     </div>
   );
 };

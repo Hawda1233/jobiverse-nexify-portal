@@ -1,14 +1,11 @@
 
 import React from 'react';
-import Navbar from '@/components/Navbar';
-import Footer from '@/components/Footer';
 import { Building, Globe, Layers, Users } from 'lucide-react';
 
 const About = () => {
   return (
-    <div className="min-h-screen flex flex-col">
-      <Navbar />
-      <main className="flex-grow py-16 mt-20">
+    <div className="min-h-screen">
+      <main className="py-16 mt-20">
         <div className="container mx-auto px-4 md:px-6">
           <div className="max-w-3xl mx-auto">
             <h1 className="text-4xl font-bold mb-6">About Nexify</h1>
@@ -66,7 +63,6 @@ const About = () => {
           </div>
         </div>
       </main>
-      <Footer />
     </div>
   );
 };

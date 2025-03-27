@@ -1,14 +1,10 @@
-
 import React from 'react';
-import Navbar from '@/components/Navbar';
-import Footer from '@/components/Footer';
 import { ShieldCheck } from 'lucide-react';
 
 const Privacy = () => {
   return (
-    <div className="min-h-screen flex flex-col">
-      <Navbar />
-      <main className="flex-grow py-16 mt-20">
+    <div className="min-h-screen">
+      <main className="py-16 mt-20">
         <div className="container mx-auto px-4 md:px-6">
           <div className="max-w-3xl mx-auto">
             <div className="flex items-center gap-3 mb-6">
@@ -122,7 +118,6 @@ const Privacy = () => {
           </div>
         </div>
       </main>
-      <Footer />
     </div>
   );
 };
