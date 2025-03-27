@@ -12,51 +12,38 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
 import { LayoutDashboard, ClipboardList, Settings, Calendar } from "lucide-react";
 import Scene3D from "@/components/3d/Scene3D";
-
-// Sample job application data
-const sampleApplications = [
-  {
-    id: "job1",
-    jobTitle: "Frontend Developer",
-    company: "TCS",
-    location: "Bangalore, India",
-    appliedDate: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2), // 2 days ago
-    status: "interview" as ApplicationStatus
-  },
-  {
-    id: "job2",
-    jobTitle: "React Developer",
-    company: "Infosys",
-    location: "Hyderabad, India",
-    appliedDate: new Date(Date.now() - 1000 * 60 * 60 * 24 * 5), // 5 days ago
-    status: "screening" as ApplicationStatus
-  },
-  {
-    id: "job3",
-    jobTitle: "Full Stack Developer",
-    company: "Wipro",
-    location: "Pune, India",
-    appliedDate: new Date(Date.now() - 1000 * 60 * 60 * 24 * 7), // 7 days ago
-    status: "applied" as ApplicationStatus
-  }
-];
+import { getUserApplications, updateApplicationStatus, deleteApplication } from "@/lib/firestoreOperations";
 
 const JobseekerDashboard = () => {
   const { currentUser, userData } = useAuth();
   const { toast } = useToast();
-  const [applications, setApplications] = useState(sampleApplications);
+  const [applications, setApplications] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("overview");
 
-  // Simulate loading of applications from backend
+  // Load applications from Firestore
   useEffect(() => {
-    // In a real application, this would fetch data from a backend
-    const timer = setTimeout(() => {
-      // This simulates applications being loaded from a database
-      console.log("Applications loaded");
-    }, 1000);
+    const fetchApplications = async () => {
+      if (!currentUser) return;
+      
+      setIsLoading(true);
+      try {
+        const userApps = await getUserApplications(currentUser.uid);
+        setApplications(userApps);
+      } catch (error) {
+        console.error("Error fetching applications:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load your applications. Please try again.",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
     
-    return () => clearTimeout(timer);
-  }, [currentUser]);
+    fetchApplications();
+  }, [currentUser, toast]);
 
   // Redirect to sign-in if no user is authenticated
   if (!currentUser) {
@@ -64,27 +51,48 @@ const JobseekerDashboard = () => {
   }
 
   // Handle status change of an application
-  const handleStatusChange = (id: string, newStatus: ApplicationStatus) => {
-    setApplications(apps => 
-      apps.map(app => 
-        app.id === id ? { ...app, status: newStatus } : app
-      )
-    );
-    
-    toast({
-      title: "Status updated",
-      description: `Application status has been updated to ${newStatus}.`,
-    });
+  const handleStatusChange = async (id: string, newStatus: ApplicationStatus) => {
+    try {
+      await updateApplicationStatus(id, newStatus);
+      
+      setApplications(apps => 
+        apps.map(app => 
+          app.id === id ? { ...app, status: newStatus } : app
+        )
+      );
+      
+      toast({
+        title: "Status updated",
+        description: `Application status has been updated to ${newStatus}.`,
+      });
+    } catch (error) {
+      console.error("Error updating status:", error);
+      toast({
+        title: "Update failed",
+        description: "Could not update application status.",
+        variant: "destructive",
+      });
+    }
   };
 
   // Handle deletion of an application
-  const handleDeleteApplication = (id: string) => {
-    setApplications(apps => apps.filter(app => app.id !== id));
-    
-    toast({
-      title: "Application removed",
-      description: "The job application has been removed from your dashboard.",
-    });
+  const handleDeleteApplication = async (id: string) => {
+    try {
+      await deleteApplication(id);
+      setApplications(apps => apps.filter(app => app.id !== id));
+      
+      toast({
+        title: "Application removed",
+        description: "The job application has been removed from your dashboard.",
+      });
+    } catch (error) {
+      console.error("Error deleting application:", error);
+      toast({
+        title: "Deletion failed",
+        description: "Could not remove application.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -104,125 +112,154 @@ const JobseekerDashboard = () => {
             </p>
           </header>
 
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-            <div className="bg-background rounded-lg p-4 mb-6 shadow-sm">
-              <TabsList className="grid grid-cols-1 md:grid-cols-4">
-                <TabsTrigger value="overview" className="flex items-center gap-2">
-                  <LayoutDashboard className="h-4 w-4" />
-                  <span>Overview</span>
-                </TabsTrigger>
-                <TabsTrigger value="applications" className="flex items-center gap-2">
-                  <ClipboardList className="h-4 w-4" />
-                  <span>Applications</span>
-                </TabsTrigger>
-                <TabsTrigger value="interviews" className="flex items-center gap-2">
-                  <Calendar className="h-4 w-4" />
-                  <span>Interviews</span>
-                </TabsTrigger>
-                <TabsTrigger value="settings" className="flex items-center gap-2">
-                  <Settings className="h-4 w-4" />
-                  <span>Settings</span>
-                </TabsTrigger>
-              </TabsList>
+          {isLoading ? (
+            <div className="flex justify-center items-center py-12">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
             </div>
-
-            <TabsContent value="overview" className="space-y-6">
-              <div className="grid grid-cols-1 gap-6">
-                <div className="bg-background p-6 rounded-lg shadow-sm">
-                  <h2 className="text-xl font-semibold mb-4">Job Search Overview</h2>
-                  <DashboardMetrics />
-                </div>
-                
-                <div className="bg-background p-6 rounded-lg shadow-sm">
-                  <div className="flex justify-between items-center mb-4">
-                    <h2 className="text-xl font-semibold">Recent Applications</h2>
-                    <Button variant="outline" size="sm" onClick={() => setActiveTab("applications")}>
-                      View All
-                    </Button>
-                  </div>
-                  <div className="space-y-4">
-                    {applications.slice(0, 2).map(application => (
-                      <JobApplicationCard
-                        key={application.id}
-                        {...application}
-                        onStatusChange={handleStatusChange}
-                        onDelete={handleDeleteApplication}
-                      />
-                    ))}
-                  </div>
-                </div>
+          ) : (
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+              <div className="bg-background rounded-lg p-4 mb-6 shadow-sm">
+                <TabsList className="grid grid-cols-1 md:grid-cols-4">
+                  <TabsTrigger value="overview" className="flex items-center gap-2">
+                    <LayoutDashboard className="h-4 w-4" />
+                    <span>Overview</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="applications" className="flex items-center gap-2">
+                    <ClipboardList className="h-4 w-4" />
+                    <span>Applications</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="interviews" className="flex items-center gap-2">
+                    <Calendar className="h-4 w-4" />
+                    <span>Interviews</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="settings" className="flex items-center gap-2">
+                    <Settings className="h-4 w-4" />
+                    <span>Settings</span>
+                  </TabsTrigger>
+                </TabsList>
               </div>
-            </TabsContent>
 
-            <TabsContent value="applications">
-              <div className="bg-background p-6 rounded-lg shadow-sm">
-                <h2 className="text-xl font-semibold mb-4">All Applications</h2>
-                <ScrollArea className="h-[600px] pr-4">
-                  <div className="space-y-4">
-                    {applications.length > 0 ? (
-                      applications.map(application => (
+              <TabsContent value="overview" className="space-y-6">
+                <div className="grid grid-cols-1 gap-6">
+                  <div className="bg-background p-6 rounded-lg shadow-sm">
+                    <h2 className="text-xl font-semibold mb-4">Job Search Overview</h2>
+                    <DashboardMetrics />
+                  </div>
+                  
+                  <div className="bg-background p-6 rounded-lg shadow-sm">
+                    <div className="flex justify-between items-center mb-4">
+                      <h2 className="text-xl font-semibold">Recent Applications</h2>
+                      <Button variant="outline" size="sm" onClick={() => setActiveTab("applications")}>
+                        View All
+                      </Button>
+                    </div>
+                    <div className="space-y-4">
+                      {applications.slice(0, 2).map(application => (
                         <JobApplicationCard
                           key={application.id}
-                          {...application}
-                          onStatusChange={handleStatusChange}
-                          onDelete={handleDeleteApplication}
-                        />
-                      ))
-                    ) : (
-                      <div className="text-center py-8">
-                        <p className="text-muted-foreground">No applications yet.</p>
-                        <Button className="mt-4" onClick={() => window.location.href = "/jobs"}>
-                          Browse Jobs
-                        </Button>
-                      </div>
-                    )}
-                  </div>
-                </ScrollArea>
-              </div>
-            </TabsContent>
-
-            <TabsContent value="interviews">
-              <div className="bg-background p-6 rounded-lg shadow-sm">
-                <h2 className="text-xl font-semibold mb-4">Upcoming Interviews</h2>
-                <ScrollArea className="h-[600px] pr-4">
-                  <div className="space-y-4">
-                    {applications
-                      .filter(app => app.status === "interview")
-                      .map(application => (
-                        <JobApplicationCard
-                          key={application.id}
-                          {...application}
+                          id={application.id}
+                          jobTitle={application.jobTitle}
+                          company={application.companyName}
+                          location={application.location || "Remote"}
+                          appliedDate={application.appliedDate}
+                          status={application.status as ApplicationStatus}
                           onStatusChange={handleStatusChange}
                           onDelete={handleDeleteApplication}
                         />
                       ))}
-                    {applications.filter(app => app.status === "interview").length === 0 && (
-                      <div className="text-center py-8">
-                        <p className="text-muted-foreground">No upcoming interviews.</p>
-                        <Button className="mt-4" onClick={() => window.location.href = "/interview"}>
-                          Practice Interview
-                        </Button>
-                      </div>
-                    )}
+                      {applications.length === 0 && (
+                        <div className="text-center py-8">
+                          <p className="text-muted-foreground">No applications yet.</p>
+                          <Button className="mt-4" onClick={() => window.location.href = "/jobs"}>
+                            Browse Jobs
+                          </Button>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                </ScrollArea>
-              </div>
-            </TabsContent>
-
-            <TabsContent value="settings">
-              <div className="bg-background p-6 rounded-lg shadow-sm">
-                <h2 className="text-xl font-semibold mb-4">Dashboard Settings</h2>
-                <p className="text-muted-foreground">
-                  Settings for your dashboard are coming soon. For now, you can update your profile information on the profile page.
-                </p>
-                <div className="mt-4">
-                  <Button onClick={() => window.location.href = "/profile"}>
-                    Go to Profile
-                  </Button>
                 </div>
-              </div>
-            </TabsContent>
-          </Tabs>
+              </TabsContent>
+
+              <TabsContent value="applications">
+                <div className="bg-background p-6 rounded-lg shadow-sm">
+                  <h2 className="text-xl font-semibold mb-4">All Applications</h2>
+                  <ScrollArea className="h-[600px] pr-4">
+                    <div className="space-y-4">
+                      {applications.length > 0 ? (
+                        applications.map(application => (
+                          <JobApplicationCard
+                            key={application.id}
+                            id={application.id}
+                            jobTitle={application.jobTitle}
+                            company={application.companyName}
+                            location={application.location || "Remote"}
+                            appliedDate={application.appliedDate}
+                            status={application.status as ApplicationStatus}
+                            onStatusChange={handleStatusChange}
+                            onDelete={handleDeleteApplication}
+                          />
+                        ))
+                      ) : (
+                        <div className="text-center py-8">
+                          <p className="text-muted-foreground">No applications yet.</p>
+                          <Button className="mt-4" onClick={() => window.location.href = "/jobs"}>
+                            Browse Jobs
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  </ScrollArea>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="interviews">
+                <div className="bg-background p-6 rounded-lg shadow-sm">
+                  <h2 className="text-xl font-semibold mb-4">Upcoming Interviews</h2>
+                  <ScrollArea className="h-[600px] pr-4">
+                    <div className="space-y-4">
+                      {applications
+                        .filter(app => app.status === "interview")
+                        .map(application => (
+                          <JobApplicationCard
+                            key={application.id}
+                            id={application.id}
+                            jobTitle={application.jobTitle}
+                            company={application.companyName}
+                            location={application.location || "Remote"}
+                            appliedDate={application.appliedDate}
+                            status={application.status as ApplicationStatus}
+                            onStatusChange={handleStatusChange}
+                            onDelete={handleDeleteApplication}
+                          />
+                        ))}
+                      {applications.filter(app => app.status === "interview").length === 0 && (
+                        <div className="text-center py-8">
+                          <p className="text-muted-foreground">No upcoming interviews.</p>
+                          <Button className="mt-4" onClick={() => window.location.href = "/interview"}>
+                            Practice Interview
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  </ScrollArea>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="settings">
+                <div className="bg-background p-6 rounded-lg shadow-sm">
+                  <h2 className="text-xl font-semibold mb-4">Dashboard Settings</h2>
+                  <p className="text-muted-foreground">
+                    Settings for your dashboard are coming soon. For now, you can update your profile information on the profile page.
+                  </p>
+                  <div className="mt-4">
+                    <Button onClick={() => window.location.href = "/profile"}>
+                      Go to Profile
+                    </Button>
+                  </div>
+                </div>
+              </TabsContent>
+            </Tabs>
+          )}
         </div>
       </div>
       <Footer />

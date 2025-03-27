@@ -21,7 +21,7 @@ export const addJobToFirestore = async (jobData: Omit<JobType, "id" | "postedTim
     const postedTime = formatPostedTime(new Date());
     
     return { 
-      id: parseInt(docRef.id, 10) || Math.floor(Math.random() * 10000), // Convert to number or use random fallback
+      id: parseInt(docRef.id) || Math.floor(Math.random() * 10000), // Convert to number or use random fallback
       ...jobData,
       postedTime 
     };
@@ -41,7 +41,7 @@ export const getJobsFromFirestore = async () => {
     querySnapshot.forEach((doc) => {
       const data = doc.data();
       jobs.push({
-        id: parseInt(doc.id, 10) || Math.floor(Math.random() * 10000), // Convert to number or use random fallback
+        id: parseInt(doc.id) || Math.floor(Math.random() * 10000), // Convert to number or use random fallback
         title: data.title,
         companyName: data.companyName,
         location: data.location,
@@ -73,7 +73,7 @@ export const getJobsByHR = async (userId: string) => {
     querySnapshot.forEach((doc) => {
       const data = doc.data();
       jobs.push({
-        id: parseInt(doc.id, 10) || Math.floor(Math.random() * 10000), // Convert to number or use random fallback
+        id: parseInt(doc.id) || Math.floor(Math.random() * 10000), // Convert to number or use random fallback
         title: data.title,
         companyName: data.companyName,
         location: data.location,
@@ -102,7 +102,7 @@ export const applyForJob = async (jobId: string, userId: string, applicationData
       jobId,
       userId,
       ...applicationData,
-      status: "pending",
+      status: "applied",
       appliedAt: Timestamp.now(),
     });
     
@@ -142,15 +142,49 @@ export const getUserApplications = async (userId: string) => {
     
     const applications: any[] = [];
     querySnapshot.forEach((doc) => {
+      const data = doc.data();
       applications.push({
         id: doc.id,
-        ...doc.data(),
+        jobId: data.jobId,
+        jobTitle: data.jobTitle,
+        companyName: data.companyName,
+        location: data.location || "",
+        status: data.status,
+        appliedDate: data.appliedAt.toDate(),
+        ...data
       });
     });
     
     return applications;
   } catch (error) {
     console.error("Error getting user applications:", error);
+    throw error;
+  }
+};
+
+// Update application status
+export const updateApplicationStatus = async (applicationId: string, newStatus: string) => {
+  try {
+    const applicationRef = doc(db, "applications", applicationId);
+    await updateDoc(applicationRef, {
+      status: newStatus,
+      updatedAt: Timestamp.now(),
+    });
+    return true;
+  } catch (error) {
+    console.error("Error updating application status:", error);
+    throw error;
+  }
+};
+
+// Delete an application
+export const deleteApplication = async (applicationId: string) => {
+  try {
+    const applicationRef = doc(db, "applications", applicationId);
+    await deleteDoc(applicationRef);
+    return true;
+  } catch (error) {
+    console.error("Error deleting application:", error);
     throw error;
   }
 };

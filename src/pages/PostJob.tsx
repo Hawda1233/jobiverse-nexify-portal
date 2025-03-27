@@ -61,7 +61,7 @@ const PostJob = () => {
     setIsLoading(true);
 
     try {
-      // Create new job object
+      // Create new job object - removed postedTime as it's added by the backend
       const newJob = {
         title,
         companyName: userData.company || "Unknown Company",
