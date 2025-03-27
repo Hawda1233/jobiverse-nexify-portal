@@ -1,5 +1,5 @@
 
-import React, { Suspense, useState } from 'react';
+import React, { Suspense } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, Environment, Stars } from '@react-three/drei';
 import Character3D from './Character3D';
@@ -28,30 +28,13 @@ const Scene3D = ({
   showCharacter = true,
   showStars = true
 }: Scene3DProps) => {
-  const [hasError, setHasError] = useState(false);
-
-  // Handle canvas errors
-  const handleCanvasError = (error: Error) => {
-    console.error("Canvas error:", error);
-    setHasError(true);
-  };
-
-  if (hasError) {
-    return <Scene3DFallback />;
-  }
-
   return (
     <div style={{ height, width: '100%', position: 'relative' }}>
       <Canvas 
         camera={{ position: [0, 0, 5], fov: 50 }}
-        onCreated={(state) => {
-          // Check if WebGL is supported
-          if (!state.gl.capabilities.isWebGL2) {
-            console.warn("WebGL 2 not supported, falling back to WebGL 1");
-          }
+        onError={(error) => {
+          console.error("Canvas error:", error);
         }}
-        onError={handleCanvasError}
-        fallback={<Scene3DFallback />}
       >
         <Suspense fallback={null}>
           <ambientLight intensity={0.5} />

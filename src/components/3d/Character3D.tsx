@@ -40,45 +40,13 @@ const Character3D = ({
   const groupRef = useRef<Group>(null);
   const [modelError, setModelError] = useState(false);
   
-  // Console warning about missing model files - only show once on mount
-  useEffect(() => {
-    console.warn(
-      'Note: You need to add your own .glb model files to the public/models directory. ' +
-      'Currently using a fallback cube instead. See public/models/README.md for details.'
-    );
-  }, []);
-  
-  // Use a separate effect to handle model loading errors
-  useEffect(() => {
-    const errorHandler = (error: Error) => {
+  // Try to load the model but handle error gracefully
+  const { scene, nodes, animations } = useGLTF(modelPath, true, true, 
+    (error) => {
       console.error('Error loading 3D model:', error);
       setModelError(true);
-    };
-
-    // Attempt to load the model
-    const xhr = new XMLHttpRequest();
-    xhr.open('GET', modelPath, true);
-    xhr.responseType = 'arraybuffer';
-    
-    xhr.onload = () => {
-      if (xhr.status !== 200) {
-        errorHandler(new Error(`Failed to load model: ${xhr.statusText}`));
-      }
-    };
-    
-    xhr.onerror = () => {
-      errorHandler(new Error('Network error occurred while loading the model'));
-    };
-    
-    xhr.send();
-
-    return () => {
-      xhr.abort(); // Clean up on unmount
-    };
-  }, [modelPath]);
-  
-  // Load the model (this will still try to load it, but we'll show fallback if there's an error)
-  const { scene } = useGLTF(modelPath);
+    }
+  ) || { scene: null, nodes: null, animations: null };
   
   useFrame(({ clock }) => {
     if (groupRef.current) {
@@ -88,7 +56,7 @@ const Character3D = ({
   });
 
   // If there was an error loading the model, show fallback
-  if (modelError || !scene) {
+  if (modelError) {
     return <FallbackBox />;
   }
 
