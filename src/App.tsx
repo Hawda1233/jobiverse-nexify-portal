@@ -20,6 +20,7 @@ import Profile from "./pages/Profile";
 import CompanyJobs from "./pages/CompanyJobs";
 import ResourcesPage from "./pages/ResourcesPage";
 import ResourceDetail from "./pages/ResourceDetail";
+import TechTrends2025Detail from "./pages/TechTrends2025Detail";
 import ComparisonTool from "./pages/ComparisonTool";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
@@ -139,6 +140,8 @@ const AppRoutes = () => {
         <Route path="/companies/:company" element={<CompanyJobs />} />
         <Route path="/resources/:topic" element={<ResourceDetail />} />
         <Route path="/resources/company/:companyId" element={<ResourceDetail />} />
+        <Route path="/resources/tech-trends-2025" element={<TechTrends2025Detail />} />
+        <Route path="/resources/tech-trends-2025/:section" element={<TechTrends2025Detail />} />
         <Route path="*" element={<NotFound />} />
       </Route>
     </Routes>

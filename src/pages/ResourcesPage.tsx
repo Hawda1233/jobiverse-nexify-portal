@@ -5,7 +5,8 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { 
   Briefcase, BookOpen, FileCheck, Brain, 
-  GraduationCap, TrendingUp, DollarSign, Lightbulb, Building
+  GraduationCap, TrendingUp, DollarSign, Lightbulb, Building,
+  Cpu
 } from "lucide-react";
 import { 
   Card, 
@@ -39,6 +40,13 @@ interface CompanyStudyMaterial {
 const ResourcesPage: React.FC = () => {
   // Resource categories with their descriptions
   const resourceCategories: ResourceCategory[] = [
+    {
+      id: "tech-trends-2025",
+      title: "Tech Trends 2025",
+      description: "Explore the upcoming technology trends that will shape the tech industry by 2025 and beyond.",
+      icon: <Cpu className="h-8 w-8 text-primary" />,
+      articles: 5
+    },
     {
       id: "interview-preparation",
       title: "Interview Preparation",
@@ -179,11 +187,12 @@ const ResourcesPage: React.FC = () => {
           <TabsList className="w-full max-w-md mx-auto mb-8">
             <TabsTrigger value="general" className="flex-1">General Resources</TabsTrigger>
             <TabsTrigger value="company" className="flex-1">Company-Specific</TabsTrigger>
+            <TabsTrigger value="tech-trends" className="flex-1">Tech Trends 2025</TabsTrigger>
           </TabsList>
           
           <TabsContent value="general">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {resourceCategories.filter(cat => cat.id !== "company-materials").map((category) => (
+              {resourceCategories.filter(cat => cat.id !== "company-materials" && cat.id !== "tech-trends-2025").map((category) => (
                 <Link key={category.id} to={`/resources/${category.id}`} className="group">
                   <Card className="h-full transition-all hover:shadow-lg hover:border-primary/50">
                     <CardHeader>
@@ -252,6 +261,115 @@ const ResourcesPage: React.FC = () => {
                   </Card>
                 </Link>
               ))}
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="tech-trends">
+            <div className="mb-8">
+              <h2 className="text-2xl font-bold mb-4 flex items-center">
+                <Cpu className="h-6 w-6 mr-2 text-primary" />
+                Tech Trends 2025
+              </h2>
+              <p className="text-muted-foreground mb-6">
+                Explore the upcoming technology trends that will shape the tech industry landscape by 2025. Based on extensive research and analysis of emerging technologies and market directions.
+              </p>
+            </div>
+            
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              <div className="lg:col-span-2">
+                <Card className="h-full">
+                  <CardHeader>
+                    <CardTitle>Key Technology Trends for 2025</CardTitle>
+                    <CardDescription>
+                      A comprehensive overview of the most impactful technologies that will transform industries
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="space-y-2">
+                      <h3 className="font-semibold">Artificial Intelligence Evolution</h3>
+                      <p className="text-muted-foreground text-sm">
+                        AI is moving beyond pattern recognition to creative problem-solving and decision making, with applications spanning healthcare diagnostics, industrial automation, and personalized education.
+                      </p>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <h3 className="font-semibold">Quantum Computing Applications</h3>
+                      <p className="text-muted-foreground text-sm">
+                        Practical applications of quantum computing will begin to emerge, particularly in drug discovery, materials science, and complex optimization problems.
+                      </p>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <h3 className="font-semibold">Extended Reality Integration</h3>
+                      <p className="text-muted-foreground text-sm">
+                        AR and VR technologies will become more integrated into daily workflows, transforming remote collaboration, training, and customer experiences across industries.
+                      </p>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <h3 className="font-semibold">Sustainable Technology</h3>
+                      <p className="text-muted-foreground text-sm">
+                        Green tech innovations including carbon capture, alternative energy storage, and eco-friendly materials will gain prominence as sustainability becomes a business imperative.
+                      </p>
+                    </div>
+                  </CardContent>
+                  <CardFooter>
+                    <Link to="/resources/tech-trends-2025">
+                      <Button>Read Full Report</Button>
+                    </Link>
+                  </CardFooter>
+                </Card>
+              </div>
+              
+              <div className="lg:col-span-1">
+                <Card className="h-full">
+                  <CardHeader>
+                    <CardTitle>Skills in Demand</CardTitle>
+                    <CardDescription>
+                      Technical and soft skills that will be highly valued by 2025
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <ul className="space-y-3">
+                      <li className="flex items-start">
+                        <div className="bg-primary/10 p-1 rounded mr-2 mt-0.5">
+                          <Cpu className="h-4 w-4 text-primary" />
+                        </div>
+                        <span>AI/ML Engineering & Ethics</span>
+                      </li>
+                      <li className="flex items-start">
+                        <div className="bg-primary/10 p-1 rounded mr-2 mt-0.5">
+                          <Cpu className="h-4 w-4 text-primary" />
+                        </div>
+                        <span>Quantum Algorithm Development</span>
+                      </li>
+                      <li className="flex items-start">
+                        <div className="bg-primary/10 p-1 rounded mr-2 mt-0.5">
+                          <Cpu className="h-4 w-4 text-primary" />
+                        </div>
+                        <span>Cybersecurity & Data Privacy</span>
+                      </li>
+                      <li className="flex items-start">
+                        <div className="bg-primary/10 p-1 rounded mr-2 mt-0.5">
+                          <Cpu className="h-4 w-4 text-primary" />
+                        </div>
+                        <span>AR/VR Experience Design</span>
+                      </li>
+                      <li className="flex items-start">
+                        <div className="bg-primary/10 p-1 rounded mr-2 mt-0.5">
+                          <Cpu className="h-4 w-4 text-primary" />
+                        </div>
+                        <span>Sustainable Technology Development</span>
+                      </li>
+                    </ul>
+                  </CardContent>
+                  <CardFooter>
+                    <Link to="/resources/tech-trends-2025/skills">
+                      <Button variant="outline" className="w-full">View Skill Roadmaps</Button>
+                    </Link>
+                  </CardFooter>
+                </Card>
+              </div>
             </div>
           </TabsContent>
         </Tabs>
