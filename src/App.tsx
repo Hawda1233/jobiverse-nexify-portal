@@ -51,6 +51,7 @@ const App = () => (
             {/* Resources routes */}
             <Route path="/resources" element={<ResourcesPage />} />
             <Route path="/resources/:topic" element={<ResourceDetail />} />
+            <Route path="/resources/company/:companyId" element={<ResourceDetail />} />
             
             {/* Comparison Tool route */}
             <Route path="/comparison" element={<ComparisonTool />} />

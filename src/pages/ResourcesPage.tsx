@@ -5,7 +5,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { 
   Briefcase, BookOpen, FileCheck, Brain, 
-  GraduationCap, TrendingUp, DollarSign, Lightbulb 
+  GraduationCap, TrendingUp, DollarSign, Lightbulb, Building
 } from "lucide-react";
 import { 
   Card, 
@@ -16,6 +16,7 @@ import {
   CardTitle 
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 // Resource category interface
 interface ResourceCategory {
@@ -24,6 +25,15 @@ interface ResourceCategory {
   description: string;
   icon: React.ReactNode;
   articles: number;
+}
+
+// Company study material interface
+interface CompanyStudyMaterial {
+  id: number;
+  name: string;
+  logo: string;
+  resources: number;
+  description: string;
 }
 
 const ResourcesPage: React.FC = () => {
@@ -70,6 +80,87 @@ const ResourcesPage: React.FC = () => {
       description: "Comprehensive salary information and negotiation tips for tech roles across India.",
       icon: <DollarSign className="h-8 w-8 text-primary" />,
       articles: 7
+    },
+    {
+      id: "company-materials",
+      title: "Company Study Materials",
+      description: "Specialized preparation resources and interview patterns for top tech companies in India.",
+      icon: <Building className="h-8 w-8 text-primary" />,
+      articles: 10
+    }
+  ];
+
+  // Company-specific study materials
+  const companyStudyMaterials: CompanyStudyMaterial[] = [
+    { 
+      id: 1, 
+      name: 'Tata Consultancy Services', 
+      logo: '/tcs.svg',
+      resources: 8,
+      description: "Prepare for TCS interviews with role-specific material and coding tests."
+    },
+    { 
+      id: 2, 
+      name: 'Infosys', 
+      logo: '/infosys.svg',
+      resources: 7,
+      description: "Study guides for Infosys technical and HR interview rounds."
+    },
+    { 
+      id: 3, 
+      name: 'Wipro', 
+      logo: '/wipro.svg',
+      resources: 6,
+      description: "Wipro interview patterns and preparation strategies."
+    },
+    { 
+      id: 4, 
+      name: 'HCL Technologies', 
+      logo: '/hcl.svg',
+      resources: 5,
+      description: "Technical assessment guides for HCL recruitment process."
+    },
+    { 
+      id: 5, 
+      name: 'Tech Mahindra', 
+      logo: '/techmahindra.svg',
+      resources: 4,
+      description: "Interview preparation for Tech Mahindra positions."
+    },
+    { 
+      id: 6, 
+      name: 'Accenture', 
+      logo: '/accenture.svg',
+      resources: 9,
+      description: "Complete guide to Accenture's multi-stage interview process."
+    },
+    { 
+      id: 7, 
+      name: 'Cognizant', 
+      logo: '/cognizant.svg',
+      resources: 6,
+      description: "Cognizant technical assessment and interview tips."
+    },
+    { 
+      id: 8, 
+      name: 'Capgemini', 
+      logo: '/capgemini.svg',
+      resources: 5,
+      description: "Preparation material for Capgemini hiring challenges."
+    },
+    { 
+      id: 9, 
+      name: 'IBM India', 
+      logo: '/ibm.svg',
+      resources: 7,
+      description: "IBM assessment strategies and interview preparation."
+    },
+    { 
+      id: 10, 
+      name: 'Microsoft India', 
+      logo: '/microsoft.svg',
+      resources: 10,
+      description: "In-depth guides for Microsoft's technical and behavioral interviews."
     }
   ];
 
@@ -84,34 +175,86 @@ const ResourcesPage: React.FC = () => {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {resourceCategories.map((category) => (
-            <Link key={category.id} to={`/resources/${category.id}`} className="group">
-              <Card className="h-full transition-all hover:shadow-lg hover:border-primary/50">
-                <CardHeader>
-                  <div className="flex justify-between items-start">
-                    {category.icon}
-                    <span className="text-sm text-muted-foreground">
-                      {category.articles} Articles
-                    </span>
-                  </div>
-                  <CardTitle className="group-hover:text-primary transition-colors">
-                    {category.title}
-                  </CardTitle>
-                  <CardDescription>
-                    {category.description}
-                  </CardDescription>
-                </CardHeader>
-                <CardFooter>
-                  <Button variant="ghost" className="group-hover:bg-primary/10 transition-colors w-full justify-between">
-                    Explore Resources
-                    <BookOpen className="h-4 w-4 ml-2" />
-                  </Button>
-                </CardFooter>
-              </Card>
-            </Link>
-          ))}
-        </div>
+        <Tabs defaultValue="general" className="mb-12">
+          <TabsList className="w-full max-w-md mx-auto mb-8">
+            <TabsTrigger value="general" className="flex-1">General Resources</TabsTrigger>
+            <TabsTrigger value="company" className="flex-1">Company-Specific</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="general">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {resourceCategories.filter(cat => cat.id !== "company-materials").map((category) => (
+                <Link key={category.id} to={`/resources/${category.id}`} className="group">
+                  <Card className="h-full transition-all hover:shadow-lg hover:border-primary/50">
+                    <CardHeader>
+                      <div className="flex justify-between items-start">
+                        {category.icon}
+                        <span className="text-sm text-muted-foreground">
+                          {category.articles} Articles
+                        </span>
+                      </div>
+                      <CardTitle className="group-hover:text-primary transition-colors">
+                        {category.title}
+                      </CardTitle>
+                      <CardDescription>
+                        {category.description}
+                      </CardDescription>
+                    </CardHeader>
+                    <CardFooter>
+                      <Button variant="ghost" className="group-hover:bg-primary/10 transition-colors w-full justify-between">
+                        Explore Resources
+                        <BookOpen className="h-4 w-4 ml-2" />
+                      </Button>
+                    </CardFooter>
+                  </Card>
+                </Link>
+              ))}
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="company">
+            <div className="mb-6">
+              <h2 className="text-2xl font-bold mb-4 flex items-center">
+                <Building className="h-6 w-6 mr-2 text-primary" />
+                Company Study Materials
+              </h2>
+              <p className="text-muted-foreground mb-6">
+                Specialized preparation resources for interviews at leading tech companies in India. Each guide includes company-specific interview patterns, technical assessments, and HR preparation tips.
+              </p>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {companyStudyMaterials.map((company) => (
+                <Link key={company.id} to={`/resources/company/${company.id}`} className="group">
+                  <Card className="h-full transition-all hover:shadow-lg hover:border-primary/50">
+                    <CardHeader>
+                      <div className="flex justify-between items-start">
+                        <div className="w-10 h-10 bg-secondary rounded-md flex items-center justify-center">
+                          <Building className="h-5 w-5 text-primary" />
+                        </div>
+                        <span className="text-sm text-muted-foreground">
+                          {company.resources} Resources
+                        </span>
+                      </div>
+                      <CardTitle className="group-hover:text-primary transition-colors">
+                        {company.name}
+                      </CardTitle>
+                      <CardDescription>
+                        {company.description}
+                      </CardDescription>
+                    </CardHeader>
+                    <CardFooter>
+                      <Button variant="ghost" className="group-hover:bg-primary/10 transition-colors w-full justify-between">
+                        View Study Materials
+                        <BookOpen className="h-4 w-4 ml-2" />
+                      </Button>
+                    </CardFooter>
+                  </Card>
+                </Link>
+              ))}
+            </div>
+          </TabsContent>
+        </Tabs>
 
         <div className="mt-16 bg-muted/30 rounded-lg p-8 border">
           <div className="flex flex-col md:flex-row items-center gap-6">
