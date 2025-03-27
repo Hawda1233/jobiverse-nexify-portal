@@ -1,8 +1,8 @@
 
-import React, { useRef } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
-import { Group } from 'three';
+import { Group, BoxGeometry, MeshStandardMaterial, Mesh } from 'three';
 
 interface Character3DProps {
   position?: [number, number, number];
@@ -20,10 +20,21 @@ const Character3D: React.FC<Character3DProps> = ({
   animated = true
 }) => {
   const groupRef = useRef<Group>(null);
-  const { scene } = useGLTF(modelPath);
-
-  // Clone the scene to avoid sharing issues
-  const model = scene.clone();
+  const [modelError, setModelError] = useState(false);
+  
+  // Try to load the model, but catch errors
+  let model;
+  try {
+    // Using suspend:false to prevent suspense and allow error handling
+    const { scene } = useGLTF(modelPath, undefined, undefined, (error) => {
+      console.error(`Failed to load model: ${modelPath}`, error);
+      setModelError(true);
+    });
+    model = scene.clone();
+  } catch (error) {
+    console.error(`Error loading model: ${modelPath}`, error);
+    setModelError(true);
+  }
 
   // Animation loop
   useFrame(({ clock }) => {
@@ -37,7 +48,15 @@ const Character3D: React.FC<Character3DProps> = ({
 
   return (
     <group ref={groupRef} position={position} rotation={rotation}>
-      <primitive object={model} scale={scale} />
+      {!modelError && model ? (
+        <primitive object={model} scale={scale} />
+      ) : (
+        // Fallback 3D object when model fails to load
+        <mesh scale={scale * 0.5}>
+          <boxGeometry args={[1, 1, 1]} />
+          <meshStandardMaterial color={modelPath.includes('interviewer') ? "#4169E1" : "#FF6347"} />
+        </mesh>
+      )}
     </group>
   );
 };
