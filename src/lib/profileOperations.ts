@@ -103,6 +103,9 @@ export interface CandidateProfileData {
   portfolio?: string;
   linkedIn?: string;
   github?: string;
+  preferredJobTypes?: string[];
+  preferredLocations?: string[];
+  preferredCategories?: string[]; 
   createdAt: Date;
   updatedAt: Date;
 }
@@ -148,7 +151,7 @@ export const getCandidateProfile = async (uid: string) => {
         uid, // Use the provided uid to ensure this field is always set
         email: data.email || "",
         fullName: data.fullName,
-        skills: data.skills,
+        skills: data.skills || [],
         experience: data.experience,
         education: data.education,
         resume: data.resume,
@@ -158,6 +161,9 @@ export const getCandidateProfile = async (uid: string) => {
         portfolio: data.portfolio,
         linkedIn: data.linkedIn,
         github: data.github,
+        preferredJobTypes: data.preferredJobTypes || [],
+        preferredLocations: data.preferredLocations || [],
+        preferredCategories: data.preferredCategories || [],
         createdAt: data.createdAt?.toDate() || new Date(),
         updatedAt: data.updatedAt?.toDate() || new Date()
       } as CandidateProfileData;

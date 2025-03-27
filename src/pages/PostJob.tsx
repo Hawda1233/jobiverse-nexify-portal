@@ -16,6 +16,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Separator } from "@/components/ui/separator";
+import { Badge } from "@/components/ui/badge";
+import { X, Info, BrainCircuit } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { categories } from "@/lib/jobsData";
 import { addJobToFirestore } from "@/lib/firestoreOperations";
 
@@ -32,10 +36,30 @@ const PostJob = () => {
   const [experienceLevel, setExperienceLevel] = useState("");
   const [isFeatured, setIsFeatured] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [requiredSkills, setRequiredSkills] = useState<string[]>([]);
+  const [currentSkill, setCurrentSkill] = useState("");
 
   const { userData } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  const handleAddSkill = () => {
+    if (currentSkill.trim() && !requiredSkills.includes(currentSkill.trim())) {
+      setRequiredSkills([...requiredSkills, currentSkill.trim()]);
+      setCurrentSkill("");
+    }
+  };
+
+  const handleRemoveSkill = (skillToRemove: string) => {
+    setRequiredSkills(requiredSkills.filter(skill => skill !== skillToRemove));
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleAddSkill();
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -61,7 +85,7 @@ const PostJob = () => {
     setIsLoading(true);
 
     try {
-      // Create new job object - removed postedTime as it's added by the backend
+      // Create new job object with skills included
       const newJob = {
         title,
         companyName: userData.company || "Unknown Company",
@@ -72,6 +96,7 @@ const PostJob = () => {
         description,
         experienceLevel,
         featured: isFeatured,
+        requiredSkills: requiredSkills,
         postedBy: userData.uid,
       };
       
@@ -100,9 +125,15 @@ const PostJob = () => {
     <div className="container mx-auto px-4 py-12">
       <Card className="w-full max-w-4xl mx-auto">
         <CardHeader>
-          <CardTitle className="text-2xl font-bold">Post a New Job</CardTitle>
+          <div className="flex items-center gap-2">
+            <CardTitle className="text-2xl font-bold">Post a New Job</CardTitle>
+            <Badge variant="outline" className="ml-2 bg-accent/10 text-accent">
+              <BrainCircuit className="w-3 h-3 mr-1" />
+              AI Powered
+            </Badge>
+          </div>
           <CardDescription>
-            Fill out the form below to post a new job listing
+            Fill out the form below to post a new job listing. Our AI system will automatically match this job with qualified candidates.
           </CardDescription>
         </CardHeader>
         <form onSubmit={handleSubmit}>
@@ -190,6 +221,58 @@ const PostJob = () => {
             </div>
             
             <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <Label htmlFor="requiredSkills">Required Skills</Label>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger>
+                      <Info className="h-4 w-4 text-muted-foreground" />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p className="w-[200px] text-xs">
+                        Adding specific skills helps our AI match your job with qualified candidates
+                      </p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
+              
+              <div className="flex gap-2">
+                <Input
+                  id="requiredSkills"
+                  placeholder="e.g. React, JavaScript, TypeScript"
+                  value={currentSkill}
+                  onChange={(e) => setCurrentSkill(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                />
+                <Button 
+                  type="button" 
+                  variant="secondary" 
+                  onClick={handleAddSkill}
+                >
+                  Add
+                </Button>
+              </div>
+              
+              {requiredSkills.length > 0 && (
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {requiredSkills.map((skill) => (
+                    <Badge key={skill} variant="secondary" className="flex items-center gap-1">
+                      {skill}
+                      <button 
+                        type="button" 
+                        onClick={() => handleRemoveSkill(skill)}
+                        className="ml-1 rounded-full hover:bg-accent/20 p-0.5"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </Badge>
+                  ))}
+                </div>
+              )}
+            </div>
+            
+            <div className="space-y-2">
               <Label htmlFor="description">Job Description</Label>
               <Textarea
                 id="description"
@@ -200,6 +283,8 @@ const PostJob = () => {
                 required
               />
             </div>
+            
+            <Separator />
             
             <div className="flex items-center space-x-2">
               <Checkbox 

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import JobCard from '@/components/JobCard';
@@ -6,11 +5,12 @@ import JobFilter from '@/components/JobFilter';
 import SearchBar from '@/components/SearchBar';
 import { Button } from '@/components/ui/button';
 import { Pagination, PaginationContent, PaginationItem, PaginationLink } from '@/components/ui/pagination';
-import { getJobsFromFirestore } from '@/lib/firestoreOperations';
+import { getJobsFromFirestore, getPersonalizedJobs } from '@/lib/firestoreOperations';
 import { JobType } from '@/lib/jobsData';
 import { motion } from 'framer-motion';
 import { Zap, Scan, BrainCircuit, Layers, Box, Globe, ArrowRight } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
 
 const Jobs = () => {
   const location = useLocation();
@@ -23,6 +23,9 @@ const Jobs = () => {
   const [isFiltersVisible, setIsFiltersVisible] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
   const [jobs, setJobs] = useState<JobType[]>([]);
+  const [isPersonalized, setIsPersonalized] = useState(false);
+  
+  const { currentUser, userData } = useAuth();
   
   const searchTerm = searchParams.get('search') || '';
   const selectedLocation = searchParams.get('location') || '';
@@ -33,7 +36,18 @@ const Jobs = () => {
     const fetchJobs = async () => {
       setIsLoading(true);
       try {
-        const jobsData = await getJobsFromFirestore();
+        let jobsData;
+        
+        // If user is logged in and is a candidate, fetch personalized jobs
+        if (currentUser && userData && userData.role === 'candidate') {
+          jobsData = await getPersonalizedJobs(currentUser.uid);
+          setIsPersonalized(true);
+        } else {
+          // Otherwise fetch regular jobs
+          jobsData = await getJobsFromFirestore();
+          setIsPersonalized(false);
+        }
+        
         setJobs(jobsData);
         setTotalPages(Math.ceil(jobsData.length / 9));
       } catch (error) {
@@ -49,7 +63,7 @@ const Jobs = () => {
     };
     
     fetchJobs();
-  }, [toast]);
+  }, [currentUser, userData, toast]);
   
   const getFilteredJobs = () => {
     let filtered = [...jobs];
@@ -116,8 +130,17 @@ const Jobs = () => {
           >
             <h1 className="text-3xl font-bold mb-3">Discover Opportunities</h1>
             <p className="text-muted-foreground">
-              Our AI-powered platform analyzes your skills and preferences to match you with perfect opportunities
+              {isPersonalized 
+                ? "Our AI has matched these jobs based on your skills and preferences"
+                : "Our AI-powered platform analyzes your skills and preferences to match you with perfect opportunities"}
             </p>
+            
+            {isPersonalized && (
+              <div className="mt-2 inline-flex items-center gap-1.5 bg-accent/10 text-accent px-3 py-1 rounded-full text-sm">
+                <Zap size={14} />
+                <span>AI-Powered Personalized Results</span>
+              </div>
+            )}
           </motion.div>
           
           <motion.div 
@@ -163,7 +186,15 @@ const Jobs = () => {
                 </div>
               </div>
               
-              {paginatedJobs.length > 0 ? (
+              {isLoading ? (
+                <div className="flex justify-center items-center h-64">
+                  <div className="animate-pulse space-y-4">
+                    <div className="h-4 bg-slate-200 rounded w-32"></div>
+                    <div className="h-10 bg-slate-200 rounded w-64"></div>
+                    <div className="h-4 bg-slate-200 rounded w-48"></div>
+                  </div>
+                </div>
+              ) : paginatedJobs.length > 0 ? (
                 <motion.div 
                   variants={container}
                   initial="hidden"
