@@ -40,8 +40,16 @@ const Character3D = ({
   const groupRef = useRef<Group>(null);
   const [modelError, setModelError] = useState(false);
   
-  // Try to load the model but handle error gracefully
-  const { scene, nodes, animations } = useGLTF(modelPath, true, true, 
+  useEffect(() => {
+    // Console warning about missing model files
+    console.warn(
+      'Note: You need to add your own .glb model files to the public/models directory. ' +
+      'Currently using a fallback cube instead. See public/models/README.md for details.'
+    );
+  }, []);
+  
+  // Try to load the model but handle error gracefully with a more detailed error handler
+  const { scene, nodes, animations } = useGLTF(modelPath, true, 
     (error) => {
       console.error('Error loading 3D model:', error);
       setModelError(true);
@@ -56,7 +64,7 @@ const Character3D = ({
   });
 
   // If there was an error loading the model, show fallback
-  if (modelError) {
+  if (modelError || !scene) {
     return <FallbackBox />;
   }
 

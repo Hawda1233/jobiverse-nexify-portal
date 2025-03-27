@@ -35,6 +35,7 @@ const Scene3D = ({
         onError={(error) => {
           console.error("Canvas error:", error);
         }}
+        fallback={<Scene3DFallback />}
       >
         <Suspense fallback={null}>
           <ambientLight intensity={0.5} />
