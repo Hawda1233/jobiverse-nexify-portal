@@ -40,22 +40,19 @@ const Character3D = ({
   const groupRef = useRef<Group>(null);
   const [modelError, setModelError] = useState(false);
   
+  // Console warning about missing model files - only show once on mount
   useEffect(() => {
-    // Console warning about missing model files
     console.warn(
       'Note: You need to add your own .glb model files to the public/models directory. ' +
       'Currently using a fallback cube instead. See public/models/README.md for details.'
     );
   }, []);
   
-  // Try to load the model with proper error handling
-  // useGLTF accepts (path, useDraco, useMeshOpt, onProgress)
-  try {
-    var { scene, nodes, animations } = useGLTF(modelPath);
-  } catch (error) {
+  // Load the model with error handling using useEffect to prevent render loop
+  const { scene } = useGLTF(modelPath, undefined, undefined, undefined, (error) => {
     console.error('Error loading 3D model:', error);
     setModelError(true);
-  }
+  });
   
   useFrame(({ clock }) => {
     if (groupRef.current) {
