@@ -1,22 +1,56 @@
-
-import React from 'react';
-import Hero from '@/components/Hero';
-import JobCard from '@/components/JobCard';
+import React, { lazy, Suspense } from 'react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Award, BarChart, BriefcaseBusiness, CheckCircle, ChevronRight, Globe, Layers, User } from 'lucide-react';
 import { getFeaturedJobs, categories } from '@/lib/jobsData';
+import SEOHead from '@/components/SEOHead';
+
+const Hero = lazy(() => import('@/components/Hero'));
+const JobCard = lazy(() => import('@/components/JobCard'));
+
+const HeroFallback = () => (
+  <div className="py-24 mt-10 flex items-center justify-center">
+    <div className="animate-pulse space-y-8 w-full max-w-4xl mx-auto">
+      <div className="h-8 bg-slate-200 rounded w-1/3 mx-auto"></div>
+      <div className="h-16 bg-slate-200 rounded w-2/3 mx-auto"></div>
+      <div className="h-4 bg-slate-200 rounded w-1/2 mx-auto"></div>
+      <div className="h-12 bg-slate-200 rounded w-3/4 mx-auto"></div>
+      <div className="grid grid-cols-3 gap-4">
+        <div className="h-28 bg-slate-200 rounded w-full"></div>
+        <div className="h-28 bg-slate-200 rounded w-full"></div>
+        <div className="h-28 bg-slate-200 rounded w-full"></div>
+      </div>
+    </div>
+  </div>
+);
+
+const JobCardFallback = () => (
+  <div className="neo-blur rounded-xl p-6 h-[300px] animate-pulse">
+    <div className="h-6 bg-slate-200 rounded w-3/4 mb-4"></div>
+    <div className="h-4 bg-slate-200 rounded w-1/2 mb-2"></div>
+    <div className="h-4 bg-slate-200 rounded w-1/3 mb-4"></div>
+    <div className="h-24 bg-slate-200 rounded w-full mb-4"></div>
+    <div className="h-8 bg-slate-200 rounded w-1/3"></div>
+  </div>
+);
 
 const Index = () => {
-  // Get featured jobs using the getter function
   const featuredJobs = getFeaturedJobs();
   
   return (
     <div className="min-h-screen flex flex-col">
+      <SEOHead 
+        title="Nexify - Find Your Dream Career With AI-Powered Precision"
+        description="Nexify uses cutting-edge AI, blockchain verification and AR interview technology to match your skills with the perfect opportunities, elevating your career journey."
+        keywords="job search, career, AI matching, blockchain verification, AR interviews, HR professionals"
+        canonical="/"
+      />
+      
       <main className="flex-grow">
-        <Hero />
+        <Suspense fallback={<HeroFallback />}>
+          <Hero />
+        </Suspense>
         
-        {/* Featured jobs section */}
         <section className="py-16 bg-secondary/30">
           <div className="container mx-auto px-4 md:px-6">
             <div className="flex flex-col md:flex-row justify-between items-center mb-10 gap-4">
@@ -34,13 +68,14 @@ const Index = () => {
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {featuredJobs.slice(0, 6).map((job) => (
-                <JobCard key={job.id} job={job} featured={job.id % 2 === 0} />
+                <Suspense key={job.id} fallback={<JobCardFallback />}>
+                  <JobCard key={job.id} job={job} featured={job.id % 2 === 0} />
+                </Suspense>
               ))}
             </div>
           </div>
         </section>
         
-        {/* Account section - UPDATED HR wording */}
         <section className="py-12 bg-accent/5">
           <div className="container mx-auto px-4 md:px-6">
             <div className="text-center mb-10">
@@ -78,13 +113,13 @@ const Index = () => {
                 <p className="text-muted-foreground mb-6">
                   Post jobs, find qualified candidates quickly, and manage applications all in one place
                 </p>
-                <Link to="/signup?tab=employer" className="w-full">
+                <Link to="/signup?tab=hr" className="w-full">
                   <Button className="w-full bg-accent hover:bg-accent/90">
                     Create HR Account
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>
                 </Link>
-                <Link to="/signin?tab=employer" className="mt-3 text-sm text-accent hover:underline">
+                <Link to="/signin?tab=hr" className="mt-3 text-sm text-accent hover:underline">
                   Already have an HR account? Sign in
                 </Link>
               </div>
@@ -92,7 +127,6 @@ const Index = () => {
           </div>
         </section>
         
-        {/* Categories section */}
         <section className="py-16">
           <div className="container mx-auto px-4 md:px-6">
             <div className="text-center mb-12">
@@ -123,7 +157,6 @@ const Index = () => {
           </div>
         </section>
         
-        {/* Features section */}
         <section className="py-16 bg-accent/5 relative overflow-hidden">
           <div className="absolute inset-0 -z-10">
             <div className="absolute top-0 left-0 bg-accent/5 w-[800px] h-[800px] rounded-full -translate-x-1/2 -translate-y-1/2" />
@@ -195,7 +228,6 @@ const FeatureCard = ({ icon, title, description }: FeatureCardProps) => {
   );
 };
 
-// Helper function to get category icon
 const getCategoryIcon = (category: string) => {
   const iconClassName = "h-6 w-6 text-accent";
   
@@ -221,7 +253,6 @@ const getCategoryIcon = (category: string) => {
   }
 };
 
-// Importable icons not previously used
 import { 
   Briefcase, 
   BookOpen, 
