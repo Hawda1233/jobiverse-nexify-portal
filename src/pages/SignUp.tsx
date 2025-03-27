@@ -18,6 +18,7 @@ const SignUp = () => {
   const [fullName, setFullName] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState<"jobseeker" | "employer">("jobseeker");
   const { signup, loginWithGoogle } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -106,7 +107,7 @@ const SignUp = () => {
           </CardDescription>
         </CardHeader>
         
-        <Tabs defaultValue="jobseeker" className="w-full">
+        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as "jobseeker" | "employer")} className="w-full">
           <TabsList className="grid w-full grid-cols-2 mb-4">
             <TabsTrigger value="jobseeker" className="flex items-center gap-2">
               <User className="h-4 w-4" />
@@ -238,7 +239,7 @@ const SignUp = () => {
             <div className="p-6 text-center">
               <Briefcase className="mx-auto h-12 w-12 text-primary mb-4" />
               <h3 className="text-lg font-medium mb-2">Create an Employer Account</h3>
-              <p className="text-muted-foreground mb-4">
+              <p className="text-muted-foreground mb-6">
                 Sign up as an employer to post jobs and find candidates
               </p>
               <Button 
@@ -249,7 +250,7 @@ const SignUp = () => {
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
               
-              <div className="mt-4 text-sm text-muted-foreground">
+              <div className="mt-6 text-sm text-muted-foreground">
                 Already have an employer account?{" "}
                 <Link to="/signin" className="text-accent hover:underline">
                   Sign in

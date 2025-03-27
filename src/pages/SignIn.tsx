@@ -16,6 +16,7 @@ const SignIn = () => {
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState<"jobseeker" | "employer">("jobseeker");
   const { login, loginWithGoogle, userData, updateUserRole } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -154,7 +155,7 @@ const SignIn = () => {
           </CardDescription>
         </CardHeader>
         
-        <Tabs defaultValue="jobseeker" className="w-full">
+        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as "jobseeker" | "employer")} className="w-full">
           <TabsList className="grid w-full grid-cols-2 mb-4">
             <TabsTrigger value="jobseeker" className="flex items-center gap-2">
               <User className="h-4 w-4" />
