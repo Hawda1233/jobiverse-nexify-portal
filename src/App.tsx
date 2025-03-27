@@ -20,6 +20,10 @@ import CompanyJobs from "./pages/CompanyJobs";
 import ResourcesPage from "./pages/ResourcesPage";
 import ResourceDetail from "./pages/ResourceDetail";
 import ComparisonTool from "./pages/ComparisonTool";
+import About from "./pages/About";
+import Contact from "./pages/Contact";
+import Privacy from "./pages/Privacy";
+import Terms from "./pages/Terms";
 
 const queryClient = new QueryClient();
 
@@ -55,6 +59,12 @@ const App = () => (
             
             {/* Comparison Tool route */}
             <Route path="/comparison" element={<ComparisonTool />} />
+            
+            {/* About and Policy routes */}
+            <Route path="/about" element={<About />} />
+            <Route path="/contact" element={<Contact />} />
+            <Route path="/privacy" element={<Privacy />} />
+            <Route path="/terms" element={<Terms />} />
             
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />

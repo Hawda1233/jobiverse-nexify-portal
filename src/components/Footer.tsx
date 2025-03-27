@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { BriefcaseBusiness, Facebook, Instagram, Linkedin } from 'lucide-react';
+import { BriefcaseBusiness, Facebook, Instagram, Linkedin, Mail, MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
@@ -59,11 +59,27 @@ const Footer = () => {
           </div>
           
           <div>
-            <h4 className="font-medium mb-4">Stay Updated</h4>
-            <p className="text-muted-foreground text-sm mb-3">
-              Subscribe to our newsletter for the latest job opportunities and career insights.
-            </p>
-            <form className="space-y-2">
+            <h4 className="font-medium mb-4">Contact Us</h4>
+            <ul className="space-y-3">
+              <li className="flex items-start gap-2">
+                <MapPin className="h-4 w-4 text-muted-foreground mt-1 shrink-0" />
+                <span className="text-sm text-muted-foreground">
+                  Walchand Institute of Technology<br />
+                  Walchand Hirachand Marg<br />
+                  Ashok Chowk, Solapur<br />
+                  Pin: 413005
+                </span>
+              </li>
+              <li className="flex items-center gap-2">
+                <Mail className="h-4 w-4 text-muted-foreground shrink-0" />
+                <a href="mailto:nexify@gmail.com" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                  nexify@gmail.com
+                </a>
+              </li>
+            </ul>
+            
+            <h4 className="font-medium mb-2 mt-6">Stay Updated</h4>
+            <form className="mt-3 space-y-2">
               <Input 
                 placeholder="Your email address" 
                 className="bg-background"
