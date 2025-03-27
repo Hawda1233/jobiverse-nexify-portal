@@ -40,13 +40,31 @@ const Character3D = ({
   const groupRef = useRef<Group>(null);
   const [modelError, setModelError] = useState(false);
   
-  // Try to load the model but handle error gracefully
-  const { scene, nodes, animations } = useGLTF(modelPath, true, true, 
-    (error) => {
-      console.error('Error loading 3D model:', error);
-      setModelError(true);
-    }
-  ) || { scene: null, nodes: null, animations: null };
+  // Pre-check if the model exists
+  useEffect(() => {
+    const checkModelExists = async () => {
+      try {
+        const response = await fetch(modelPath);
+        if (!response.ok) {
+          console.warn(`3D model not found: ${modelPath}`);
+          setModelError(true);
+        }
+      } catch (error) {
+        console.error('Error checking 3D model:', error);
+        setModelError(true);
+      }
+    };
+    
+    checkModelExists();
+  }, [modelPath]);
+  
+  // Only try to load the model if we haven't detected an error yet
+  const { scene } = !modelError 
+    ? useGLTF(modelPath, undefined, undefined, (error) => {
+        console.error('Error loading 3D model:', error);
+        setModelError(true);
+      }) 
+    : { scene: null };
   
   useFrame(({ clock }) => {
     if (groupRef.current) {
