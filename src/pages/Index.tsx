@@ -9,6 +9,7 @@ import { Link } from 'react-router-dom';
 import { ArrowRight, Award, BarChart, BriefcaseBusiness, CheckCircle, ChevronRight, Globe, Layers } from 'lucide-react';
 import { getFeaturedJobs, categories } from '@/lib/jobsData';
 import Scene3D from '@/components/3d/Scene3D';
+import Button3D from '@/components/3d/Button3D';
 
 const Index = () => {
   // Get featured jobs using the getter function
@@ -35,12 +36,20 @@ const Index = () => {
               <Scene3D height="400px" enableControls={true} showStars={true} />
             </div>
             
-            <div className="text-center mt-8">
+            <div className="flex justify-center mt-8 space-x-4">
               <Link to="/interview">
                 <Button size="lg" className="bg-accent hover:bg-accent/90">
                   Try Interview Simulator <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               </Link>
+              <div className="hidden md:block">
+                <Button3D 
+                  text="Explore 3D" 
+                  onClick={() => window.open('/resources', '_self')} 
+                  color="#4361ee"
+                  hoverColor="#3a0ca3"
+                />
+              </div>
             </div>
           </div>
         </section>
