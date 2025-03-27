@@ -56,8 +56,9 @@ const HRSignUp = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
   const [emailError, setEmailError] = useState("");
+  const [emailSent, setEmailSent] = useState(false);
 
-  const { signup } = useAuth();
+  const { signup, sendVerificationEmail } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -156,12 +157,15 @@ const HRSignUp = () => {
         foundedYear: foundedYear ? parseInt(foundedYear) : undefined,
       });
       
+      await sendVerificationEmail(userCredential.user);
+      setEmailSent(true);
+      
       toast({
-        title: "Success!",
-        description: "Your HR account has been created. You can now post jobs and manage applications.",
+        title: "Account created!",
+        description: "Please check your email to verify your account before logging in.",
       });
       
-      navigate("/hr-dashboard");
+      navigate("/hr-verification-pending");
     } catch (error) {
       console.error(error);
       toast({

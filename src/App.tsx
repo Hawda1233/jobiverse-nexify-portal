@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -31,6 +30,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import HRVerificationPending from "./pages/HRVerificationPending";
 
 // Auth route component for protecting routes
 const ProtectedRoute = ({ requiredRole, children }: { requiredRole?: "candidate" | "hr", children: React.ReactNode }) => {
@@ -139,6 +139,7 @@ const AppRoutes = () => {
         <Route path="/resources/company/:companyId" element={<ResourceDetail />} />
         <Route path="/resources/tech-trends-2025" element={<TechTrends2025Detail />} />
         <Route path="/resources/tech-trends-2025/:section" element={<TechTrends2025Detail />} />
+        <Route path="/hr-verification-pending" element={<HRVerificationPending />} />
         <Route path="*" element={<NotFound />} />
       </Route>
     </Routes>

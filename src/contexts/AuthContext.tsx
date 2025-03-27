@@ -8,7 +8,8 @@ import {
   UserCredential,
   User,
   signInWithPopup,
-  updateProfile
+  updateProfile,
+  sendEmailVerification
 } from "firebase/auth";
 import { auth, googleProvider, addAuthDomain } from "../lib/firebase";
 import { useToast } from "@/hooks/use-toast";
@@ -23,6 +24,7 @@ interface UserData {
   role: "candidate" | "hr";
   company?: string;
   industry?: string;
+  emailVerified?: boolean;
 }
 
 interface AuthContextProps {
@@ -34,6 +36,8 @@ interface AuthContextProps {
   loginWithGoogle: () => Promise<UserCredential>;
   logout: () => Promise<void>;
   updateUserRole: (role: "candidate" | "hr", data?: { company?: string, industry?: string }) => Promise<void>;
+  sendVerificationEmail: (user: User) => Promise<void>;
+  isEmailVerified: () => boolean;
 }
 
 const AuthContext = createContext<AuthContextProps | undefined>(undefined);
@@ -67,6 +71,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       displayName: user.displayName,
       photoURL: user.photoURL,
       role: role,
+      emailVerified: user.emailVerified,
       ...data
     };
     
@@ -83,12 +88,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           email: user.email || "",
           company: data.company,
           industry: data.industry || "",
+          emailVerified: user.emailVerified
         });
       } else {
         await saveCandidateProfile({
           uid: user.uid,
           email: user.email || "",
           fullName: user.displayName || undefined,
+          emailVerified: user.emailVerified
         });
       }
     } catch (error) {
@@ -103,6 +110,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const storedData = localStorage.getItem(`user_data_${user.uid}`);
     if (storedData) {
       const userData = JSON.parse(storedData) as UserData;
+      // Update email verification status from current user
+      userData.emailVerified = user.emailVerified;
       setUserData(userData);
       return userData;
     }
@@ -135,6 +144,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     );
     
     return userCredential;
+  }
+
+  // Send verification email to the user
+  async function sendVerificationEmail(user: User) {
+    try {
+      await sendEmailVerification(user);
+      toast({
+        title: "Verification email sent",
+        description: "Please check your inbox and click the verification link to confirm your email.",
+      });
+    } catch (error: any) {
+      console.error("Error sending verification email:", error);
+      toast({
+        title: "Error",
+        description: `Failed to send verification email: ${error.message}`,
+        variant: "destructive",
+      });
+      throw error;
+    }
+  }
+
+  // Check if the current user's email is verified
+  function isEmailVerified() {
+    return currentUser?.emailVerified || false;
   }
 
   function login(email: string, password: string) {
@@ -244,7 +277,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     login,
     loginWithGoogle,
     logout,
-    updateUserRole
+    updateUserRole,
+    sendVerificationEmail,
+    isEmailVerified
   };
 
   return (
