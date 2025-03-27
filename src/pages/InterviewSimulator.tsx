@@ -6,7 +6,6 @@ import InterviewSetup from "@/components/InterviewSetup";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Badge } from "@/components/ui/badge";
-import Scene3D from "@/components/3d/Scene3D";
 
 // Default API key for the application
 const DEFAULT_API_KEY = "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";
@@ -61,17 +60,10 @@ const InterviewSimulator: React.FC = () => {
         </div>
         
         {!selectedTopic && (
-          <div className="max-w-6xl mx-auto flex flex-col lg:flex-row gap-8 items-center mb-8">
-            <div className="lg:w-1/2 w-full">
-              <Scene3D 
-                height="400px" 
-                enableControls={true} 
-                characterPath="/models/interviewer.glb" 
-              />
-            </div>
-            <div className="lg:w-1/2 w-full">
+          <div className="max-w-6xl mx-auto">
+            <div className="w-full">
               <div className="bg-gray-800/60 backdrop-blur-sm p-6 rounded-lg border border-gray-700">
-                <h2 className="text-2xl font-semibold text-white mb-4">Practice With Our 3D Interviewer</h2>
+                <h2 className="text-2xl font-semibold text-white mb-4">Practice With Our Virtual Interviewer</h2>
                 <p className="text-gray-300 mb-4">
                   Our virtual interviewer uses advanced AI to simulate real interview scenarios, adapting questions based on your responses and providing detailed feedback.
                 </p>

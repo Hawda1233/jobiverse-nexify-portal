@@ -4,7 +4,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { motion } from "framer-motion";
 import { BrainCog, Video, MicOff, Mic } from "lucide-react";
 import { useInterview } from "@/contexts/InterviewContext";
-import Scene3D from "@/components/3d/Scene3D";
 
 interface AIInterviewerAvatarProps {
   isSpeaking: boolean;
@@ -14,8 +13,7 @@ interface AIInterviewerAvatarProps {
 
 const AIInterviewerAvatar: React.FC<AIInterviewerAvatarProps> = ({
   isSpeaking,
-  isListening,
-  use3D = false
+  isListening
 }) => {
   const { interviewState } = useInterview();
   const { selectedCharacter } = interviewState;
@@ -58,20 +56,14 @@ const AIInterviewerAvatar: React.FC<AIInterviewerAvatarProps> = ({
           className="video-frame"
         >
           <div className="relative rounded-lg overflow-hidden bg-gradient-to-b from-gray-700 to-gray-900 aspect-video w-full max-w-[280px] md:max-w-[320px] shadow-xl border border-gray-700">
-            {use3D ? (
-              <div className="absolute inset-0">
-                <Scene3D height="100%" enableControls={false} />
-              </div>
-            ) : (
-              <div className="absolute inset-0 flex items-center justify-center">
-                <Avatar className="h-32 w-32 md:h-40 md:w-40">
-                  <AvatarImage src={selectedCharacter.imageUrl} className="object-cover" />
-                  <AvatarFallback className="bg-primary/10">
-                    <BrainCog className="h-12 w-12 text-primary" />
-                  </AvatarFallback>
-                </Avatar>
-              </div>
-            )}
+            <div className="absolute inset-0 flex items-center justify-center">
+              <Avatar className="h-32 w-32 md:h-40 md:w-40">
+                <AvatarImage src={selectedCharacter.imageUrl} className="object-cover" />
+                <AvatarFallback className="bg-primary/10">
+                  <BrainCog className="h-12 w-12 text-primary" />
+                </AvatarFallback>
+              </Avatar>
+            </div>
             
             {/* Video call indicators */}
             <div className="absolute top-2 right-2 bg-red-500 rounded-full h-3 w-3 animate-pulse"></div>

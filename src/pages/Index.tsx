@@ -8,8 +8,6 @@ import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Award, BarChart, BriefcaseBusiness, CheckCircle, ChevronRight, Globe, Layers } from 'lucide-react';
 import { getFeaturedJobs, categories } from '@/lib/jobsData';
-import Scene3D from '@/components/3d/Scene3D';
-import Button3D from '@/components/3d/Button3D';
 
 const Index = () => {
   // Get featured jobs using the getter function
@@ -22,34 +20,36 @@ const Index = () => {
       <main className="flex-grow">
         <Hero />
         
-        {/* 3D Character section */}
+        {/* Virtual Assistant section */}
         <section className="py-12 bg-gradient-to-b from-slate-900 to-slate-800 text-white">
           <div className="container mx-auto px-4 md:px-6">
             <div className="text-center mb-8">
               <h2 className="text-3xl font-bold mb-3">Meet Your Virtual Career Assistant</h2>
               <p className="text-gray-300 max-w-2xl mx-auto">
-                Interact with our AI-powered 3D assistant to help guide your career journey
+                Interact with our AI-powered assistant to help guide your career journey
               </p>
             </div>
             
             <div className="max-w-4xl mx-auto">
-              <Scene3D height="400px" enableControls={true} showStars={true} />
+              <div className="bg-gradient-to-br from-slate-800 to-slate-900 h-[400px] rounded-lg flex items-center justify-center">
+                <div className="text-center">
+                  <h3 className="text-xl font-semibold mb-3">AI Career Assistant</h3>
+                  <p className="text-gray-300 mb-5 max-w-md mx-auto">
+                    Get personalized career advice and interview tips from our virtual assistant
+                  </p>
+                  <Button size="lg" className="bg-accent hover:bg-accent/90">
+                    Try it now
+                  </Button>
+                </div>
+              </div>
             </div>
             
-            <div className="flex justify-center mt-8 space-x-4">
+            <div className="flex justify-center mt-8">
               <Link to="/interview">
                 <Button size="lg" className="bg-accent hover:bg-accent/90">
                   Try Interview Simulator <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               </Link>
-              <div className="hidden md:block">
-                <Button3D 
-                  text="Explore 3D" 
-                  onClick={() => window.open('/resources', '_self')} 
-                  color="#4361ee"
-                  hoverColor="#3a0ca3"
-                />
-              </div>
             </div>
           </div>
         </section>
@@ -160,10 +160,7 @@ const Index = () => {
         </section>
         
         {/* CTA section */}
-        <section className="py-20 relative overflow-hidden">
-          <div className="absolute inset-0 -z-10">
-            <Scene3D height="100%" showCharacter={false} showStars={true} />
-          </div>
+        <section className="py-20 bg-gradient-to-br from-gray-900 to-gray-800 relative overflow-hidden">
           <div className="container mx-auto px-4 md:px-6 relative z-10">
             <div className="max-w-3xl mx-auto text-center bg-black/30 backdrop-blur-sm p-10 rounded-xl">
               <h2 className="text-3xl font-bold mb-4 text-white">Ready to Start Your Journey?</h2>
