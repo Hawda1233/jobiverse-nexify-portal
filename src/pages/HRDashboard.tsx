@@ -47,9 +47,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
-import { allJobs, JobType } from "@/lib/jobsData";
+import { JobType } from "@/lib/jobsData";
+import { getJobsByHR, getApplicationsForJob } from "@/lib/firestoreOperations";
 import InterviewScheduler, { InterviewData } from "@/components/InterviewScheduler";
 import { format } from "date-fns";
 
@@ -58,11 +57,18 @@ interface ScheduledInterview extends InterviewData {
   status: "scheduled" | "completed" | "cancelled";
 }
 
+interface ApplicationCount {
+  jobId: string;
+  count: number;
+}
+
 const HRDashboard = () => {
   const [myJobs, setMyJobs] = useState<JobType[]>([]);
   const [activeTab, setActiveTab] = useState("overview");
   const [showInterviewDialog, setShowInterviewDialog] = useState(false);
   const [scheduledInterviews, setScheduledInterviews] = useState<ScheduledInterview[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [applicationCounts, setApplicationCounts] = useState<ApplicationCount[]>([]);
   const { userData } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -84,10 +90,36 @@ const HRDashboard = () => {
       return;
     }
     
-    // Filter jobs posted by this HR
-    // In a real app, you'd fetch this from the backend
-    const hrJobs = allJobs.filter(job => job.companyName === userData.company);
-    setMyJobs(hrJobs);
+    // Fetch jobs posted by this HR from Firestore
+    const fetchHRJobs = async () => {
+      setIsLoading(true);
+      try {
+        const hrJobs = await getJobsByHR(userData.uid);
+        setMyJobs(hrJobs);
+        
+        // Fetch application counts for each job
+        const counts: ApplicationCount[] = [];
+        for (const job of hrJobs) {
+          const applications = await getApplicationsForJob(job.id.toString());
+          counts.push({
+            jobId: job.id.toString(),
+            count: applications.length
+          });
+        }
+        setApplicationCounts(counts);
+      } catch (error) {
+        console.error("Error fetching HR jobs:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load your jobs. Please try again later.",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchHRJobs();
 
     // Load previously scheduled interviews from localStorage
     const savedInterviews = localStorage.getItem(`interviews_${userData.uid}`);
@@ -100,14 +132,20 @@ const HRDashboard = () => {
     }
   }, [userData, navigate, toast]);
 
+  // Get total application count
+  const getTotalApplications = () => {
+    return applicationCounts.reduce((total, item) => total + item.count, 0);
+  };
+
   // Stats for the overview dashboard
   const stats = {
     activeJobs: myJobs.length,
-    totalApplications: 28, // Example data
+    totalApplications: getTotalApplications(),
     interviewsScheduled: scheduledInterviews.length,
-    averageApplicants: myJobs.length ? Math.round(28 / myJobs.length) : 0, // Example calculation
+    averageApplicants: myJobs.length ? Math.round(getTotalApplications() / myJobs.length) : 0,
   };
 
+  // Handle scheduling interview
   const handleScheduleInterview = (data: InterviewData) => {
     const newInterview: ScheduledInterview = {
       ...data,

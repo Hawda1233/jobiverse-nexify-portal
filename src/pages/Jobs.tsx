@@ -1,31 +1,58 @@
+
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import Navbar from '@/components/Navbar';
-import Footer from '@/components/Footer';
 import JobCard from '@/components/JobCard';
 import JobFilter from '@/components/JobFilter';
 import SearchBar from '@/components/SearchBar';
 import { Button } from '@/components/ui/button';
 import { Pagination, PaginationContent, PaginationItem, PaginationLink } from '@/components/ui/pagination';
-import { allJobs } from '@/lib/jobsData';
+import { getJobsFromFirestore } from '@/lib/firestoreOperations';
+import { JobType } from '@/lib/jobsData';
 import { motion } from 'framer-motion';
 import { Zap, Scan, BrainCircuit, Layers, Box, Globe, ArrowRight } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 const Jobs = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { toast } = useToast();
   const searchParams = new URLSearchParams(location.search);
   
   const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages] = useState(Math.ceil(allJobs.length / 9));
+  const [totalPages, setTotalPages] = useState(1);
   const [isFiltersVisible, setIsFiltersVisible] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
+  const [jobs, setJobs] = useState<JobType[]>([]);
   
   const searchTerm = searchParams.get('search') || '';
   const selectedLocation = searchParams.get('location') || '';
   const selectedCategory = searchParams.get('category') || '';
   
+  // Fetch jobs from Firestore
+  useEffect(() => {
+    const fetchJobs = async () => {
+      setIsLoading(true);
+      try {
+        const jobsData = await getJobsFromFirestore();
+        setJobs(jobsData);
+        setTotalPages(Math.ceil(jobsData.length / 9));
+      } catch (error) {
+        console.error("Error fetching jobs:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load jobs. Please try again later.",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchJobs();
+  }, [toast]);
+  
   const getFilteredJobs = () => {
-    let filtered = [...allJobs];
+    let filtered = [...jobs];
     
     if (searchTerm) {
       filtered = filtered.filter(job => 

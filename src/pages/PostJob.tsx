@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -16,10 +15,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { addNewJob } from "@/lib/jobsData";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
 import { categories } from "@/lib/jobsData";
+import { addJobToFirestore } from "@/lib/firestoreOperations";
 
 const jobTypes = ["Full-time", "Part-time", "Contract", "Internship", "Remote"];
 const experienceLevels = ["Entry Level", "Mid Level", "Senior Level", "Executive"];
@@ -63,9 +60,8 @@ const PostJob = () => {
     setIsLoading(true);
 
     try {
-      // Add the new job to the jobs array
+      // Create new job object
       const newJob = {
-        id: Date.now(), // Use timestamp as a unique ID
         title,
         companyName: userData.company || "Unknown Company",
         location,
@@ -73,13 +69,13 @@ const PostJob = () => {
         salary: salary || undefined,
         category,
         description,
-        postedTime: "Just now",
         experienceLevel,
         featured: isFeatured,
         postedBy: userData.uid,
       };
       
-      await addNewJob(newJob);
+      // Add to Firestore
+      await addJobToFirestore(newJob);
       
       toast({
         title: "Success!",
