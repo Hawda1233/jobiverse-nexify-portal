@@ -1,8 +1,8 @@
 
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
-import { Group, BoxGeometry, MeshStandardMaterial, Mesh } from 'three';
+import { Group } from 'three';
 
 interface Character3DProps {
   position?: [number, number, number];

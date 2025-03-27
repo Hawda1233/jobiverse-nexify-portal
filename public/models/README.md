@@ -21,3 +21,8 @@ This directory should contain 3D models used throughout the application.
    - Exported as binary GLB format
 
 4. Until you add model files, the application will display simple geometric shapes as placeholders.
+
+## Troubleshooting:
+- If you see a colored cube instead of a 3D character, it means the GLB file wasn't found
+- Make sure your 3D model files are correctly named and placed in this directory
+- Check browser console for specific error messages related to model loading

@@ -1,6 +1,6 @@
 
 import React, { useState, useRef } from 'react';
-import { Canvas, useFrame, ThreeElements } from '@react-three/fiber';
+import { Canvas, useFrame } from '@react-three/fiber';
 import { Text } from '@react-three/drei';
 import { Mesh } from 'three';
 
@@ -41,7 +41,7 @@ const ButtonMesh = ({
         onPointerOver={() => setHovered(true)}
         onPointerOut={() => setHovered(false)}
       >
-        <roundedBoxGeometry args={[width, height, 0.1, 10, 0.1]} />
+        <boxGeometry args={[width, height, 0.1]} />
         <meshStandardMaterial color={hovered ? hoverColor : color} />
         <Text 
           position={[0, 0, 0.06]} 
