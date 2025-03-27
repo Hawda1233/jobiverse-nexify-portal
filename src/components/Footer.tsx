@@ -27,7 +27,7 @@ const Footer = () => {
                     </svg>
                   </div>
                 } 
-                className="bg-black text-white hover:bg-black/90 hover:text-white border-none"
+                className="bg-black hover:bg-accent text-white hover:text-accent-foreground border-none transition-colors"
               />
               <SocialButton icon={<Linkedin className="h-4 w-4" />} />
               <SocialButton icon={<Facebook className="h-4 w-4" />} />
