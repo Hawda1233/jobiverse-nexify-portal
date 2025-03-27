@@ -9,7 +9,7 @@ import {
   CardFooter, 
   CardHeader 
 } from '@/components/ui/card';
-import { Bookmark, Clock, DollarSign, MapPin } from 'lucide-react';
+import { Bookmark, Clock, MapPin } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { JobType } from '@/lib/jobsData';
 
@@ -78,7 +78,6 @@ const JobCard = ({ job, featured = false }: JobCardProps) => {
           </Badge>
           {job.salary && (
             <Badge variant="outline" className="flex items-center gap-1.5">
-              <DollarSign className="h-3.5 w-3.5" />
               {job.salary}
             </Badge>
           )}
