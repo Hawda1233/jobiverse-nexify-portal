@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -56,10 +55,29 @@ const HRSignUp = () => {
   const [foundedYear, setFoundedYear] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
-  
+  const [emailError, setEmailError] = useState("");
+
   const { signup } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  const validateEmail = (email: string) => {
+    if (!email) return false;
+    
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setEmailError("Please enter a valid email address");
+      return false;
+    }
+    
+    if (email.toLowerCase().includes("@gmail.com")) {
+      setEmailError("Please use a company email address, not Gmail");
+      return false;
+    }
+    
+    setEmailError("");
+    return true;
+  };
 
   const validateStep1 = () => {
     if (!email || !password || !confirmPassword || !fullName) {
@@ -68,6 +86,10 @@ const HRSignUp = () => {
         description: "Please fill in all required fields.",
         variant: "destructive",
       });
+      return false;
+    }
+    
+    if (!validateEmail(email)) {
       return false;
     }
     
@@ -113,14 +135,12 @@ const HRSignUp = () => {
     setIsLoading(true);
 
     try {
-      // Create user account
       const userCredential = await signup(email, password, true, {
         displayName: fullName,
         company,
         industry
       });
       
-      // Save detailed profile information
       await saveEmployerProfile({
         uid: userCredential.user.uid,
         fullName,
@@ -191,12 +211,18 @@ const HRSignUp = () => {
                       id="email"
                       placeholder="you@company.com"
                       type="email"
-                      className="pl-10"
+                      className={`pl-10 ${emailError ? "border-destructive" : ""}`}
                       value={email}
-                      onChange={(e) => setEmail(e.target.value)}
+                      onChange={(e) => {
+                        setEmail(e.target.value);
+                        if (e.target.value) validateEmail(e.target.value);
+                      }}
                       required
                     />
                   </div>
+                  {emailError && (
+                    <p className="text-sm text-destructive mt-1">{emailError}</p>
+                  )}
                 </div>
                 
                 <div className="space-y-2">
