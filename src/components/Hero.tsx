@@ -4,6 +4,17 @@ import { motion } from 'framer-motion';
 import { ArrowRight, Search, MapPin, Briefcase, Zap, BrainCircuit, Box } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import SearchBar from './SearchBar';
+import ImageWithFallback from './ImageWithFallback';
+
+// Company logo mapping
+const companyLogos: Record<string, string> = {
+  Tesla: "/logos/tesla.svg",
+  Microsoft: "/logos/microsoft.svg",
+  Google: "/logos/google.svg",
+  Amazon: "/logos/amazon.svg",
+  Apple: "/logos/apple.svg",
+  Meta: "/logos/meta.svg"
+};
 
 const Hero = () => {
   return (
@@ -120,9 +131,16 @@ const Hero = () => {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 1.8 + index * 0.1, duration: 0.5 }}
-              className="flex items-center justify-center h-12 neo-blur rounded-lg text-muted-foreground font-medium animate-float"
+              className="flex flex-col items-center justify-center p-4 neo-blur rounded-lg text-muted-foreground font-medium animate-float h-20"
             >
-              {company}
+              <div className="h-8 w-full flex items-center justify-center mb-2">
+                <ImageWithFallback 
+                  src={companyLogos[company]} 
+                  alt={`${company} logo`}
+                  className="h-8 object-contain"
+                />
+              </div>
+              <span className="text-xs">{company}</span>
             </motion.div>
           ))}
         </motion.div>
