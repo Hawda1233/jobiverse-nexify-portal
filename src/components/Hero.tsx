@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { motion } from 'framer-motion';
 import { ArrowRight, Search, MapPin, Briefcase, Zap, BrainCircuit, Box } from 'lucide-react';
@@ -133,17 +134,17 @@ const Hero = () => {
               className="flex flex-col items-center justify-center p-4 neo-blur rounded-lg text-muted-foreground font-medium animate-float h-36"
             >
               <div className="h-20 w-full flex items-center justify-center mb-2">
-                {company === 'Meta' ? (
+                {company === 'Amazon' ? (
                   <img 
                     src={companyLogos[company]} 
                     alt={`${company} logo`}
-                    className="h-20 w-auto max-w-full object-contain"
+                    className="h-14 w-auto max-w-full object-contain"
                   />
-                ) : company === 'Amazon' ? (
+                ) : company === 'Meta' ? (
                   <img 
                     src={companyLogos[company]} 
                     alt={`${company} logo`}
-                    className="h-20 w-auto max-w-full object-contain"
+                    className="h-12 w-auto max-w-full object-contain"
                   />
                 ) : (
                   <img 
