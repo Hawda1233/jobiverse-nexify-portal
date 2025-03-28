@@ -137,14 +137,13 @@ const Hero = () => {
                   <img 
                     src={companyLogos[company]} 
                     alt={`${company} logo`}
-                    className="h-16 w-auto max-w-full object-contain"
-                    style={{ color: '#0080FF' }}
+                    className="h-20 w-auto max-w-full object-contain"
                   />
                 ) : company === 'Amazon' ? (
                   <img 
                     src={companyLogos[company]} 
                     alt={`${company} logo`}
-                    className="h-16 w-auto max-w-full object-contain"
+                    className="h-20 w-auto max-w-full object-contain"
                   />
                 ) : (
                   <img 
