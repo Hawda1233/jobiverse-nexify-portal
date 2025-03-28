@@ -28,6 +28,7 @@ import Terms from "./pages/Terms";
 import JobseekerDashboard from "./pages/JobseekerDashboard";
 import Applications from "./pages/Applications";
 import Navbar from "@/components/Navbar";
+import HRNavbar from "@/components/HRNavbar";
 import Footer from "@/components/Footer";
 import { ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -54,10 +55,20 @@ const ProtectedRoute = ({ requiredRole, children }: { requiredRole?: "candidate"
   return <>{children}</>;
 };
 
-// Layout component that includes Navbar and Footer
-const MainLayout = () => (
+// Role-based layout components
+const JobseekerLayout = () => (
   <>
     <Navbar />
+    <div className="min-h-screen">
+      <Outlet />
+    </div>
+    <Footer />
+  </>
+);
+
+const HRLayout = () => (
+  <>
+    <HRNavbar />
     <div className="min-h-screen">
       <Outlet />
     </div>
@@ -84,11 +95,22 @@ const CleanLayout = () => {
   );
 };
 
+// RoleBasedLayout that determines which layout to show based on user role
+const RoleBasedLayout = () => {
+  const { userData } = useAuth();
+  
+  if (userData?.role === "hr") {
+    return <HRLayout />;
+  }
+  
+  return <JobseekerLayout />;
+};
+
 const AppRoutes = () => {
   return (
     <Routes>
-      {/* Routes with navbar and footer */}
-      <Route element={<MainLayout />}>
+      {/* Public routes with role-based navigation */}
+      <Route element={<RoleBasedLayout />}>
         <Route path="/" element={<Index />} />
         <Route path="/jobs" element={<Jobs />} />
         <Route path="/companies" element={<Jobs />} />
