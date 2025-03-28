@@ -131,13 +131,13 @@ const Hero = () => {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 1.8 + index * 0.1, duration: 0.5 }}
-              className="flex flex-col items-center justify-center p-4 neo-blur rounded-lg text-muted-foreground font-medium animate-float h-24"
+              className="flex flex-col items-center justify-center p-4 neo-blur rounded-lg text-muted-foreground font-medium animate-float h-28"
             >
-              <div className="h-10 w-full flex items-center justify-center mb-2">
+              <div className="h-14 w-full flex items-center justify-center mb-2">
                 <ImageWithFallback 
                   src={companyLogos[company]} 
                   alt={`${company} logo`}
-                  className="h-10 w-auto object-contain"
+                  className="h-12 w-auto object-contain"
                 />
               </div>
               <span className="text-xs">{company}</span>
