@@ -107,30 +107,51 @@ const RoleBasedLayout = () => {
 };
 
 const AppRoutes = () => {
+  const { currentUser } = useAuth();
+  
   return (
     <Routes>
-      {/* Public routes with role-based navigation */}
-      <Route element={<RoleBasedLayout />}>
+      {/* Public routes - landing page and auth routes */}
+      <Route path="/" element={<RoleBasedLayout />}>
         <Route path="/" element={<Index />} />
-        <Route path="/jobs" element={<Jobs />} />
-        <Route path="/companies" element={<Jobs />} />
-        <Route path="/resources" element={<ResourcesPage />} />
-        <Route path="/comparison" element={<ComparisonTool />} />
+      </Route>
+      
+      <Route element={<CleanLayout />}>
+        <Route path="/signin" element={<SignIn />} />
+        <Route path="/signup" element={<SignUp />} />
+        <Route path="/hr-signup" element={<HRSignUp />} />
         <Route path="/about" element={<About />} />
         <Route path="/contact" element={<Contact />} />
         <Route path="/privacy" element={<Privacy />} />
         <Route path="/terms" element={<Terms />} />
       </Route>
+
+      {/* Protected routes that require authentication */}
+      <Route element={
+        <ProtectedRoute>
+          <RoleBasedLayout />
+        </ProtectedRoute>
+      }>
+        <Route path="/jobs" element={<Jobs />} />
+        <Route path="/companies" element={<Jobs />} />
+        <Route path="/resources" element={<ResourcesPage />} />
+        <Route path="/comparison" element={<ComparisonTool />} />
+      </Route>
       
-      {/* Routes with only back button */}
+      {/* Routes with only back button - protected */}
       <Route element={<CleanLayout />}>
-        <Route path="/jobs/:id" element={<JobDetails />} />
-        <Route path="/interview" element={<InterviewSimulator />} />
-        <Route path="/signin" element={<SignIn />} />
-        <Route path="/signup" element={<SignUp />} />
-        <Route path="/hr-signup" element={<HRSignUp />} />
+        <Route path="/jobs/:id" element={
+          <ProtectedRoute>
+            <JobDetails />
+          </ProtectedRoute>
+        } />
+        <Route path="/interview" element={
+          <ProtectedRoute>
+            <InterviewSimulator />
+          </ProtectedRoute>
+        } />
         
-        {/* Protected routes */}
+        {/* Protected routes with specific roles */}
         <Route path="/profile" element={
           <ProtectedRoute>
             <Profile />
@@ -157,12 +178,36 @@ const AppRoutes = () => {
           </ProtectedRoute>
         } />
         
-        <Route path="/companies/:company" element={<CompanyJobs />} />
-        <Route path="/resources/:topic" element={<ResourceDetail />} />
-        <Route path="/resources/company/:companyId" element={<ResourceDetail />} />
-        <Route path="/resources/tech-trends-2025" element={<TechTrends2025Detail />} />
-        <Route path="/resources/tech-trends-2025/:section" element={<TechTrends2025Detail />} />
-        <Route path="/hr-verification-pending" element={<HRVerificationPending />} />
+        <Route path="/companies/:company" element={
+          <ProtectedRoute>
+            <CompanyJobs />
+          </ProtectedRoute>
+        } />
+        <Route path="/resources/:topic" element={
+          <ProtectedRoute>
+            <ResourceDetail />
+          </ProtectedRoute>
+        } />
+        <Route path="/resources/company/:companyId" element={
+          <ProtectedRoute>
+            <ResourceDetail />
+          </ProtectedRoute>
+        } />
+        <Route path="/resources/tech-trends-2025" element={
+          <ProtectedRoute>
+            <TechTrends2025Detail />
+          </ProtectedRoute>
+        } />
+        <Route path="/resources/tech-trends-2025/:section" element={
+          <ProtectedRoute>
+            <TechTrends2025Detail />
+          </ProtectedRoute>
+        } />
+        <Route path="/hr-verification-pending" element={
+          <ProtectedRoute requiredRole="hr">
+            <HRVerificationPending />
+          </ProtectedRoute>
+        } />
         <Route path="*" element={<NotFound />} />
       </Route>
     </Routes>

@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { Menu, X, User, BriefcaseBusiness, Bell, LogOut, Briefcase, Building, BookOpen, Scale, LayoutDashboard, ClipboardList } from 'lucide-react';
+import { Menu, X, User, BriefcaseBusiness, Bell, LogOut, Briefcase, Building, BookOpen, Scale, LayoutDashboard, ClipboardList, LogIn } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import {
@@ -30,7 +30,7 @@ const Navbar = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
-  const { currentUser, logout } = useAuth();
+  const { currentUser, userData, logout } = useAuth();
   const { toast } = useToast();
 
   useEffect(() => {
@@ -62,6 +62,18 @@ const Navbar = () => {
         variant: "destructive",
       });
     }
+  };
+
+  const handleProtectedNavigation = (path: string) => {
+    if (!currentUser) {
+      toast({
+        title: "Authentication Required",
+        description: "Please sign in to access this feature",
+      });
+      navigate('/signin');
+      return;
+    }
+    navigate(path);
   };
 
   const getUserInitials = () => {
@@ -99,7 +111,12 @@ const Navbar = () => {
               </NavigationMenuItem>
               
               <NavigationMenuItem>
-                <Link to="/jobs">
+                <Link to={currentUser ? "/jobs" : "#"} onClick={(e) => {
+                  if (!currentUser) {
+                    e.preventDefault();
+                    handleProtectedNavigation('/jobs');
+                  }
+                }}>
                   <NavigationMenuLink className={navigationMenuTriggerStyle()}>
                     Browse Jobs
                   </NavigationMenuLink>
@@ -107,70 +124,91 @@ const Navbar = () => {
               </NavigationMenuItem>
               
               <NavigationMenuItem>
-                <NavigationMenuTrigger>Companies</NavigationMenuTrigger>
-                <NavigationMenuContent>
-                  <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px]">
-                    <li className="row-span-3">
-                      <NavigationMenuLink asChild>
-                        <a
-                          className="flex flex-col justify-end w-full h-full p-6 no-underline rounded-md outline-none select-none bg-gradient-to-b from-muted/50 to-muted focus:shadow-md"
-                          href="/companies"
-                        >
-                          <Building className="h-6 w-6 mb-2" />
-                          <div className="text-lg font-medium">Top Indian Companies</div>
-                          <p className="text-sm text-muted-foreground">
-                            Explore opportunities at India's leading tech firms
-                          </p>
-                        </a>
-                      </NavigationMenuLink>
-                    </li>
-                    <ListItem href="/companies/tcs" title="Tata Consultancy Services">
-                      India's largest IT services and consulting company
-                    </ListItem>
-                    <ListItem href="/companies/infosys" title="Infosys">
-                      Global leader in next-generation digital services
-                    </ListItem>
-                    <ListItem href="/companies/wipro" title="Wipro">
-                      Leading technology services and consulting company
-                    </ListItem>
-                    <ListItem href="/companies/hcl" title="HCL Technologies">
-                      Global technology company helping enterprises reimagine their businesses
-                    </ListItem>
-                    <ListItem href="/companies/techmahindra" title="Tech Mahindra">
-                      Provider of digital transformation, consulting and business reengineering services
-                    </ListItem>
-                  </ul>
-                </NavigationMenuContent>
+                <NavigationMenuTrigger onClick={(e) => {
+                  if (!currentUser) {
+                    e.stopPropagation();
+                    handleProtectedNavigation('/companies');
+                    return;
+                  }
+                }}>Companies</NavigationMenuTrigger>
+                {currentUser && (
+                  <NavigationMenuContent>
+                    <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px]">
+                      <li className="row-span-3">
+                        <NavigationMenuLink asChild>
+                          <a
+                            className="flex flex-col justify-end w-full h-full p-6 no-underline rounded-md outline-none select-none bg-gradient-to-b from-muted/50 to-muted focus:shadow-md"
+                            href="/companies"
+                          >
+                            <Building className="h-6 w-6 mb-2" />
+                            <div className="text-lg font-medium">Top Indian Companies</div>
+                            <p className="text-sm text-muted-foreground">
+                              Explore opportunities at India's leading tech firms
+                            </p>
+                          </a>
+                        </NavigationMenuLink>
+                      </li>
+                      <ListItem href="/companies/tcs" title="Tata Consultancy Services">
+                        India's largest IT services and consulting company
+                      </ListItem>
+                      <ListItem href="/companies/infosys" title="Infosys">
+                        Global leader in next-generation digital services
+                      </ListItem>
+                      <ListItem href="/companies/wipro" title="Wipro">
+                        Leading technology services and consulting company
+                      </ListItem>
+                      <ListItem href="/companies/hcl" title="HCL Technologies">
+                        Global technology company helping enterprises reimagine their businesses
+                      </ListItem>
+                      <ListItem href="/companies/techmahindra" title="Tech Mahindra">
+                        Provider of digital transformation, consulting and business reengineering services
+                      </ListItem>
+                    </ul>
+                  </NavigationMenuContent>
+                )}
               </NavigationMenuItem>
               
               <NavigationMenuItem>
-                <NavigationMenuTrigger>Resources</NavigationMenuTrigger>
-                <NavigationMenuContent>
-                  <ul className="grid gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px]">
-                    <ListItem href="/resources/interview-preparation" title="Interview Preparation">
-                      Tips, common questions, and strategies for tech interviews
-                    </ListItem>
-                    <ListItem href="/resources/resume-tips" title="Resume Building">
-                      Expert advice on creating a standout technical resume
-                    </ListItem>
-                    <ListItem href="/resources/skills-development" title="Skills Development">
-                      Resources to develop in-demand technical skills
-                    </ListItem>
-                    <ListItem href="/resources/career-paths" title="Career Paths">
-                      Guidance on various tech career trajectories in India
-                    </ListItem>
-                    <ListItem href="/resources/industry-trends" title="Industry Trends">
-                      Latest trends and technologies in the Indian tech industry
-                    </ListItem>
-                    <ListItem href="/resources/salary-guides" title="Salary Guides">
-                      Comprehensive salary information for tech roles in India
-                    </ListItem>
-                  </ul>
-                </NavigationMenuContent>
+                <NavigationMenuTrigger onClick={(e) => {
+                  if (!currentUser) {
+                    e.stopPropagation();
+                    handleProtectedNavigation('/resources');
+                    return;
+                  }
+                }}>Resources</NavigationMenuTrigger>
+                {currentUser && (
+                  <NavigationMenuContent>
+                    <ul className="grid gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px]">
+                      <ListItem href="/resources/interview-preparation" title="Interview Preparation">
+                        Tips, common questions, and strategies for tech interviews
+                      </ListItem>
+                      <ListItem href="/resources/resume-tips" title="Resume Building">
+                        Expert advice on creating a standout technical resume
+                      </ListItem>
+                      <ListItem href="/resources/skills-development" title="Skills Development">
+                        Resources to develop in-demand technical skills
+                      </ListItem>
+                      <ListItem href="/resources/career-paths" title="Career Paths">
+                        Guidance on various tech career trajectories in India
+                      </ListItem>
+                      <ListItem href="/resources/industry-trends" title="Industry Trends">
+                        Latest trends and technologies in the Indian tech industry
+                      </ListItem>
+                      <ListItem href="/resources/salary-guides" title="Salary Guides">
+                        Comprehensive salary information for tech roles in India
+                      </ListItem>
+                    </ul>
+                  </NavigationMenuContent>
+                )}
               </NavigationMenuItem>
               
               <NavigationMenuItem>
-                <Link to="/comparison">
+                <Link to={currentUser ? "/comparison" : "#"} onClick={(e) => {
+                  if (!currentUser) {
+                    e.preventDefault();
+                    handleProtectedNavigation('/comparison');
+                  }
+                }}>
                   <NavigationMenuLink className={navigationMenuTriggerStyle()}>
                     <Scale className="mr-1 h-4 w-4" />
                     Companies Review
@@ -186,52 +224,58 @@ const Navbar = () => {
             variant="outline" 
             size="sm" 
             className="gap-2"
-            onClick={() => navigate('/interview')}
+            onClick={() => handleProtectedNavigation('/interview')}
           >
             <Briefcase className="h-4 w-4" />
             <span>Practice Interview</span>
           </Button>
           
-          <Button variant="ghost" size="icon">
-            <Bell className="h-5 w-5" />
-          </Button>
-          
           {currentUser ? (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="relative h-10 w-10 rounded-full">
-                  <Avatar>
-                    <AvatarImage src={currentUser.photoURL || ""} />
-                    <AvatarFallback>{getUserInitials()}</AvatarFallback>
-                  </Avatar>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuLabel>My Account</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => navigate('/profile')}>
-                  <User className="mr-2 h-4 w-4" />
-                  Profile
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => navigate('/dashboard')}>
-                  <LayoutDashboard className="mr-2 h-4 w-4" />
-                  Dashboard
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => navigate('/applications')}>
-                  <ClipboardList className="mr-2 h-4 w-4" />
-                  My Applications
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleLogout}>
-                  <LogOut className="mr-2 h-4 w-4" />
-                  Log out
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <>
+              <Button 
+                variant="ghost" 
+                size="icon"
+                onClick={() => navigate('/notifications')}
+              >
+                <Bell className="h-5 w-5" />
+              </Button>
+              
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="relative h-10 w-10 rounded-full">
+                    <Avatar>
+                      <AvatarImage src={currentUser.photoURL || ""} />
+                      <AvatarFallback>{getUserInitials()}</AvatarFallback>
+                    </Avatar>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => navigate('/profile')}>
+                    <User className="mr-2 h-4 w-4" />
+                    Profile
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate('/dashboard')}>
+                    <LayoutDashboard className="mr-2 h-4 w-4" />
+                    Dashboard
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate('/applications')}>
+                    <ClipboardList className="mr-2 h-4 w-4" />
+                    My Applications
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleLogout}>
+                    <LogOut className="mr-2 h-4 w-4" />
+                    Log out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </>
           ) : (
             <div className="flex items-center gap-2">
               <Button variant="outline" className="flex items-center gap-2" onClick={() => navigate('/signin')}>
-                <User className="h-4 w-4" />
+                <LogIn className="h-4 w-4" />
                 <span>Sign In</span>
               </Button>
               <Button onClick={() => navigate('/signup')}>Sign Up</Button>
@@ -253,15 +297,62 @@ const Navbar = () => {
         <div className="md:hidden absolute top-full left-0 w-full neo-blur py-4 px-6 animate-fade-in">
           <nav className="flex flex-col gap-4 mb-4">
             <MobileNavLink to="/" active={location.pathname === '/'}>Home</MobileNavLink>
-            <MobileNavLink to="/jobs" active={location.pathname === '/jobs'}>Browse Jobs</MobileNavLink>
-            <MobileNavLink to="/companies" active={location.pathname.includes('/companies')}>Companies</MobileNavLink>
-            <MobileNavLink to="/resources" active={location.pathname.includes('/resources')}>Resources</MobileNavLink>
-            <MobileNavLink to="/comparison" active={location.pathname === '/comparison'}>
+            
+            <MobileNavLink 
+              to={currentUser ? "/jobs" : "#"} 
+              active={location.pathname === '/jobs'}
+              onClick={(e) => {
+                if (!currentUser) {
+                  e.preventDefault();
+                  handleProtectedNavigation('/jobs');
+                }
+              }}
+            >
+              Browse Jobs
+            </MobileNavLink>
+            
+            <MobileNavLink 
+              to={currentUser ? "/companies" : "#"} 
+              active={location.pathname.includes('/companies')}
+              onClick={(e) => {
+                if (!currentUser) {
+                  e.preventDefault();
+                  handleProtectedNavigation('/companies');
+                }
+              }}
+            >
+              Companies
+            </MobileNavLink>
+            
+            <MobileNavLink 
+              to={currentUser ? "/resources" : "#"} 
+              active={location.pathname.includes('/resources')}
+              onClick={(e) => {
+                if (!currentUser) {
+                  e.preventDefault();
+                  handleProtectedNavigation('/resources');
+                }
+              }}
+            >
+              Resources
+            </MobileNavLink>
+            
+            <MobileNavLink 
+              to={currentUser ? "/comparison" : "#"} 
+              active={location.pathname === '/comparison'}
+              onClick={(e) => {
+                if (!currentUser) {
+                  e.preventDefault();
+                  handleProtectedNavigation('/comparison');
+                }
+              }}
+            >
               <div className="flex items-center">
                 <Scale className="mr-2 h-4 w-4" />
                 Companies Review
               </div>
             </MobileNavLink>
+            
             {currentUser && (
               <>
                 <MobileNavLink to="/dashboard" active={location.pathname === '/dashboard'}>
@@ -284,7 +375,7 @@ const Navbar = () => {
             variant="outline" 
             className="flex items-center justify-center gap-2 w-full mb-3" 
             onClick={() => {
-              navigate('/interview');
+              handleProtectedNavigation('/interview');
               setMobileMenuOpen(false);
             }}
           >
@@ -307,7 +398,7 @@ const Navbar = () => {
             ) : (
               <>
                 <Button variant="outline" className="flex items-center justify-center gap-2 w-full" onClick={() => navigate('/signin')}>
-                  <User className="h-4 w-4" />
+                  <LogIn className="h-4 w-4" />
                   <span>Sign In</span>
                 </Button>
                 <Button className="w-full" onClick={() => navigate('/signup')}>Sign Up</Button>
@@ -324,6 +415,7 @@ interface NavLinkProps {
   to: string;
   active: boolean;
   children: React.ReactNode;
+  onClick?: (e: React.MouseEvent) => void;
 }
 
 const NavLink = ({ to, active, children }: NavLinkProps) => (
@@ -340,13 +432,14 @@ const NavLink = ({ to, active, children }: NavLinkProps) => (
   </Link>
 );
 
-const MobileNavLink = ({ to, active, children }: NavLinkProps) => (
+const MobileNavLink = ({ to, active, children, onClick }: NavLinkProps) => (
   <Link
     to={to}
     className={cn(
       'py-2 font-medium transition-colors',
       active ? 'text-accent' : 'text-foreground/80'
     )}
+    onClick={onClick}
   >
     {children}
   </Link>

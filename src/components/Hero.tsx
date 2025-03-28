@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowRight, Search, MapPin, Briefcase, Zap, BrainCircuit, Box, Bell } from 'lucide-react';
+import { ArrowRight, Search, MapPin, Briefcase, Zap, BrainCircuit, Box, Bell, LogIn } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/hooks/use-toast';
 import {
@@ -15,6 +15,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import SearchBar from './SearchBar';
 import ImageWithFallback from './ImageWithFallback';
+import { useAuth } from '@/contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 // Company logo mapping
 const companyLogos: Record<string, string> = {
@@ -55,6 +57,8 @@ const Hero = () => {
   const [notifications, setNotifications] = useState(initialNotifications);
   const [unreadCount, setUnreadCount] = useState(initialNotifications.length);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const { currentUser } = useAuth();
+  const navigate = useNavigate();
 
   // Update unread count when notifications change
   useEffect(() => {
@@ -64,6 +68,14 @@ const Hero = () => {
 
   // Handle opening the notification dropdown
   const handleOpenNotifications = () => {
+    if (!currentUser) {
+      toast({
+        title: "Authentication Required",
+        description: "Please sign in to view your notifications",
+        variant: "default",
+      });
+      return;
+    }
     setIsDropdownOpen(true);
   };
 
@@ -83,6 +95,15 @@ const Hero = () => {
 
   // Handle clicking on a notification
   const handleNotificationClick = (id: number) => {
+    if (!currentUser) {
+      toast({
+        title: "Authentication Required",
+        description: "Please sign in to interact with notifications",
+        variant: "default",
+      });
+      return;
+    }
+    
     // Mark specific notification as read
     const updatedNotifications = notifications.map(notification =>
       notification.id === id ? { ...notification, read: true } : notification
@@ -94,6 +115,19 @@ const Hero = () => {
       title: "Notification viewed",
       description: "Navigating to the related content...",
     });
+  };
+
+  // Handle search functionality
+  const handleSearch = () => {
+    if (!currentUser) {
+      toast({
+        title: "Authentication Required",
+        description: "Please sign in to search for jobs",
+        variant: "default",
+      });
+      return;
+    }
+    navigate('/jobs');
   };
 
   return (
@@ -122,37 +156,39 @@ const Hero = () => {
                 )}
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-80 mt-2" align="end">
-              <DropdownMenuLabel>Notifications</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuGroup>
-                {notifications.length > 0 ? (
-                  notifications.map(notification => (
-                    <DropdownMenuItem 
-                      key={notification.id}
-                      className={`cursor-pointer p-3 ${!notification.read ? 'bg-accent/10' : ''}`}
-                      onClick={() => handleNotificationClick(notification.id)}
-                    >
-                      <div className="flex flex-col space-y-1">
-                        <div className="flex justify-between items-center">
-                          <p className="font-medium">{notification.title}</p>
-                          <span className="text-xs text-muted-foreground">{notification.time}</span>
+            {currentUser && (
+              <DropdownMenuContent className="w-80 mt-2" align="end">
+                <DropdownMenuLabel>Notifications</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuGroup>
+                  {notifications.length > 0 ? (
+                    notifications.map(notification => (
+                      <DropdownMenuItem 
+                        key={notification.id}
+                        className={`cursor-pointer p-3 ${!notification.read ? 'bg-accent/10' : ''}`}
+                        onClick={() => handleNotificationClick(notification.id)}
+                      >
+                        <div className="flex flex-col space-y-1">
+                          <div className="flex justify-between items-center">
+                            <p className="font-medium">{notification.title}</p>
+                            <span className="text-xs text-muted-foreground">{notification.time}</span>
+                          </div>
+                          <p className="text-sm text-muted-foreground">{notification.message}</p>
                         </div>
-                        <p className="text-sm text-muted-foreground">{notification.message}</p>
-                      </div>
-                    </DropdownMenuItem>
-                  ))
-                ) : (
-                  <div className="p-3 text-center text-muted-foreground">
-                    No new notifications
-                  </div>
-                )}
-              </DropdownMenuGroup>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem className="cursor-pointer justify-center">
-                See all notifications
-              </DropdownMenuItem>
-            </DropdownMenuContent>
+                      </DropdownMenuItem>
+                    ))
+                  ) : (
+                    <div className="p-3 text-center text-muted-foreground">
+                      No new notifications
+                    </div>
+                  )}
+                </DropdownMenuGroup>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem className="cursor-pointer justify-center">
+                  See all notifications
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            )}
           </DropdownMenu>
         </div>
 
@@ -194,8 +230,15 @@ const Hero = () => {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 1, duration: 0.8 }}
+            className="w-full"
           >
-            <SearchBar />
+            <SearchBar onSearch={handleSearch} />
+            {!currentUser && (
+              <div className="mt-2 text-sm text-muted-foreground flex items-center justify-center gap-2">
+                <LogIn className="h-4 w-4" />
+                <span>Sign in to search and apply for jobs</span>
+              </div>
+            )}
           </motion.div>
 
           <motion.div 
@@ -230,6 +273,12 @@ const Hero = () => {
               </div>
               <h3 className="font-medium mb-1">AI Matching</h3>
               <p className="text-sm text-muted-foreground">Smart algorithms that understand your true potential</p>
+              {!currentUser && (
+                <div className="mt-2 text-xs text-accent flex items-center">
+                  <LogIn className="h-3 w-3 mr-1" />
+                  <span>Sign in to use</span>
+                </div>
+              )}
             </div>
             <div className="neo-blur rounded-xl p-5 flex flex-col items-center text-center card-hover">
               <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-3">
@@ -237,6 +286,12 @@ const Hero = () => {
               </div>
               <h3 className="font-medium mb-1">AR/VR Interviews</h3>
               <p className="text-sm text-muted-foreground">Practice and perform in immersive environments</p>
+              {!currentUser && (
+                <div className="mt-2 text-xs text-accent flex items-center">
+                  <LogIn className="h-3 w-3 mr-1" />
+                  <span>Sign in to use</span>
+                </div>
+              )}
             </div>
             <div className="neo-blur rounded-xl p-5 flex flex-col items-center text-center card-hover">
               <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-3">
@@ -244,6 +299,12 @@ const Hero = () => {
               </div>
               <h3 className="font-medium mb-1">Blockchain Verified</h3>
               <p className="text-sm text-muted-foreground">Secure, transparent credential verification</p>
+              {!currentUser && (
+                <div className="mt-2 text-xs text-accent flex items-center">
+                  <LogIn className="h-3 w-3 mr-1" />
+                  <span>Sign in to use</span>
+                </div>
+              )}
             </div>
           </motion.div>
         </motion.div>
