@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
-import { JobApplicationCard, ApplicationStatus } from "@/components/JobApplicationCard";
+import JobApplicationCard, { ApplicationStatus } from "@/components/JobApplicationCard";
 import { getUserApplications, updateApplicationStatus, deleteApplication } from "@/lib/firestoreOperations";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
