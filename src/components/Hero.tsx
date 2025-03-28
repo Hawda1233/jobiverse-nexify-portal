@@ -134,11 +134,26 @@ const Hero = () => {
               className="flex flex-col items-center justify-center p-4 neo-blur rounded-lg text-muted-foreground font-medium animate-float h-36"
             >
               <div className="h-20 w-full flex items-center justify-center mb-2">
-                <img 
-                  src={companyLogos[company]} 
-                  alt={`${company} logo`}
-                  className={`h-auto max-h-16 w-auto object-contain ${company === 'Meta' ? 'text-[#0080FF]' : 'text-foreground'}`}
-                />
+                {company === 'Meta' ? (
+                  <img 
+                    src={companyLogos[company]} 
+                    alt={`${company} logo`}
+                    className="h-auto max-h-14 w-auto max-w-full object-contain"
+                    style={{ color: '#0080FF' }}
+                  />
+                ) : company === 'Amazon' ? (
+                  <img 
+                    src={companyLogos[company]} 
+                    alt={`${company} logo`}
+                    className="h-auto max-h-14 w-auto max-w-full object-contain"
+                  />
+                ) : (
+                  <img 
+                    src={companyLogos[company]} 
+                    alt={`${company} logo`}
+                    className="h-auto max-h-14 w-auto max-w-full object-contain"
+                  />
+                )}
               </div>
               <span className="text-xs">{company}</span>
             </motion.div>
