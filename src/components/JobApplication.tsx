@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/card";
 import { applyForJob } from "@/lib/firestoreOperations";
 import { useNavigate } from "react-router-dom";
+import { Loader2 } from "lucide-react";
 
 interface JobApplicationProps {
   jobId: string | number;
@@ -24,7 +25,7 @@ interface JobApplicationProps {
   onSuccess?: () => void;
 }
 
-const JobApplication = ({ jobId, jobTitle, companyName, onSuccess }: JobApplicationProps) => {
+export const JobApplication = ({ jobId, jobTitle, companyName, onSuccess }: JobApplicationProps) => {
   const [coverLetter, setCoverLetter] = useState("");
   const [resume, setResume] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
@@ -58,6 +59,7 @@ const JobApplication = ({ jobId, jobTitle, companyName, onSuccess }: JobApplicat
         email: userData.email,
         jobTitle,
         companyName,
+        location: "", // This could be fetched from the job details
       };
       
       await applyForJob(jobId.toString(), userData.uid, applicationData);
@@ -104,6 +106,7 @@ const JobApplication = ({ jobId, jobTitle, companyName, onSuccess }: JobApplicat
               value={resume}
               onChange={(e) => setResume(e.target.value)}
               required
+              disabled={isLoading}
             />
           </div>
           
@@ -115,6 +118,7 @@ const JobApplication = ({ jobId, jobTitle, companyName, onSuccess }: JobApplicat
               value={phoneNumber}
               onChange={(e) => setPhoneNumber(e.target.value)}
               required
+              disabled={isLoading}
             />
           </div>
           
@@ -127,12 +131,20 @@ const JobApplication = ({ jobId, jobTitle, companyName, onSuccess }: JobApplicat
               value={coverLetter}
               onChange={(e) => setCoverLetter(e.target.value)}
               required
+              disabled={isLoading}
             />
           </div>
         </CardContent>
         <CardFooter>
           <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? "Submitting Application..." : "Submit Application"}
+            {isLoading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Submitting Application...
+              </>
+            ) : (
+              "Submit Application"
+            )}
           </Button>
         </CardFooter>
       </form>

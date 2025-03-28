@@ -1,253 +1,213 @@
 
 import React, { useState, useEffect } from "react";
-import { Navigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
-import JobApplicationCard, { ApplicationStatus } from "@/components/JobApplicationCard";
 import { useToast } from "@/hooks/use-toast";
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Badge } from "@/components/ui/badge";
-import { Search, Filter } from "lucide-react";
+import { JobApplicationCard, ApplicationStatus } from "@/components/JobApplicationCard";
 import { getUserApplications, updateApplicationStatus, deleteApplication } from "@/lib/firestoreOperations";
+import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { 
+  Card, 
+  CardContent, 
+  CardDescription, 
+  CardHeader, 
+  CardTitle 
+} from "@/components/ui/card";
+import { Briefcase, Calendar, Loader2 } from "lucide-react";
+
+interface Application {
+  id: string;
+  jobId: string;
+  jobTitle: string;
+  companyName: string;
+  location: string;
+  status: ApplicationStatus;
+  appliedDate: Date;
+}
 
 const Applications = () => {
-  const { currentUser } = useAuth();
-  const { toast } = useToast();
-  const [applications, setApplications] = useState<any[]>([]);
-  const [filteredApplications, setFilteredApplications] = useState<any[]>([]);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [applications, setApplications] = useState<Application[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState("all");
+  const { userData } = useAuth();
+  const navigate = useNavigate();
+  const { toast } = useToast();
 
-  // Load applications from Firestore
   useEffect(() => {
+    if (!userData) {
+      navigate("/signin");
+      return;
+    }
+
     const fetchApplications = async () => {
-      if (!currentUser) return;
-      
       setIsLoading(true);
       try {
-        const userApps = await getUserApplications(currentUser.uid);
-        setApplications(userApps);
-        setFilteredApplications(userApps);
+        const userApps = await getUserApplications(userData.uid);
+        const formattedApps = userApps.map((app: any) => ({
+          id: app.id,
+          jobId: app.jobId,
+          jobTitle: app.jobTitle || "Untitled Position",
+          companyName: app.companyName || "Unknown Company",
+          location: app.location || "Remote",
+          status: app.status || "applied",
+          appliedDate: app.appliedDate || new Date(),
+        }));
+        
+        setApplications(formattedApps);
       } catch (error) {
         console.error("Error fetching applications:", error);
         toast({
           title: "Error",
-          description: "Failed to load your applications. Please try again.",
+          description: "Failed to load your applications. Please try again later.",
           variant: "destructive",
         });
       } finally {
         setIsLoading(false);
       }
     };
-    
+
     fetchApplications();
-  }, [currentUser, toast]);
+  }, [userData, navigate, toast]);
 
-  // Redirect to sign-in if no user is authenticated
-  if (!currentUser) {
-    return <Navigate to="/signin" />;
-  }
-
-  // Filter applications based on search term and status
-  useEffect(() => {
-    let filtered = applications;
-    
-    if (searchTerm) {
-      filtered = filtered.filter(app => 
-        app.jobTitle?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        app.companyName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        app.location?.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
-    
-    if (statusFilter !== "all") {
-      filtered = filtered.filter(app => app.status === statusFilter);
-    }
-    
-    setFilteredApplications(filtered);
-  }, [applications, searchTerm, statusFilter]);
-
-  // Handle status change of an application
   const handleStatusChange = async (id: string, newStatus: ApplicationStatus) => {
     try {
       await updateApplicationStatus(id, newStatus);
       
-      setApplications(apps => 
-        apps.map(app => 
-          app.id === id ? { ...app, status: newStatus } : app
-        )
-      );
+      setApplications(applications.map(app => 
+        app.id === id ? { ...app, status: newStatus } : app
+      ));
       
       toast({
-        title: "Status updated",
-        description: `Application status has been updated to ${newStatus}.`,
+        title: "Status Updated",
+        description: `Application marked as ${newStatus}`,
       });
     } catch (error) {
-      console.error("Error updating status:", error);
+      console.error("Error updating application status:", error);
       toast({
-        title: "Update failed",
-        description: "Could not update application status.",
+        title: "Update Failed",
+        description: "Failed to update application status. Please try again.",
         variant: "destructive",
       });
     }
   };
 
-  // Handle deletion of an application
   const handleDeleteApplication = async (id: string) => {
     try {
       await deleteApplication(id);
-      setApplications(apps => apps.filter(app => app.id !== id));
+      
+      setApplications(applications.filter(app => app.id !== id));
       
       toast({
-        title: "Application removed",
-        description: "The job application has been removed from your list.",
+        title: "Application Deleted",
+        description: "The application has been removed from your list.",
       });
     } catch (error) {
       console.error("Error deleting application:", error);
       toast({
-        title: "Deletion failed",
-        description: "Could not remove application.",
+        title: "Deletion Failed",
+        description: "Failed to delete the application. Please try again.",
         variant: "destructive",
       });
     }
   };
 
-  // Generate status counts for badges
-  const getStatusCounts = () => {
-    const counts = {
-      all: applications.length,
-      applied: 0,
-      screening: 0,
-      interview: 0,
-      offer: 0,
-      accepted: 0,
-      rejected: 0
-    };
-    
-    applications.forEach(app => {
-      if (app.status && counts[app.status as keyof typeof counts] !== undefined) {
-        counts[app.status as keyof typeof counts] += 1;
-      }
-    });
-    
-    return counts;
+  // Filter applications based on active tab
+  const filteredApplications = applications.filter(app => {
+    if (activeTab === "all") return true;
+    if (activeTab === "active") return ["applied", "screening", "interview"].includes(app.status);
+    if (activeTab === "closed") return ["offer", "accepted", "rejected"].includes(app.status);
+    return true;
+  });
+
+  // Get counts for each tab
+  const counts = {
+    all: applications.length,
+    active: applications.filter(app => ["applied", "screening", "interview"].includes(app.status)).length,
+    closed: applications.filter(app => ["offer", "accepted", "rejected"].includes(app.status)).length,
   };
-  
-  const statusCounts = getStatusCounts();
 
-  return (
-    <div className="min-h-screen flex flex-col">
-      <Navbar />
-      <div className="flex-grow pt-28 pb-16">
-        <div className="container mx-auto px-4">
-          <header className="mb-8">
-            <h1 className="text-3xl font-bold">My Applications</h1>
-            <p className="text-muted-foreground mt-2">
-              Track and manage all your job applications
-            </p>
-          </header>
-
-          {isLoading ? (
-            <div className="flex justify-center items-center py-12">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-            </div>
-          ) : (
-            <div className="bg-background p-6 rounded-lg shadow-sm mb-6">
-              <div className="flex flex-col md:flex-row gap-4 mb-6">
-                <div className="flex-grow relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input 
-                    placeholder="Search applications..." 
-                    className="pl-10"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                  />
-                </div>
-                <div className="w-full md:w-64 flex items-center gap-2">
-                  <Filter className="h-4 w-4 text-muted-foreground" />
-                  <Select 
-                    value={statusFilter} 
-                    onValueChange={setStatusFilter}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Filter by status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">
-                        All Applications
-                        <Badge variant="outline" className="ml-2">{statusCounts.all}</Badge>
-                      </SelectItem>
-                      <SelectItem value="applied">
-                        Applied
-                        <Badge variant="outline" className="ml-2">{statusCounts.applied}</Badge>
-                      </SelectItem>
-                      <SelectItem value="screening">
-                        Screening
-                        <Badge variant="outline" className="ml-2">{statusCounts.screening}</Badge>
-                      </SelectItem>
-                      <SelectItem value="interview">
-                        Interview
-                        <Badge variant="outline" className="ml-2">{statusCounts.interview}</Badge>
-                      </SelectItem>
-                      <SelectItem value="offer">
-                        Offer
-                        <Badge variant="outline" className="ml-2">{statusCounts.offer}</Badge>
-                      </SelectItem>
-                      <SelectItem value="accepted">
-                        Accepted
-                        <Badge variant="outline" className="ml-2">{statusCounts.accepted}</Badge>
-                      </SelectItem>
-                      <SelectItem value="rejected">
-                        Rejected
-                        <Badge variant="outline" className="ml-2">{statusCounts.rejected}</Badge>
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <ScrollArea className="h-[600px]">
-                <div className="space-y-4">
-                  {filteredApplications.length > 0 ? (
-                    filteredApplications.map(application => (
-                      <JobApplicationCard
-                        key={application.id}
-                        id={application.id}
-                        jobTitle={application.jobTitle}
-                        company={application.companyName}
-                        location={application.location || "Remote"}
-                        appliedDate={application.appliedDate}
-                        status={application.status as ApplicationStatus}
-                        onStatusChange={handleStatusChange}
-                        onDelete={handleDeleteApplication}
-                      />
-                    ))
-                  ) : (
-                    <div className="text-center py-8">
-                      <p className="text-muted-foreground">
-                        {applications.length > 0
-                          ? "No applications matching your filters."
-                          : "You haven't applied to any jobs yet."}
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </ScrollArea>
-            </div>
-          )}
+  if (isLoading) {
+    return (
+      <div className="container mx-auto px-4 py-12 flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
+          <p className="text-muted-foreground">Loading your applications...</p>
         </div>
       </div>
-      <Footer />
+    );
+  }
+
+  return (
+    <div className="container mx-auto px-4 py-12">
+      <div className="flex items-center justify-between mb-8">
+        <div>
+          <h1 className="text-3xl font-bold">My Applications</h1>
+          <p className="text-muted-foreground mt-1">
+            Track and manage your job applications
+          </p>
+        </div>
+        <Button onClick={() => navigate("/jobs")}>
+          <Briefcase className="mr-2 h-4 w-4" />
+          Browse Jobs
+        </Button>
+      </div>
+      
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-8">
+        <TabsList className="grid w-full grid-cols-3 max-w-md">
+          <TabsTrigger value="all" className="flex flex-col py-2">
+            <span>All</span>
+            <span className="text-xs text-muted-foreground">{counts.all}</span>
+          </TabsTrigger>
+          <TabsTrigger value="active" className="flex flex-col py-2">
+            <span>Active</span>
+            <span className="text-xs text-muted-foreground">{counts.active}</span>
+          </TabsTrigger>
+          <TabsTrigger value="closed" className="flex flex-col py-2">
+            <span>Closed</span>
+            <span className="text-xs text-muted-foreground">{counts.closed}</span>
+          </TabsTrigger>
+        </TabsList>
+
+        {/* Applications grid for all tabs */}
+        <TabsContent value={activeTab}>
+          {filteredApplications.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredApplications.map((application) => (
+                <JobApplicationCard
+                  key={application.id}
+                  id={application.jobId}
+                  jobTitle={application.jobTitle}
+                  company={application.companyName}
+                  location={application.location}
+                  appliedDate={application.appliedDate}
+                  status={application.status}
+                  onStatusChange={handleStatusChange}
+                  onDelete={() => handleDeleteApplication(application.id)}
+                />
+              ))}
+            </div>
+          ) : (
+            <Card>
+              <CardContent className="flex flex-col items-center justify-center py-12">
+                <Calendar className="h-12 w-12 text-muted-foreground mb-4" />
+                <h3 className="text-xl font-medium mb-2">No applications yet</h3>
+                <p className="text-muted-foreground text-center max-w-md mb-6">
+                  {activeTab === "all" 
+                    ? "You haven't applied to any jobs yet. Start your job search today!" 
+                    : activeTab === "active" 
+                      ? "You don't have any active applications. Apply to more jobs!" 
+                      : "You don't have any closed applications. Check back after you've received responses."}
+                </p>
+                <Button onClick={() => navigate("/jobs")}>
+                  <Briefcase className="mr-2 h-4 w-4" />
+                  Browse Jobs
+                </Button>
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
