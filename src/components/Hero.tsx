@@ -123,7 +123,7 @@ const Hero = () => {
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 1.6, duration: 0.8 }}
-          className="mt-16 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 max-w-5xl mx-auto"
+          className="mt-16 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-6 max-w-5xl mx-auto"
         >
           {['Tesla', 'Microsoft', 'Google', 'Amazon', 'Apple', 'Meta'].map((company, index) => (
             <motion.div 
@@ -131,13 +131,13 @@ const Hero = () => {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 1.8 + index * 0.1, duration: 0.5 }}
-              className="flex flex-col items-center justify-center p-4 neo-blur rounded-lg text-muted-foreground font-medium animate-float h-20"
+              className="flex flex-col items-center justify-center p-4 neo-blur rounded-lg text-muted-foreground font-medium animate-float h-24"
             >
-              <div className="h-8 w-full flex items-center justify-center mb-2">
+              <div className="h-10 w-full flex items-center justify-center mb-2">
                 <ImageWithFallback 
                   src={companyLogos[company]} 
                   alt={`${company} logo`}
-                  className="h-8 object-contain"
+                  className="h-10 w-auto object-contain"
                 />
               </div>
               <span className="text-xs">{company}</span>
