@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { motion } from 'framer-motion';
 import { ArrowRight, Search, MapPin, Briefcase, Zap, BrainCircuit, Box } from 'lucide-react';
@@ -137,13 +138,13 @@ const Hero = () => {
                   <img 
                     src={companyLogos[company]} 
                     alt={`${company} logo`}
-                    className="h-14 w-auto max-w-full object-contain"
+                    className="h-10 w-auto max-w-full object-contain"
                   />
                 ) : company === 'Meta' ? (
                   <img 
                     src={companyLogos[company]} 
                     alt={`${company} logo`}
-                    className="h-12 w-auto max-w-full object-contain"
+                    className="h-8 w-auto max-w-full object-contain"
                   />
                 ) : (
                   <img 
