@@ -1,8 +1,18 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowRight, Search, MapPin, Briefcase, Zap, BrainCircuit, Box } from 'lucide-react';
+import { ArrowRight, Search, MapPin, Briefcase, Zap, BrainCircuit, Box, Bell } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { toast } from '@/hooks/use-toast';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import SearchBar from './SearchBar';
 import ImageWithFallback from './ImageWithFallback';
 
@@ -16,7 +26,76 @@ const companyLogos: Record<string, string> = {
   Meta: "/logos/meta.svg"
 };
 
+// Mock notifications data
+const initialNotifications = [
+  {
+    id: 1,
+    title: "New Job Match",
+    message: "We found a new job matching your skills: Senior React Developer at Google",
+    time: "10 minutes ago",
+    read: false
+  },
+  {
+    id: 2,
+    title: "Application Update",
+    message: "Your application at Microsoft has moved to the interview stage",
+    time: "1 hour ago",
+    read: false
+  },
+  {
+    id: 3,
+    title: "Profile Viewed",
+    message: "A recruiter from Tesla viewed your profile",
+    time: "Yesterday",
+    read: false
+  }
+];
+
 const Hero = () => {
+  const [notifications, setNotifications] = useState(initialNotifications);
+  const [unreadCount, setUnreadCount] = useState(initialNotifications.length);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+
+  // Update unread count when notifications change
+  useEffect(() => {
+    const count = notifications.filter(notification => !notification.read).length;
+    setUnreadCount(count);
+  }, [notifications]);
+
+  // Handle opening the notification dropdown
+  const handleOpenNotifications = () => {
+    setIsDropdownOpen(true);
+  };
+
+  // Handle closing the notification dropdown
+  const handleCloseNotifications = () => {
+    // Mark all as read when dropdown closes
+    if (isDropdownOpen) {
+      const updatedNotifications = notifications.map(notification => ({
+        ...notification,
+        read: true
+      }));
+      setNotifications(updatedNotifications);
+      setUnreadCount(0);
+    }
+    setIsDropdownOpen(false);
+  };
+
+  // Handle clicking on a notification
+  const handleNotificationClick = (id: number) => {
+    // Mark specific notification as read
+    const updatedNotifications = notifications.map(notification =>
+      notification.id === id ? { ...notification, read: true } : notification
+    );
+    setNotifications(updatedNotifications);
+    
+    // Show a toast to simulate navigation
+    toast({
+      title: "Notification viewed",
+      description: "Navigating to the related content...",
+    });
+  };
+
   return (
     <section className="relative py-20 overflow-hidden">
       {/* Abstract background shapes */}
@@ -27,6 +106,56 @@ const Hero = () => {
       </div>
 
       <div className="container mx-auto px-4 md:px-6">
+        {/* Notification System */}
+        <div className="absolute top-4 right-4 z-10">
+          <DropdownMenu open={isDropdownOpen} onOpenChange={open => {
+            if (open) handleOpenNotifications();
+            else handleCloseNotifications();
+          }}>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="relative">
+                <Bell className="h-5 w-5" />
+                {unreadCount > 0 && (
+                  <span className="absolute top-0 right-0 h-4 w-4 rounded-full bg-red-500 flex items-center justify-center text-[10px] text-white font-bold">
+                    {unreadCount}
+                  </span>
+                )}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="w-80 mt-2" align="end">
+              <DropdownMenuLabel>Notifications</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuGroup>
+                {notifications.length > 0 ? (
+                  notifications.map(notification => (
+                    <DropdownMenuItem 
+                      key={notification.id}
+                      className={`cursor-pointer p-3 ${!notification.read ? 'bg-accent/10' : ''}`}
+                      onClick={() => handleNotificationClick(notification.id)}
+                    >
+                      <div className="flex flex-col space-y-1">
+                        <div className="flex justify-between items-center">
+                          <p className="font-medium">{notification.title}</p>
+                          <span className="text-xs text-muted-foreground">{notification.time}</span>
+                        </div>
+                        <p className="text-sm text-muted-foreground">{notification.message}</p>
+                      </div>
+                    </DropdownMenuItem>
+                  ))
+                ) : (
+                  <div className="p-3 text-center text-muted-foreground">
+                    No new notifications
+                  </div>
+                )}
+              </DropdownMenuGroup>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem className="cursor-pointer justify-center">
+                See all notifications
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -138,13 +267,13 @@ const Hero = () => {
                   <img 
                     src={companyLogos[company]} 
                     alt={`${company} logo`}
-                    className="h-10 w-auto max-w-full object-contain"
+                    className="h-5 w-auto max-w-full object-contain"
                   />
                 ) : company === 'Meta' ? (
                   <img 
                     src={companyLogos[company]} 
                     alt={`${company} logo`}
-                    className="h-12 w-auto max-w-full object-contain"
+                    className="h-8 w-auto max-w-full object-contain"
                   />
                 ) : (
                   <img 
