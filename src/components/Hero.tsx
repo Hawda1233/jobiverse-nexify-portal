@@ -144,7 +144,7 @@ const Hero = () => {
                   <img 
                     src={companyLogos[company]} 
                     alt={`${company} logo`}
-                    className="h-8 w-auto max-w-full object-contain"
+                    className="h-12 w-auto max-w-full object-contain"
                   />
                 ) : (
                   <img 
