@@ -33,6 +33,7 @@ import Footer from "@/components/Footer";
 import { ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import HRVerificationPending from "./pages/HRVerificationPending";
+import OTPVerification from "./pages/OTPVerification";
 
 // Auth route component for protecting routes
 const ProtectedRoute = ({ requiredRole, children }: { requiredRole?: "candidate" | "hr", children: React.ReactNode }) => {
@@ -50,6 +51,11 @@ const ProtectedRoute = ({ requiredRole, children }: { requiredRole?: "candidate"
     return requiredRole === "hr" ? 
       <Navigate to="/dashboard" replace /> : 
       <Navigate to="/hr-dashboard" replace />;
+  }
+
+  // Check if HR user needs OTP verification
+  if (requiredRole === "hr" && userData?.role === "hr" && !userData?.otpVerified) {
+    return <Navigate to="/otp-verification" replace />;
   }
 
   return <>{children}</>;
@@ -124,6 +130,13 @@ const AppRoutes = () => {
         <Route path="/contact" element={<Contact />} />
         <Route path="/privacy" element={<Privacy />} />
         <Route path="/terms" element={<Terms />} />
+        
+        {/* New OTP verification route */}
+        <Route path="/otp-verification" element={
+          <ProtectedRoute>
+            <OTPVerification />
+          </ProtectedRoute>
+        } />
       </Route>
 
       {/* Protected routes that require authentication */}

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -16,11 +15,10 @@ const SignIn = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<"jobseeker" | "employer">("jobseeker");
-  const { login, loginWithGoogle, userData, updateUserRole } = useAuth();
+  const { login, loginWithGoogle, userData, updateUserRole, sendOTPVerification } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  // Read the tab from URL if it exists
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const tab = params.get('tab');
@@ -29,7 +27,6 @@ const SignIn = () => {
     }
   }, []);
 
-  // Update URL when tab changes
   useEffect(() => {
     const url = new URL(window.location.href);
     if (activeTab === 'employer') {
@@ -45,28 +42,39 @@ const SignIn = () => {
     setIsLoading(true);
 
     try {
-      await login(email, password);
+      const userCredential = await login(email, password);
+      const user = userCredential.user;
 
-      // Additional logic to handle role switching if necessary
       if (activeTab === "employer" && userData?.role !== "hr") {
-        // Need to switch to HR role
         try {
           await updateUserRole("hr");
         } catch (error) {
           console.error("Error updating role:", error);
         }
-        navigate("/hr-dashboard");
       } else if (activeTab === "jobseeker" && userData?.role !== "candidate") {
-        // Need to switch to candidate role
         try {
           await updateUserRole("candidate");
         } catch (error) {
           console.error("Error updating role:", error);
         }
-        navigate("/dashboard");
+      }
+
+      if (activeTab === "employer" || (userData && userData.role === "hr")) {
+        if (!userData?.otpVerified) {
+          await sendOTPVerification(user);
+          
+          toast({
+            title: "Verification required",
+            description: "We've sent a verification code to your email.",
+          });
+          
+          navigate("/otp-verification");
+          return;
+        }
+        
+        navigate("/hr-dashboard");
       } else {
-        // Go to appropriate dashboard based on current role
-        navigate(userData?.role === "hr" ? "/hr-dashboard" : "/dashboard");
+        navigate("/dashboard");
       }
 
       toast({
@@ -88,28 +96,39 @@ const SignIn = () => {
   const handleGoogleSignIn = async () => {
     setIsGoogleLoading(true);
     try {
-      await loginWithGoogle();
+      const result = await loginWithGoogle();
+      const user = result.user;
 
-      // Additional logic to handle role switching if necessary
       if (activeTab === "employer" && userData?.role !== "hr") {
-        // Need to switch to HR role
         try {
           await updateUserRole("hr");
         } catch (error) {
           console.error("Error updating role:", error);
         }
-        navigate("/hr-dashboard");
       } else if (activeTab === "jobseeker" && userData?.role !== "candidate") {
-        // Need to switch to candidate role
         try {
           await updateUserRole("candidate");
         } catch (error) {
           console.error("Error updating role:", error);
         }
-        navigate("/dashboard");
+      }
+
+      if (activeTab === "employer" || (userData && userData.role === "hr")) {
+        if (!userData?.otpVerified) {
+          await sendOTPVerification(user);
+          
+          toast({
+            title: "Verification required",
+            description: "We've sent a verification code to your email.",
+          });
+          
+          navigate("/otp-verification");
+          return;
+        }
+        
+        navigate("/hr-dashboard");
       } else {
-        // Go to appropriate dashboard based on current role
-        navigate(userData?.role === "hr" ? "/hr-dashboard" : "/dashboard");
+        navigate("/dashboard");
       }
 
       toast({

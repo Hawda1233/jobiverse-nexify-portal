@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -56,9 +57,8 @@ const HRSignUp = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
   const [emailError, setEmailError] = useState("");
-  const [emailSent, setEmailSent] = useState(false);
 
-  const { signup, sendVerificationEmail } = useAuth();
+  const { signup, sendOTPVerification } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -157,15 +157,16 @@ const HRSignUp = () => {
         foundedYear: foundedYear ? parseInt(foundedYear) : undefined,
       });
       
-      await sendVerificationEmail(userCredential.user);
-      setEmailSent(true);
+      // Send OTP verification instead of email verification
+      await sendOTPVerification(userCredential.user);
       
       toast({
         title: "Account created!",
-        description: "Please check your email to verify your account before logging in.",
+        description: "We've sent a verification code to your email.",
       });
       
-      navigate("/hr-verification-pending");
+      // Navigate to OTP verification page
+      navigate("/otp-verification");
     } catch (error) {
       console.error(error);
       toast({

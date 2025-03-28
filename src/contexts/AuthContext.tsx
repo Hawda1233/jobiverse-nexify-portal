@@ -14,6 +14,7 @@ import {
 import { auth, googleProvider, addAuthDomain } from "../lib/firebase";
 import { useToast } from "@/hooks/use-toast";
 import { saveCandidateProfile, saveEmployerProfile } from "@/lib/profileOperations";
+import { sendOTP, verifyOTP, checkOTPVerification } from "@/lib/otpOperations";
 
 // New interface for user data including role
 interface UserData {
@@ -25,6 +26,7 @@ interface UserData {
   company?: string;
   industry?: string;
   emailVerified?: boolean;
+  otpVerified?: boolean;
 }
 
 interface AuthContextProps {
@@ -38,6 +40,11 @@ interface AuthContextProps {
   updateUserRole: (role: "candidate" | "hr", data?: { company?: string, industry?: string }) => Promise<void>;
   sendVerificationEmail: (user: User) => Promise<void>;
   isEmailVerified: () => boolean;
+  // New OTP-related methods
+  sendOTPVerification: (user: User) => Promise<{ success: boolean; message?: string }>;
+  verifyOTPCode: (uid: string, otp: string) => Promise<{ success: boolean; message?: string }>;
+  isOTPVerified: () => boolean;
+  markOTPVerified: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextProps | undefined>(undefined);
@@ -72,6 +79,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       photoURL: user.photoURL,
       role: role,
       emailVerified: user.emailVerified,
+      otpVerified: false,
       ...data
     };
     
@@ -163,6 +171,54 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
       throw error;
     }
+  }
+
+  // New: Send OTP verification
+  async function sendOTPVerification(user: User) {
+    try {
+      return await sendOTP(user);
+    } catch (error: any) {
+      console.error("Error sending OTP verification:", error);
+      toast({
+        title: "Error",
+        description: `Failed to send verification code: ${error.message}`,
+        variant: "destructive",
+      });
+      throw error;
+    }
+  }
+
+  // New: Verify OTP code
+  async function verifyOTPCode(uid: string, otp: string) {
+    try {
+      return await verifyOTP(uid, otp);
+    } catch (error: any) {
+      console.error("Error verifying OTP:", error);
+      toast({
+        title: "Error",
+        description: `Failed to verify code: ${error.message}`,
+        variant: "destructive",
+      });
+      throw error;
+    }
+  }
+
+  // New: Check if user's OTP is verified
+  function isOTPVerified() {
+    return userData?.otpVerified || false;
+  }
+
+  // New: Mark user as OTP verified
+  async function markOTPVerified() {
+    if (!currentUser || !userData) return;
+    
+    const updatedUserData = {
+      ...userData,
+      otpVerified: true
+    };
+    
+    localStorage.setItem(`user_data_${currentUser.uid}`, JSON.stringify(updatedUserData));
+    setUserData(updatedUserData);
   }
 
   // Check if the current user's email is verified
@@ -279,7 +335,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     logout,
     updateUserRole,
     sendVerificationEmail,
-    isEmailVerified
+    isEmailVerified,
+    // New OTP-related methods
+    sendOTPVerification,
+    verifyOTPCode,
+    isOTPVerified,
+    markOTPVerified
   };
 
   return (
