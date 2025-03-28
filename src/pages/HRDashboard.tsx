@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -626,7 +625,10 @@ const HRDashboard = () => {
           <InterviewScheduler
             onSchedule={handleScheduleInterview}
             onCancel={() => setShowInterviewDialog(false)}
-            jobOptions={myJobs.map(job => ({ id: job.id, title: job.title }))}
+            jobOptions={myJobs.map(job => ({ 
+              id: job.id.toString(),
+              title: job.title 
+            }))}
           />
         </DialogContent>
       </Dialog>
