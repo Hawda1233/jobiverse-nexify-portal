@@ -62,7 +62,7 @@ const JobDetails = () => {
         if (jobSnap.exists()) {
           const data = jobSnap.data();
           setJob({
-            id: parseInt(id),
+            id: id,
             title: data.title,
             companyName: data.companyName,
             location: data.location,

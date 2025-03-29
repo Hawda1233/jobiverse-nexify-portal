@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { allJobs } from "@/lib/jobsData";
+import { sampleJobs } from "@/lib/jobsData";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import JobCard from "@/components/JobCard";
@@ -224,7 +224,7 @@ const CompanyJobs: React.FC = () => {
         // Load jobs for this company
         setLoading(true);
         setTimeout(() => {
-          const filtered = allJobs.filter(job => 
+          const filtered = sampleJobs.filter(job => 
             job.companyName.toLowerCase() === formattedCompanyName.toLowerCase()
           );
           setCompanyJobs(filtered);

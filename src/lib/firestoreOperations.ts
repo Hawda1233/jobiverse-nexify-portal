@@ -1,3 +1,4 @@
+
 import { db } from "./firebase";
 import { collection, addDoc, getDocs, query, where, orderBy, Timestamp, doc, getDoc, updateDoc, deleteDoc, limit } from "firebase/firestore";
 import { JobType } from "./jobsData";
@@ -31,7 +32,7 @@ export const addJobToFirestore = async (jobData: Omit<JobType, "id" | "postedTim
       const postedTime = formatPostedTime(new Date());
       
       return { 
-        id: supabaseJob.id || Math.floor(Math.random() * 10000),
+        id: String(supabaseJob.id || Math.floor(Math.random() * 10000)),
         ...jobData,
         postedTime 
       };
@@ -51,7 +52,7 @@ export const addJobToFirestore = async (jobData: Omit<JobType, "id" | "postedTim
       const postedTime = formatPostedTime(new Date());
       
       return { 
-        id: parseInt(docRef.id) || Math.floor(Math.random() * 10000), // Convert to number or use random fallback
+        id: docRef.id,
         ...jobData,
         postedTime 
       };
@@ -101,7 +102,7 @@ export const getJobsFromFirestore = async () => {
       const supabaseJobs = await getJobsFromSupabase();
       
       return supabaseJobs.map(job => ({
-        id: job.id || Math.floor(Math.random() * 10000),
+        id: String(job.id || Math.floor(Math.random() * 10000)),
         title: job.title,
         companyName: job.company_name,
         location: job.location,
@@ -125,7 +126,7 @@ export const getJobsFromFirestore = async () => {
       querySnapshot.forEach((doc) => {
         const data = doc.data();
         jobs.push({
-          id: parseInt(doc.id) || Math.floor(Math.random() * 10000), // Convert to number or use random fallback
+          id: doc.id,
           title: data.title,
           companyName: data.companyName,
           location: data.location,
@@ -336,7 +337,7 @@ export const getPersonalizedJobs = async (userId: string) => {
     querySnapshot.forEach((doc) => {
       const data = doc.data();
       const job: JobType = {
-        id: parseInt(doc.id) || Math.floor(Math.random() * 10000), // Convert to number or use random fallback
+        id: doc.id,
         title: data.title,
         companyName: data.companyName,
         location: data.location,
