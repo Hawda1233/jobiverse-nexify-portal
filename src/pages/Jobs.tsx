@@ -24,6 +24,7 @@ const Jobs = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [jobs, setJobs] = useState<JobType[]>([]);
   const [isPersonalized, setIsPersonalized] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   
   const { currentUser, userData } = useAuth();
   
@@ -31,41 +32,54 @@ const Jobs = () => {
   const selectedLocation = searchParams.get('location') || '';
   const selectedCategory = searchParams.get('category') || '';
   
-  // Fetch jobs from Supabase
+  // Fetch jobs from Supabase with error handling
   useEffect(() => {
     const fetchJobs = async () => {
       setIsLoading(true);
+      setError(null);
+      
       try {
         // Fetch regular jobs from Supabase
         const jobsData = await getJobsFromSupabase();
         
+        if (!jobsData || jobsData.length === 0) {
+          console.log('No jobs found or error fetching jobs');
+          setJobs([]);
+          setTotalPages(1);
+          setIsLoading(false);
+          return;
+        }
+        
         // Map Supabase data structure to our JobType
         const transformedJobs = jobsData.map((job: any): JobType => ({
-          id: job.id,
-          title: job.title,
-          companyName: job.company_name,
-          location: job.location,
-          jobType: job.job_type,
-          salary: job.salary,
-          category: job.category,
-          description: job.description,
-          experienceLevel: job.experience_level,
-          featured: job.featured,
-          postedBy: job.posted_by,
-          postedTime: formatPostedDate(job.created_at),
+          id: job.id || `temp-${Date.now()}`,
+          title: job.title || 'Untitled Position',
+          companyName: job.company_name || 'Unknown Company',
+          location: job.location || 'Remote',
+          jobType: job.job_type || 'Full-time',
+          salary: job.salary || 'Competitive',
+          category: job.category || 'Technology',
+          description: job.description || 'No description provided',
+          experienceLevel: job.experience_level || 'Entry Level',
+          featured: job.featured || false,
+          postedBy: job.posted_by || 'Nexify',
+          postedTime: formatPostedDate(job.created_at) || 'Recently',
           companyLogo: "/placeholder.svg" // Default logo
         }));
         
         setJobs(transformedJobs);
-        setTotalPages(Math.ceil(transformedJobs.length / 9));
+        setTotalPages(Math.ceil(transformedJobs.length / 9) || 1);
         setIsPersonalized(false);
       } catch (error) {
         console.error("Error fetching jobs:", error);
+        setError("Failed to load jobs. Please try again later.");
         toast({
           title: "Error",
           description: "Failed to load jobs. Please try again later.",
           variant: "destructive",
         });
+        setJobs([]);
+        setTotalPages(1);
       } finally {
         setIsLoading(false);
       }
@@ -224,6 +238,22 @@ const Jobs = () => {
                     <div className="h-4 bg-slate-200 rounded w-48"></div>
                   </div>
                 </div>
+              ) : error ? (
+                <motion.div 
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.5 }}
+                  className="neo-blur rounded-xl p-10 text-center"
+                >
+                  <h3 className="text-xl font-medium mb-2">Error Loading Jobs</h3>
+                  <p className="text-muted-foreground mb-4">{error}</p>
+                  <Button 
+                    onClick={() => window.location.reload()}
+                    variant="outline"
+                  >
+                    Refresh Page
+                  </Button>
+                </motion.div>
               ) : paginatedJobs.length > 0 ? (
                 <motion.div 
                   variants={container}

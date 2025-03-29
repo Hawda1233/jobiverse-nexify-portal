@@ -1,12 +1,24 @@
-
 import { createClient } from '@supabase/supabase-js';
 
 // Supabase connection details
-const supabaseUrl = 'https://cgciiicdtfmukdlvpkyv.supabase.co';
-const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNnY2lpaWNkdGZtdWtkbHZwa3l2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDMyNzcxNDYsImV4cCI6MjA1ODg1MzE0Nn0.PpMD2j6Se50QpnlN3JnV3vOj3P2LCrrlxNpqOmIPl7w';
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://cgciiicdtfmukdlvpkyv.supabase.co';
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNnY2lpaWNkdGZtdWtkbHZwa3l2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDMyNzcxNDYsImV4cCI6MjA1ODg1MzE0Nn0.PpMD2j6Se50QpnlN3JnV3vOj3P2LCrrlxNpqOmIPl7w';
 
-// Create Supabase client
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+// Create Supabase client with error handling
+let supabase;
+try {
+  supabase = createClient(supabaseUrl, supabaseAnonKey);
+  console.log('Supabase client initialized successfully');
+} catch (error) {
+  console.error('Failed to initialize Supabase client:', error);
+  // Create a fallback client with default values
+  supabase = createClient(
+    'https://cgciiicdtfmukdlvpkyv.supabase.co',
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNnY2lpaWNkdGZtdWtkbHZwa3l2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDMyNzcxNDYsImV4cCI6MjA1ODg1MzE0Nn0.PpMD2j6Se50QpnlN3JnV3vOj3P2LCrrlxNpqOmIPl7w'
+  );
+}
+
+export { supabase };
 
 // Helper functions for Supabase operations
 
@@ -87,13 +99,13 @@ export const getJobsFromSupabase = async () => {
     
     if (error) {
       console.error('Error fetching jobs from Supabase:', error);
-      throw error;
+      return []; // Return empty array instead of throwing error
     }
     
     return data || [];
   } catch (error) {
     console.error('Error in getJobsFromSupabase:', error);
-    throw error;
+    return []; // Return empty array instead of throwing error
   }
 };
 
@@ -113,13 +125,13 @@ export const addJobToSupabase = async (jobData: any) => {
     
     if (error) {
       console.error('Error adding job to Supabase:', error);
-      throw error;
+      return null;
     }
     
     return data;
   } catch (error) {
     console.error('Error in addJobToSupabase:', error);
-    throw error;
+    return null;
   }
 };
 
