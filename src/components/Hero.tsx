@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowRight, Search, MapPin, Briefcase, Zap, BrainCircuit, Box, Bell, LogIn } from 'lucide-react';
@@ -23,9 +22,7 @@ const companyLogos: Record<string, string> = {
   Tesla: "/logos/tesla.svg",
   Microsoft: "/logos/microsoft.svg",
   Google: "/logos/google.svg",
-  Amazon: "/logos/amazon.svg",
-  Apple: "/logos/apple.svg",
-  Meta: "/logos/meta.svg"
+  Apple: "/logos/apple.svg"
 };
 
 // Mock notifications data
@@ -313,9 +310,9 @@ const Hero = () => {
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 1.6, duration: 0.8 }}
-          className="mt-16 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-6 max-w-5xl mx-auto"
+          className="mt-16 grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-4xl mx-auto"
         >
-          {['Tesla', 'Microsoft', 'Google', 'Amazon', 'Apple', 'Meta'].map((company, index) => (
+          {['Tesla', 'Microsoft', 'Google', 'Apple'].map((company, index) => (
             <motion.div 
               key={company}
               initial={{ opacity: 0 }}
@@ -324,25 +321,11 @@ const Hero = () => {
               className="flex flex-col items-center justify-center p-4 neo-blur rounded-lg text-muted-foreground font-medium animate-float h-36"
             >
               <div className="h-20 w-full flex items-center justify-center mb-2">
-                {company === 'Amazon' ? (
-                  <img 
-                    src={companyLogos[company]} 
-                    alt={`${company} logo`}
-                    className="h-5 w-auto max-w-full object-contain"
-                  />
-                ) : company === 'Meta' ? (
-                  <img 
-                    src={companyLogos[company]} 
-                    alt={`${company} logo`}
-                    className="h-8 w-auto max-w-full object-contain"
-                  />
-                ) : (
-                  <img 
-                    src={companyLogos[company]} 
-                    alt={`${company} logo`}
-                    className="h-16 w-auto max-w-full object-contain"
-                  />
-                )}
+                <img 
+                  src={companyLogos[company]} 
+                  alt={`${company} logo`}
+                  className="h-16 w-auto max-w-full object-contain"
+                />
               </div>
               <span className="text-xs">{company}</span>
             </motion.div>
