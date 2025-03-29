@@ -7,8 +7,8 @@ import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { getEmployerProfile } from "@/lib/profileOperations";
-import { addJobToFirestore } from "@/lib/firestoreOperations";
-import { Briefcase, Building2, MapPin, CreditCard, Clock, UserCircle, Loader2 } from "lucide-react";
+import { addJobToSupabase } from "@/lib/supabase";
+import { Loader2, Building2 } from "lucide-react";
 import { 
   Form,
   FormControl,
@@ -115,21 +115,22 @@ const PostJob = () => {
     setIsLoading(true);
     
     try {
-      // Add job to Firestore
+      // Add job to Supabase
       const jobData = {
         title: data.title,
-        companyName: data.company,
+        company_name: data.company,
         location: data.location,
-        jobType: data.jobType,
+        job_type: data.jobType,
         salary: data.salary || undefined,
         category: data.category,
-        experienceLevel: data.experienceLevel,
+        experience_level: data.experienceLevel,
         description: data.description,
         featured: data.featured,
-        postedBy: userData.uid
+        posted_by: userData.uid,
+        keywords: generateKeywords(data.title, data.category, data.description)
       };
       
-      await addJobToFirestore(jobData);
+      await addJobToSupabase(jobData);
       
       toast({
         title: "Job Posted Successfully",
@@ -148,6 +149,17 @@ const PostJob = () => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  // Generate keywords for better job searchability
+  const generateKeywords = (title: string, category: string, description: string): string[] => {
+    const combinedText = `${title} ${category} ${description}`;
+    const words = combinedText.toLowerCase().split(/\s+/);
+    const uniqueWords = [...new Set(words)];
+    return uniqueWords
+      .filter(word => word.length > 2)
+      .filter(word => !["and", "the", "for", "with", "this", "that"].includes(word))
+      .slice(0, 20);
   };
 
   if (!userData || userData.role !== "hr") {

@@ -5,10 +5,10 @@ import JobFilter from '@/components/JobFilter';
 import SearchBar from '@/components/SearchBar';
 import { Button } from '@/components/ui/button';
 import { Pagination, PaginationContent, PaginationItem, PaginationLink } from '@/components/ui/pagination';
-import { getJobsFromFirestore, getPersonalizedJobs } from '@/lib/firestoreOperations';
+import { getJobsFromSupabase } from '@/lib/supabase';
 import { JobType } from '@/lib/jobsData';
 import { motion } from 'framer-motion';
-import { Zap, Scan, BrainCircuit, Layers, Box, Globe, ArrowRight } from 'lucide-react';
+import { Zap, Box, Globe, BrainCircuit } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -31,25 +31,34 @@ const Jobs = () => {
   const selectedLocation = searchParams.get('location') || '';
   const selectedCategory = searchParams.get('category') || '';
   
-  // Fetch jobs from Firestore
+  // Fetch jobs from Supabase
   useEffect(() => {
     const fetchJobs = async () => {
       setIsLoading(true);
       try {
-        let jobsData;
+        // Fetch regular jobs from Supabase
+        const jobsData = await getJobsFromSupabase();
         
-        // If user is logged in and is a candidate, fetch personalized jobs
-        if (currentUser && userData && userData.role === 'candidate') {
-          jobsData = await getPersonalizedJobs(currentUser.uid);
-          setIsPersonalized(true);
-        } else {
-          // Otherwise fetch regular jobs
-          jobsData = await getJobsFromFirestore();
-          setIsPersonalized(false);
-        }
+        // Map Supabase data structure to our JobType
+        const transformedJobs = jobsData.map((job: any): JobType => ({
+          id: job.id,
+          title: job.title,
+          companyName: job.company_name,
+          location: job.location,
+          jobType: job.job_type,
+          salary: job.salary,
+          category: job.category,
+          description: job.description,
+          experienceLevel: job.experience_level,
+          featured: job.featured,
+          postedBy: job.posted_by,
+          postedTime: formatPostedDate(job.created_at),
+          companyLogo: "/placeholder.svg" // Default logo
+        }));
         
-        setJobs(jobsData);
-        setTotalPages(Math.ceil(jobsData.length / 9));
+        setJobs(transformedJobs);
+        setTotalPages(Math.ceil(transformedJobs.length / 9));
+        setIsPersonalized(false);
       } catch (error) {
         console.error("Error fetching jobs:", error);
         toast({
@@ -64,6 +73,27 @@ const Jobs = () => {
     
     fetchJobs();
   }, [currentUser, userData, toast]);
+  
+  // Format posted date from Supabase timestamp to relative time
+  const formatPostedDate = (timestamp: string): string => {
+    const date = new Date(timestamp);
+    const now = new Date();
+    const diffInDays = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
+    
+    if (diffInDays === 0) {
+      return "Today";
+    } else if (diffInDays === 1) {
+      return "Yesterday";
+    } else if (diffInDays < 7) {
+      return `${diffInDays} days ago`;
+    } else if (diffInDays < 30) {
+      const weeks = Math.floor(diffInDays / 7);
+      return `${weeks} ${weeks === 1 ? 'week' : 'weeks'} ago`;
+    } else {
+      const months = Math.floor(diffInDays / 30);
+      return `${months} ${months === 1 ? 'month' : 'months'} ago`;
+    }
+  };
   
   const getFilteredJobs = () => {
     let filtered = [...jobs];
