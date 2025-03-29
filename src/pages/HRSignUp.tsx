@@ -58,7 +58,7 @@ const HRSignUp = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [emailError, setEmailError] = useState("");
 
-  const { signup, sendOTPVerification } = useAuth();
+  const { signup } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -68,11 +68,6 @@ const HRSignUp = () => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       setEmailError("Please enter a valid email address");
-      return false;
-    }
-    
-    if (email.toLowerCase().includes("@gmail.com")) {
-      setEmailError("Please use a company email address, not Gmail");
       return false;
     }
     
@@ -157,16 +152,13 @@ const HRSignUp = () => {
         foundedYear: foundedYear ? parseInt(foundedYear) : undefined,
       });
       
-      // Send OTP verification instead of email verification
-      await sendOTPVerification(userCredential.user);
-      
       toast({
         title: "Account created!",
-        description: "We've sent a verification code to your email.",
+        description: "Your HR account has been created successfully.",
       });
       
-      // Navigate to OTP verification page
-      navigate("/otp-verification");
+      // Navigate directly to HR dashboard
+      navigate("/hr-dashboard");
     } catch (error) {
       console.error(error);
       toast({
@@ -209,7 +201,7 @@ const HRSignUp = () => {
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="email">Work Email*</Label>
+                  <Label htmlFor="email">Email*</Label>
                   <div className="relative">
                     <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input

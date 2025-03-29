@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -31,8 +32,6 @@ import HRNavbar from "@/components/HRNavbar";
 import Footer from "@/components/Footer";
 import { ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import HRVerificationPending from "./pages/HRVerificationPending";
-import OTPVerification from "./pages/OTPVerification";
 
 const ProtectedRoute = ({ requiredRole, children }: { requiredRole?: "candidate" | "hr", children: React.ReactNode }) => {
   const { currentUser, userData, loading } = useAuth();
@@ -49,10 +48,6 @@ const ProtectedRoute = ({ requiredRole, children }: { requiredRole?: "candidate"
     return requiredRole === "hr" ? 
       <Navigate to="/dashboard" replace /> : 
       <Navigate to="/hr-dashboard" replace />;
-  }
-
-  if (requiredRole === "hr" && userData?.role === "hr" && !userData?.otpVerified) {
-    return <Navigate to="/otp-verification" replace />;
   }
 
   return <>{children}</>;
@@ -123,12 +118,6 @@ const AppRoutes = () => {
         <Route path="/contact" element={<Contact />} />
         <Route path="/privacy" element={<Privacy />} />
         <Route path="/terms" element={<Terms />} />
-        
-        <Route path="/otp-verification" element={
-          <ProtectedRoute>
-            <OTPVerification />
-          </ProtectedRoute>
-        } />
       </Route>
       
       <Route element={
@@ -203,11 +192,6 @@ const AppRoutes = () => {
         <Route path="/resources/tech-trends-2025/:section" element={
           <ProtectedRoute>
             <TechTrends2025Detail />
-          </ProtectedRoute>
-        } />
-        <Route path="/hr-verification-pending" element={
-          <ProtectedRoute requiredRole="hr">
-            <HRVerificationPending />
           </ProtectedRoute>
         } />
         <Route path="*" element={<NotFound />} />
