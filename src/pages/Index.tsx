@@ -95,12 +95,14 @@ const Index = () => {
                 <p className="text-muted-foreground mb-6">
                   Find your dream job with AI-powered matching, apply with one click, and track your applications
                 </p>
-                <Link to="/signup" className="w-full">
-                  <Button className="w-full">
-                    Create Job Seeker Account
-                    <ArrowRight className="ml-2 h-4 w-4" />
+                <div className="w-full">
+                  <Button className="w-full" asChild>
+                    <Link to="/signup">
+                      Create Job Seeker Account
+                      <ArrowRight className="ml-2 h-4 w-4" />
+                    </Link>
                   </Button>
-                </Link>
+                </div>
                 <Link to="/signin" className="mt-3 text-sm text-accent hover:underline">
                   Already have an account? Sign in
                 </Link>
@@ -114,12 +116,14 @@ const Index = () => {
                 <p className="text-muted-foreground mb-6">
                   Post jobs, find qualified candidates quickly, and manage applications all in one place
                 </p>
-                <Link to="/signup?tab=hr" className="w-full">
-                  <Button className="w-full bg-accent hover:bg-accent/90">
-                    Create HR Account
-                    <ArrowRight className="ml-2 h-4 w-4" />
+                <div className="w-full">
+                  <Button className="w-full bg-accent hover:bg-accent/90" asChild>
+                    <Link to="/signup?tab=hr">
+                      Create HR Account
+                      <ArrowRight className="ml-2 h-4 w-4" />
+                    </Link>
                   </Button>
-                </Link>
+                </div>
                 <Link to="/signin?tab=hr" className="mt-3 text-sm text-accent hover:underline">
                   Already have an HR account? Sign in
                 </Link>
