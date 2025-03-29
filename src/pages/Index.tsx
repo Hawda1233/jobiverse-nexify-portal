@@ -139,20 +139,16 @@ const Index = () => {
             
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
               {categories.map((category) => (
-                <Link 
-                  key={category.id} 
-                  to={`/jobs?category=${category.name}`}
-                  className="neo-blur rounded-xl p-6 flex flex-col items-center text-center card-hover"
-                >
+                <div key={category.id} className="neo-blur rounded-xl p-6 flex flex-col items-center text-center card-hover">
                   <div className="w-12 h-12 rounded-full bg-accent/10 flex items-center justify-center mb-4">
                     {getCategoryIcon(category.name)}
                   </div>
                   <h3 className="font-medium mb-1">{category.name}</h3>
                   <p className="text-sm text-muted-foreground mb-3">{category.jobCount} jobs</p>
-                  <span className="text-xs text-accent flex items-center">
+                  <Link to={`/jobs?category=${category.name}`} className="text-xs text-accent flex items-center">
                     Browse <ChevronRight className="h-3 w-3 ml-1" />
-                  </span>
-                </Link>
+                  </Link>
+                </div>
               ))}
             </div>
           </div>
