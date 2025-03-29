@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowRight, Search, MapPin, Briefcase, Zap, BrainCircuit, Box, Bell, LogIn } from 'lucide-react';
@@ -196,16 +195,6 @@ const Hero = () => {
           transition={{ duration: 0.8 }}
           className="flex flex-col items-center max-w-4xl mx-auto text-center"
         >
-          <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.4, duration: 0.5 }}
-            className="inline-flex items-center bg-accent/10 text-accent rounded-full px-3 py-1 text-sm font-medium mb-6"
-          >
-            <span className="animate-pulse-subtle">Revolutionizing job search</span>
-            <ArrowRight className="h-3.5 w-3.5 ml-1" />
-          </motion.div>
-
           <motion.h1 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
