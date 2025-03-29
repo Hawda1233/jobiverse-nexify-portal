@@ -7,14 +7,25 @@ const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIU
 // Create Supabase client with error handling
 let supabase;
 try {
-  supabase = createClient(supabaseUrl, supabaseAnonKey);
+  supabase = createClient(supabaseUrl, supabaseAnonKey, {
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true,
+    },
+  });
   console.log('Supabase client initialized successfully');
 } catch (error) {
   console.error('Failed to initialize Supabase client:', error);
   // Create a fallback client with default values
   supabase = createClient(
     'https://cgciiicdtfmukdlvpkyv.supabase.co',
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNnY2lpaWNkdGZtdWtkbHZwa3l2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDMyNzcxNDYsImV4cCI6MjA1ODg1MzE0Nn0.PpMD2j6Se50QpnlN3JnV3vOj3P2LCrrlxNpqOmIPl7w'
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNnY2lpaWNkdGZtdWtkbHZwa3l2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDMyNzcxNDYsImV4cCI6MjA1ODg1MzE0Nn0.PpMD2j6Se50QpnlN3JnV3vOj3P2LCrrlxNpqOmIPl7w',
+    {
+      auth: {
+        persistSession: true,
+        autoRefreshToken: true,
+      },
+    }
   );
 }
 

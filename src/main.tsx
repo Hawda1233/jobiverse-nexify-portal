@@ -7,13 +7,13 @@ import { ErrorBoundary } from 'react-error-boundary';
 import App from './App.tsx';
 import './index.css';
 
-// Create the query client with retry logic and error handling
+// Create the query client with robust error handling
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       refetchOnWindowFocus: false,
       staleTime: 5 * 60 * 1000, // 5 minutes
-      retry: 1,
+      retry: 2, // Increase retry count
       retryDelay: 1000,
       // Updated: Using meta.onError instead of onError at root level
       meta: {
@@ -28,7 +28,7 @@ const queryClient = new QueryClient({
 // Create a helmet context
 const helmetContext = {};
 
-// Error fallback component
+// Error fallback component with more detailed information
 const ErrorFallback = ({ error, resetErrorBoundary }) => {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-background text-foreground">
@@ -64,10 +64,17 @@ if ('serviceWorker' in navigator && import.meta.env.PROD) {
   });
 }
 
-// Find root element
+// Find root element and initialize app with better error handling
 const rootElement = document.getElementById("root");
 if (!rootElement) {
   console.error("Root element not found!");
+  // Create a fallback element if root is not found
+  const fallbackElement = document.createElement("div");
+  fallbackElement.id = "root";
+  document.body.appendChild(fallbackElement);
+  
+  const root = createRoot(fallbackElement);
+  root.render(<div>Failed to mount app: Root element not found</div>);
 } else {
   // Create root component
   const root = createRoot(rootElement);
@@ -75,7 +82,11 @@ if (!rootElement) {
   // Render app with all required providers and error boundary
   root.render(
     <React.StrictMode>
-      <ErrorBoundary FallbackComponent={ErrorFallback} onReset={() => window.location.reload()}>
+      <ErrorBoundary FallbackComponent={ErrorFallback} onReset={() => {
+        // Clear any cached state that might be causing problems
+        queryClient.clear();
+        window.location.reload();
+      }}>
         <HelmetProvider context={helmetContext}>
           <QueryClientProvider client={queryClient}>
             <App />

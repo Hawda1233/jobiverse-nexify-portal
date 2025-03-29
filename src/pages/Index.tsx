@@ -1,10 +1,10 @@
-
-import React, { lazy, Suspense } from 'react';
+import React, { lazy, Suspense, useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Award, BarChart, BriefcaseBusiness, CheckCircle, ChevronRight, Globe, Layers, User } from 'lucide-react';
 import { getFeaturedJobs, categories } from '@/lib/jobsData';
 import SEOHead from '@/components/SEOHead';
+import { toast } from "@/hooks/use-toast";
 
 const Hero = lazy(() => import('@/components/Hero'));
 const JobCard = lazy(() => import('@/components/JobCard'));
@@ -36,7 +36,39 @@ const JobCardFallback = () => (
 );
 
 const Index = () => {
-  const featuredJobs = getFeaturedJobs();
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [featuredJobs, setFeaturedJobs] = useState([]);
+  
+  useEffect(() => {
+    try {
+      const jobs = getFeaturedJobs();
+      setFeaturedJobs(jobs);
+      setIsLoading(false);
+    } catch (err) {
+      console.error('Error loading featured jobs:', err);
+      setError('Failed to load featured jobs. Please try again later.');
+      setIsLoading(false);
+      
+      toast({
+        title: "Error loading content",
+        description: "There was a problem loading the page content. Please try again.",
+        variant: "destructive",
+      });
+    }
+  }, []);
+  
+  if (error && !isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4">
+        <div className="max-w-md w-full p-6 rounded-xl shadow-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+          <h1 className="text-2xl font-bold mb-4 text-red-600">Something went wrong</h1>
+          <p className="mb-6 text-gray-600 dark:text-gray-300">{error}</p>
+          <Button onClick={() => window.location.reload()} className="w-full">Try again</Button>
+        </div>
+      </div>
+    );
+  }
   
   return (
     <div className="min-h-screen flex flex-col">
@@ -59,8 +91,8 @@ const Index = () => {
                 <h2 className="text-3xl font-bold mb-2">Featured Jobs</h2>
                 <p className="text-muted-foreground">Explore our handpicked opportunities from top companies</p>
               </div>
-              <Button variant="outline" className="flex items-center gap-2" asChild>
-                <Link to="/jobs">
+              <Button variant="outline" asChild>
+                <Link to="/jobs" className="flex items-center gap-2">
                   <span>View all jobs</span>
                   <ArrowRight className="h-4 w-4" />
                 </Link>
