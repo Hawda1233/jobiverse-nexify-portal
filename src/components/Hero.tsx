@@ -212,7 +212,7 @@ const Hero = () => {
             transition={{ delay: 0.6, duration: 0.8 }}
             className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight mb-6 text-balance"
           >
-            Nexify: Where Talent Meets Opportunities
+            <span className="text-accent">Nexify</span> Where Talent Meets Opportunities
           </motion.h1>
 
           <motion.p 
