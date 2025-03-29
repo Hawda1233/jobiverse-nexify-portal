@@ -59,12 +59,12 @@ const Index = () => {
                 <h2 className="text-3xl font-bold mb-2">Featured Jobs</h2>
                 <p className="text-muted-foreground">Explore our handpicked opportunities from top companies</p>
               </div>
-              <Link to="/jobs">
-                <Button variant="outline" className="flex items-center gap-2">
+              <Button variant="outline" className="flex items-center gap-2" asChild>
+                <Link to="/jobs">
                   <span>View all jobs</span>
                   <ArrowRight className="h-4 w-4" />
-                </Button>
-              </Link>
+                </Link>
+              </Button>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -103,9 +103,11 @@ const Index = () => {
                     </Link>
                   </Button>
                 </div>
-                <Link to="/signin" className="mt-3 text-sm text-accent hover:underline">
-                  Already have an account? Sign in
-                </Link>
+                <div className="mt-3">
+                  <Button variant="link" className="text-sm text-accent p-0 h-auto" asChild>
+                    <Link to="/signin">Already have an account? Sign in</Link>
+                  </Button>
+                </div>
               </div>
               
               <div className="neo-blur rounded-xl p-8 flex flex-col items-center text-center card-hover">
@@ -124,9 +126,11 @@ const Index = () => {
                     </Link>
                   </Button>
                 </div>
-                <Link to="/signin?tab=hr" className="mt-3 text-sm text-accent hover:underline">
-                  Already have an HR account? Sign in
-                </Link>
+                <div className="mt-3">
+                  <Button variant="link" className="text-sm text-accent p-0 h-auto" asChild>
+                    <Link to="/signin?tab=hr">Already have an HR account? Sign in</Link>
+                  </Button>
+                </div>
               </div>
             </div>
           </div>
@@ -149,9 +153,11 @@ const Index = () => {
                   </div>
                   <h3 className="font-medium mb-1">{category.name}</h3>
                   <p className="text-sm text-muted-foreground mb-3">{category.jobCount} jobs</p>
-                  <Link to={`/jobs?category=${category.name}`} className="text-xs text-accent flex items-center">
-                    Browse <ChevronRight className="h-3 w-3 ml-1" />
-                  </Link>
+                  <Button variant="link" className="text-xs text-accent p-0 h-auto flex items-center" asChild>
+                    <Link to={`/jobs?category=${category.name}`}>
+                      Browse <ChevronRight className="h-3 w-3 ml-1" />
+                    </Link>
+                  </Button>
                 </div>
               ))}
             </div>
