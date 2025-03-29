@@ -15,7 +15,6 @@ const queryClient = new QueryClient({
       staleTime: 5 * 60 * 1000, // 5 minutes
       retry: 2, // Increase retry count
       retryDelay: 1000,
-      // Updated: Using meta.onError instead of onError at root level
       meta: {
         onError: (error: Error) => {
           console.error('Query error:', error);

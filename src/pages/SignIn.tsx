@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -43,26 +42,28 @@ const SignIn = () => {
     setIsLoading(true);
 
     try {
-      await login(email, password);
+      const result = await login(email, password);
 
       if (activeTab === "employer" && userData?.role !== "hr") {
         try {
           await updateUserRole("hr");
+          navigate("/hr-dashboard");
         } catch (error) {
           console.error("Error updating role:", error);
         }
       } else if (activeTab === "jobseeker" && userData?.role !== "candidate") {
         try {
           await updateUserRole("candidate");
+          navigate("/dashboard");
         } catch (error) {
           console.error("Error updating role:", error);
         }
-      }
-
-      if (activeTab === "employer" || (userData && userData.role === "hr")) {
-        navigate("/hr-dashboard");
       } else {
-        navigate("/dashboard");
+        if (userData?.role === "hr") {
+          navigate("/hr-dashboard");
+        } else {
+          navigate("/dashboard");
+        }
       }
 
       toast({
@@ -86,24 +87,24 @@ const SignIn = () => {
     try {
       await loginWithGoogle();
 
-      if (activeTab === "employer" && userData?.role !== "hr") {
+      if (activeTab === "employer") {
         try {
           await updateUserRole("hr");
+          navigate("/hr-dashboard");
         } catch (error) {
           console.error("Error updating role:", error);
         }
-      } else if (activeTab === "jobseeker" && userData?.role !== "candidate") {
-        try {
-          await updateUserRole("candidate");
-        } catch (error) {
-          console.error("Error updating role:", error);
-        }
-      }
-
-      if (activeTab === "employer" || (userData && userData.role === "hr")) {
-        navigate("/hr-dashboard");
       } else {
-        navigate("/dashboard");
+        if (userData?.role === "hr") {
+          navigate("/hr-dashboard");
+        } else {
+          try {
+            await updateUserRole("candidate");
+            navigate("/dashboard");
+          } catch (error) {
+            console.error("Error updating role:", error);
+          }
+        }
       }
 
       toast({
@@ -112,7 +113,6 @@ const SignIn = () => {
       });
     } catch (error) {
       console.error("Google sign-in error:", error);
-
       if (error instanceof Error) {
         toast({
           title: "Error",
