@@ -16,6 +16,9 @@ const queryClient = new QueryClient({
   },
 });
 
+// Create a helmet context
+const helmetContext = {};
+
 // Register service worker
 if ('serviceWorker' in navigator && import.meta.env.PROD) {
   window.addEventListener('load', () => {
@@ -35,7 +38,7 @@ const root = createRoot(document.getElementById("root")!);
 // Render app with all required providers
 root.render(
   <React.StrictMode>
-    <HelmetProvider>
+    <HelmetProvider context={helmetContext}>
       <QueryClientProvider client={queryClient}>
         <App />
       </QueryClientProvider>

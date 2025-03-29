@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -35,7 +34,6 @@ import { Button } from "@/components/ui/button";
 import HRVerificationPending from "./pages/HRVerificationPending";
 import OTPVerification from "./pages/OTPVerification";
 
-// Auth route component for protecting routes
 const ProtectedRoute = ({ requiredRole, children }: { requiredRole?: "candidate" | "hr", children: React.ReactNode }) => {
   const { currentUser, userData, loading } = useAuth();
 
@@ -53,7 +51,6 @@ const ProtectedRoute = ({ requiredRole, children }: { requiredRole?: "candidate"
       <Navigate to="/hr-dashboard" replace />;
   }
 
-  // Check if HR user needs OTP verification
   if (requiredRole === "hr" && userData?.role === "hr" && !userData?.otpVerified) {
     return <Navigate to="/otp-verification" replace />;
   }
@@ -61,7 +58,6 @@ const ProtectedRoute = ({ requiredRole, children }: { requiredRole?: "candidate"
   return <>{children}</>;
 };
 
-// Role-based layout components
 const JobseekerLayout = () => (
   <>
     <Navbar />
@@ -82,7 +78,6 @@ const HRLayout = () => (
   </>
 );
 
-// Layout for pages that don't need Navbar/Footer
 const CleanLayout = () => {
   return (
     <div className="min-h-screen">
@@ -101,7 +96,6 @@ const CleanLayout = () => {
   );
 };
 
-// RoleBasedLayout that determines which layout to show based on user role
 const RoleBasedLayout = () => {
   const { userData } = useAuth();
   
@@ -117,7 +111,6 @@ const AppRoutes = () => {
   
   return (
     <Routes>
-      {/* Public routes - landing page and auth routes */}
       <Route path="/" element={<RoleBasedLayout />}>
         <Route path="/" element={<Index />} />
       </Route>
@@ -131,15 +124,13 @@ const AppRoutes = () => {
         <Route path="/privacy" element={<Privacy />} />
         <Route path="/terms" element={<Terms />} />
         
-        {/* New OTP verification route */}
         <Route path="/otp-verification" element={
           <ProtectedRoute>
             <OTPVerification />
           </ProtectedRoute>
         } />
       </Route>
-
-      {/* Protected routes that require authentication */}
+      
       <Route element={
         <ProtectedRoute>
           <RoleBasedLayout />
@@ -151,7 +142,6 @@ const AppRoutes = () => {
         <Route path="/comparison" element={<ComparisonTool />} />
       </Route>
       
-      {/* Routes with only back button - protected */}
       <Route element={<CleanLayout />}>
         <Route path="/jobs/:id" element={
           <ProtectedRoute>
@@ -164,7 +154,6 @@ const AppRoutes = () => {
           </ProtectedRoute>
         } />
         
-        {/* Protected routes with specific roles */}
         <Route path="/profile" element={
           <ProtectedRoute>
             <Profile />
