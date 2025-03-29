@@ -1,19 +1,25 @@
 
 // This is a mock implementation of email service
-// In a real application, you would implement Firebase Cloud Functions to send emails
+// In a real application, you would implement Supabase Edge Functions to send emails
+
+import { supabase } from './supabase';
 
 // Function to send verification email with OTP
 export const sendEmailVerificationWithOTP = async (email: string, otp: string): Promise<boolean> => {
   try {
-    // In production, this would call a Firebase Cloud Function
+    // In production, this would call a Supabase Edge Function
     // For now, we'll just log the information and simulate sending an email
     console.log(`Sending OTP email to ${email} with code: ${otp}`);
     
     // Simulate API call
     await new Promise(resolve => setTimeout(resolve, 1000));
     
+    // TODO: In production, replace with actual Supabase Edge Function call
+    // const { data, error } = await supabase.functions.invoke('send-email', {
+    //   body: { email, otp, template: 'verification' }
+    // });
+    
     // For demonstration purposes, we'll just return success
-    // In a real implementation, this would make an API call to Firebase Functions
     return true;
   } catch (error) {
     console.error("Error sending email:", error);
@@ -21,18 +27,27 @@ export const sendEmailVerificationWithOTP = async (email: string, otp: string): 
   }
 };
 
-// Note: In a production environment, you would implement a Firebase Cloud Function like this:
+// Note: In a production environment, you would implement a Supabase Edge Function like this:
 /*
-// Firebase Function (server-side code)
-exports.sendVerificationEmail = functions.https.onCall(async (data, context) => {
-  const { email, otp } = data;
+// Supabase Edge Function (server-side code)
+import { serve } from "https://deno.land/std@0.131.0/http/server.ts";
+import { SmtpClient } from "https://deno.land/x/smtp@v0.7.0/mod.ts";
+
+serve(async (req) => {
+  const { email, otp, template } = await req.json();
   
-  // Use a service like Nodemailer, SendGrid, or Firebase's built-in email service
-  // to send the actual email
-  const mailOptions = {
-    from: '"Nexify" <noreply@nexify-job-platform.firebaseapp.com>',
+  const client = new SmtpClient();
+  await client.connectTLS({
+    hostname: "smtp.example.com",
+    port: 587,
+    username: "your-username",
+    password: "your-password",
+  });
+  
+  await client.send({
+    from: "noreply@nexify-job-platform.com",
     to: email,
-    subject: 'Verify Your Nexify Account',
+    subject: "Verify Your Nexify Account",
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <h2>Verify Your Nexify Account</h2>
@@ -44,14 +59,13 @@ exports.sendVerificationEmail = functions.https.onCall(async (data, context) => 
         <p>If you didn't request this code, you can safely ignore this email.</p>
       </div>
     `
-  };
+  });
   
-  try {
-    await mailTransport.sendMail(mailOptions);
-    return { success: true };
-  } catch (error) {
-    console.error('Error sending email:', error);
-    return { success: false, error: error.message };
-  }
+  await client.close();
+  
+  return new Response(
+    JSON.stringify({ success: true }),
+    { headers: { "Content-Type": "application/json" } },
+  );
 });
 */
