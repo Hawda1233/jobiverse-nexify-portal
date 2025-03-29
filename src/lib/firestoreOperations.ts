@@ -1,4 +1,3 @@
-
 import { db } from "./firebase";
 import { collection, addDoc, getDocs, query, where, orderBy, Timestamp, doc, getDoc, updateDoc, deleteDoc, limit } from "firebase/firestore";
 import { JobType } from "./jobsData";
@@ -159,7 +158,7 @@ export const getJobsByHR = async (userId: string) => {
     querySnapshot.forEach((doc) => {
       const data = doc.data();
       jobs.push({
-        id: parseInt(doc.id) || Math.floor(Math.random() * 10000), // Convert to number or use random fallback
+        id: String(doc.id), // Convert to string to match JobType
         title: data.title,
         companyName: data.companyName,
         location: data.location,
@@ -337,7 +336,7 @@ export const getPersonalizedJobs = async (userId: string) => {
     querySnapshot.forEach((doc) => {
       const data = doc.data();
       const job: JobType = {
-        id: doc.id,
+        id: String(doc.id), // Convert to string to match JobType
         title: data.title,
         companyName: data.companyName,
         location: data.location,

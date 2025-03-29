@@ -70,7 +70,7 @@ const Index = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {featuredJobs.slice(0, 6).map((job) => (
                 <Suspense key={job.id} fallback={<JobCardFallback />}>
-                  <JobCard key={job.id} job={job} featured={job.id % 2 === 0} />
+                  <JobCard key={job.id} job={job} featured={job.featured} />
                 </Suspense>
               ))}
             </div>
