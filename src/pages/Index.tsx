@@ -1,3 +1,4 @@
+
 import React, { lazy, Suspense, useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
@@ -5,6 +6,7 @@ import { ArrowRight, Award, BarChart, BriefcaseBusiness, CheckCircle, ChevronRig
 import { getFeaturedJobs, categories } from '@/lib/jobsData';
 import SEOHead from '@/components/SEOHead';
 import { toast } from "@/hooks/use-toast";
+import LoadingFallback from '@/components/LoadingFallback';
 
 const Hero = lazy(() => import('@/components/Hero'));
 const JobCard = lazy(() => import('@/components/JobCard'));
@@ -39,6 +41,20 @@ const Index = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [featuredJobs, setFeaturedJobs] = useState([]);
+  const [isOffline, setIsOffline] = useState<boolean>(!navigator.onLine);
+  
+  useEffect(() => {
+    const handleOnline = () => setIsOffline(false);
+    const handleOffline = () => setIsOffline(true);
+    
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
   
   useEffect(() => {
     try {
@@ -50,15 +66,17 @@ const Index = () => {
       setError('Failed to load featured jobs. Please try again later.');
       setIsLoading(false);
       
-      toast({
-        title: "Error loading content",
-        description: "There was a problem loading the page content. Please try again.",
-        variant: "destructive",
-      });
+      if (!isOffline) {
+        toast({
+          title: "Error loading content",
+          description: "There was a problem loading the page content. Please try again.",
+          variant: "destructive",
+        });
+      }
     }
-  }, []);
+  }, [isOffline]);
   
-  if (error && !isLoading) {
+  if (error && !isLoading && !isOffline) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4">
         <div className="max-w-md w-full p-6 rounded-xl shadow-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
@@ -78,6 +96,12 @@ const Index = () => {
         keywords="job search, career, AI matching, blockchain verification, AR interviews, HR professionals"
         canonical="/"
       />
+      
+      {isOffline && (
+        <div className="bg-yellow-100 p-3 text-center text-yellow-800">
+          <p className="text-sm">You are currently offline. Some content may not be available.</p>
+        </div>
+      )}
       
       <main className="flex-grow">
         <Suspense fallback={<HeroFallback />}>

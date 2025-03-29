@@ -5,6 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { BrowserRouter, Routes, Route, Outlet, Navigate } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
 import { useAuth } from "@/contexts/AuthContext";
+import OfflineWarning from "@/components/OfflineWarning";
 import Index from "./pages/Index";
 import Jobs from "./pages/Jobs";
 import JobDetails from "./pages/JobDetails";
@@ -92,7 +93,15 @@ const CleanLayout = () => {
 };
 
 const RoleBasedLayout = () => {
-  const { userData } = useAuth();
+  const { userData, loading } = useAuth();
+  
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full"></div>
+      </div>
+    );
+  }
   
   if (userData?.role === "hr") {
     return <HRLayout />;
@@ -206,6 +215,7 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
+        <OfflineWarning />
         <AppRoutes />
       </BrowserRouter>
     </TooltipProvider>

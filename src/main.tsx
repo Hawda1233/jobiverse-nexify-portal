@@ -27,12 +27,32 @@ const queryClient = new QueryClient({
 // Create a helmet context
 const helmetContext = {};
 
-// Error fallback component with more detailed information
+// Error fallback component with more detailed information and offline detection
 const ErrorFallback = ({ error, resetErrorBoundary }) => {
+  const [isOffline, setIsOffline] = React.useState(!navigator.onLine);
+  
+  React.useEffect(() => {
+    const handleOnline = () => setIsOffline(false);
+    const handleOffline = () => setIsOffline(true);
+    
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-background text-foreground">
       <div className="max-w-md w-full p-6 rounded-xl shadow-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
         <h1 className="text-2xl font-bold mb-4 text-red-600 dark:text-red-400">Something went wrong</h1>
+        {isOffline && (
+          <div className="mb-4 p-3 bg-yellow-100 border border-yellow-300 rounded text-yellow-800">
+            You appear to be offline. Some features may not work correctly.
+          </div>
+        )}
         <p className="mb-4 text-gray-600 dark:text-gray-300">
           The application encountered an unexpected error.
         </p>
