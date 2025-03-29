@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowRight, Search, MapPin, Briefcase, Zap, BrainCircuit, Box, Bell, LogIn } from 'lucide-react';
@@ -211,7 +212,7 @@ const Hero = () => {
             transition={{ delay: 0.6, duration: 0.8 }}
             className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight mb-6 text-balance"
           >
-            Discover Your Dream Career With <span className="text-accent">AI-Powered</span> Precision
+            Nexify: Where Talent Meets Opportunities
           </motion.h1>
 
           <motion.p 
