@@ -9,8 +9,9 @@ import SimpleFallbackPage from './components/SimpleFallbackPage.tsx';
 import './index.css';
 import { app, db, auth } from './lib/firebase';
 
-// Verify Firebase initialization status - use app directly
-console.log("Firebase initialization status:", !!app && !!db && !!auth);
+// Verify Firebase initialization status - immediately check at module load time
+const firebaseInitialized = !!app && !!db && !!auth;
+console.log("Firebase initialization status:", firebaseInitialized);
 
 // Create the query client with robust error handling
 const queryClient = new QueryClient({
@@ -77,7 +78,7 @@ const ErrorFallback = ({ error, resetErrorBoundary }) => {
 
 // Firebase initialization check component
 const FirebaseInitializationCheck = ({ children }) => {
-  const [isInitialized, setIsInitialized] = React.useState(false);
+  const [isInitialized, setIsInitialized] = React.useState(firebaseInitialized);
   
   useEffect(() => {
     if (app && db && auth) {

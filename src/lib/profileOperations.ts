@@ -2,9 +2,9 @@
 import { db } from "./firebase";
 import { collection, doc, setDoc, getDoc, updateDoc } from "firebase/firestore";
 
-// Define collection references properly
-const employerProfilesRef = collection(db, "employerProfiles");
-const candidateProfilesRef = collection(db, "candidateProfiles");
+// Define collection references properly - using functions to ensure db is initialized
+const getEmployerProfilesRef = () => collection(db, "employerProfiles");
+const getCandidateProfilesRef = () => collection(db, "candidateProfiles");
 
 // Interface for employer profile data
 export interface EmployerProfileData {

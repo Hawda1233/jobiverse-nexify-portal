@@ -12,18 +12,17 @@ const firebaseConfig = {
   appId: "1:123456789012:web:abcdef1234567890abcdef"
 };
 
-// Initialize Firebase first
+// Initialize Firebase first - ensure this happens before any other Firebase service is used
 const app = initializeApp(firebaseConfig);
 
 // Initialize Firestore and Auth explicitly with the app instance
-export const auth = getAuth(app);
 export const db = getFirestore(app);
+export const auth = getAuth(app);
 
 // Configure Google Auth Provider with custom parameters
 export const googleProvider = new GoogleAuthProvider();
 googleProvider.setCustomParameters({
   prompt: 'select_account',
-  // Setting language preference for Hindi to support Indian users
   'hl': 'hi'
 });
 

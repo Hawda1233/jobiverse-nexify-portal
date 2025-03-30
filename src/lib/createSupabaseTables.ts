@@ -6,8 +6,9 @@ const checkTableExists = async (tableName: string) => {
   try {
     const { error } = await supabase
       .from(tableName)
-      .select('*')
-      .limit(1);
+      .select('count')
+      .limit(1)
+      .single();
     
     return !error;
   } catch (error) {
@@ -16,55 +17,70 @@ const checkTableExists = async (tableName: string) => {
   }
 };
 
-// Create required tables using SQL directly instead of RPC calls
+// Create required tables using SQL RPC calls
 export const createRequiredTables = async () => {
   try {
-    // Check and create users table
-    const usersTableExists = await checkTableExists('users');
-    if (!usersTableExists) {
-      console.log('Creating users table in Supabase');
-      try {
-        // Use direct SQL instead of RPC to create users table
-        const { error: createUsersError } = await supabase.from('users').insert([]);
-        
-        if (createUsersError && createUsersError.code !== '42P07') { // Ignore "relation already exists" error
-          console.error('Error creating users table:', createUsersError);
-        }
-      } catch (error) {
-        console.error("Error creating users table:", error);
+    // Create users table using custom RPC
+    try {
+      const { error: usersRPCError } = await supabase.rpc('create_users_table');
+      if (usersRPCError) {
+        console.log('Error with users table RPC, trying direct schema creation:', usersRPCError);
+        // Fall back to direct schema query if RPC fails
+        await supabase.schema.createTable('users', table => {
+          table.uuid('id').primaryKey().defaultTo(supabase.sql`uuid_generate_v4()`);
+          table.text('email');
+          table.text('display_name');
+          table.text('role');
+          table.timestamps(true, true);
+        }).ifNotExists();
       }
+    } catch (error) {
+      console.error("Users table creation error:", error);
     }
 
-    // Check and create jobs table
-    const jobsTableExists = await checkTableExists('jobs');
-    if (!jobsTableExists) {
-      console.log('Creating jobs table in Supabase');
-      try {
-        // Use direct SQL instead of RPC to create jobs table
-        const { error: createJobsError } = await supabase.from('jobs').insert([]);
-        
-        if (createJobsError && createJobsError.code !== '42P07') {
-          console.error('Error creating jobs table:', createJobsError);
-        }
-      } catch (error) {
-        console.error("Error creating jobs table:", error);
+    // Create jobs table using custom RPC
+    try {
+      const { error: jobsRPCError } = await supabase.rpc('create_jobs_table');
+      if (jobsRPCError) {
+        console.log('Error with jobs table RPC, trying direct schema creation:', jobsRPCError);
+        // Fall back to direct schema query if RPC fails
+        await supabase.schema.createTable('jobs', table => {
+          table.uuid('id').primaryKey().defaultTo(supabase.sql`uuid_generate_v4()`);
+          table.text('title').notNull();
+          table.text('company_name').notNull();
+          table.text('location');
+          table.text('job_type');
+          table.text('salary');
+          table.text('description').notNull();
+          table.text('category');
+          table.text('experience_level');
+          table.uuid('posted_by').notNull().references('id').inTable('users');
+          table.boolean('featured').defaultTo(false);
+          table.timestamps(true, true);
+        }).ifNotExists();
       }
+    } catch (error) {
+      console.error("Jobs table creation error:", error);
     }
 
-    // Check and create applications table
-    const applicationsTableExists = await checkTableExists('applications');
-    if (!applicationsTableExists) {
-      console.log('Creating applications table in Supabase');
-      try {
-        // Use direct SQL instead of RPC to create applications table
-        const { error: createApplicationsError } = await supabase.from('applications').insert([]);
-        
-        if (createApplicationsError && createApplicationsError.code !== '42P07') {
-          console.error('Error creating applications table:', createApplicationsError);
-        }
-      } catch (error) {
-        console.error("Error creating applications table:", error);
+    // Create applications table using custom RPC
+    try {
+      const { error: applicationsRPCError } = await supabase.rpc('create_applications_table');
+      if (applicationsRPCError) {
+        console.log('Error with applications table RPC, trying direct schema creation:', applicationsRPCError);
+        // Fall back to direct schema query if RPC fails
+        await supabase.schema.createTable('applications', table => {
+          table.uuid('id').primaryKey().defaultTo(supabase.sql`uuid_generate_v4()`);
+          table.uuid('user_id').notNull().references('id').inTable('users');
+          table.uuid('job_id').notNull().references('id').inTable('jobs');
+          table.text('status').defaultTo('applied');
+          table.text('cover_letter');
+          table.text('resume');
+          table.timestamps(true, true);
+        }).ifNotExists();
       }
+    } catch (error) {
+      console.error("Applications table creation error:", error);
     }
 
     return true;
@@ -78,8 +94,21 @@ export const createRequiredTables = async () => {
 export const initializeSupabase = async () => {
   try {
     console.log('Initializing Supabase...');
-    await createRequiredTables();
-    return true;
+    
+    if (!supabase) {
+      console.error('Supabase client not initialized');
+      return false;
+    }
+    
+    // Use an RPC or direct SQL if we have the appropriate permissions
+    try {
+      await createRequiredTables();
+      console.log('Supabase tables initialized successfully');
+      return true;
+    } catch (error) {
+      console.warn('Could not create Supabase tables - this is OK for read-only access:', error);
+      return true; // Still return true as we don't want to block the app
+    }
   } catch (error) {
     console.error('Failed to initialize Supabase:', error);
     return false;

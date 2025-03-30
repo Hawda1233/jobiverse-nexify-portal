@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -38,6 +39,7 @@ import LoadingFallback from "@/components/LoadingFallback";
 import { Suspense, useEffect } from "react";
 import { initializeSupabase } from "./lib/createSupabaseTables";
 
+// Only use useAuth inside components that are children of AuthProvider
 const ProtectedRoute = ({ requiredRole, children }: { requiredRole?: "candidate" | "hr", children: React.ReactNode }) => {
   const { currentUser, userData, loading } = useAuth();
 
@@ -136,7 +138,8 @@ const PublicLayout = () => {
   return <JobseekerLayout />;
 };
 
-const AppRoutes = () => {
+// This component uses useAuth and must be wrapped by AuthProvider
+const AuthenticatedRoutes = () => {
   const { currentUser, userData, loading } = useAuth();
   
   if (loading) {
@@ -253,6 +256,7 @@ const AppRoutes = () => {
   );
 };
 
+// Main App component - ensure AuthProvider wraps everything that uses useAuth
 const App = () => {
   useEffect(() => {
     initializeSupabase().catch(console.error);
@@ -267,7 +271,7 @@ const App = () => {
           <BrowserRouter>
             <ServiceWorkerRegistration />
             <OfflineWarning />
-            <AppRoutes />
+            <AuthenticatedRoutes />
           </BrowserRouter>
         </TooltipProvider>
       </AuthProvider>
