@@ -13,7 +13,7 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase
-export const app = initializeApp(firebaseConfig);
+const app = initializeApp(firebaseConfig);
 
 // Initialize Firestore and Auth explicitly with the app instance
 export const auth = getAuth(app);
@@ -47,4 +47,5 @@ export const addAuthDomain = () => {
 // Call this function when initializing the app
 addAuthDomain();
 
-export default app;
+// Export the initialized app
+export { app };
