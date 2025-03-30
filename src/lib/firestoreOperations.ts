@@ -5,9 +5,9 @@ import { JobType } from "./jobsData";
 import { getCandidateProfile } from "./profileOperations";
 import { supabase, getJobsFromSupabase, addJobToSupabase, applyForJobInSupabase, getUserApplicationsFromSupabase } from "./supabase";
 
-// Collection reference - ensure db is properly initialized
-const jobsCollection = collection(db, "jobs");
-const applicationsCollection = collection(db, "applications");
+// Collection reference - ensure we're using the initialized Firestore instance
+const getJobsCollection = () => collection(db, "jobs");
+const getApplicationsCollection = () => collection(db, "applications");
 
 // Add a new job to Firestore or Supabase
 export const addJobToFirestore = async (jobData: Omit<JobType, "id" | "postedTime">) => {
@@ -39,7 +39,8 @@ export const addJobToFirestore = async (jobData: Omit<JobType, "id" | "postedTim
     } catch (supabaseError) {
       console.error("Error adding job to Supabase, falling back to Firebase:", supabaseError);
       
-      // Fallback to Firebase
+      // Fallback to Firebase - ensure we get a fresh collection reference
+      const jobsCollection = getJobsCollection();
       const docRef = await addDoc(jobsCollection, {
         ...jobData,
         createdAt: Timestamp.now(),
@@ -118,7 +119,8 @@ export const getJobsFromFirestore = async () => {
     } catch (supabaseError) {
       console.error("Error getting jobs from Supabase, falling back to Firebase:", supabaseError);
       
-      // Fallback to Firebase
+      // Fallback to Firebase - ensure we get a fresh collection reference
+      const jobsCollection = getJobsCollection();
       const q = query(jobsCollection, where("active", "==", true), orderBy("createdAt", "desc"));
       const querySnapshot = await getDocs(q);
       
@@ -152,6 +154,7 @@ export const getJobsFromFirestore = async () => {
 // Get jobs posted by specific HR user
 export const getJobsByHR = async (userId: string) => {
   try {
+    const jobsCollection = getJobsCollection();
     const q = query(jobsCollection, where("postedBy", "==", userId), orderBy("createdAt", "desc"));
     const querySnapshot = await getDocs(q);
     
@@ -201,7 +204,8 @@ export const applyForJob = async (jobId: string, userId: string, applicationData
     } catch (supabaseError) {
       console.error("Error applying for job in Supabase, falling back to Firebase:", supabaseError);
       
-      // Fallback to Firebase
+      // Fallback to Firebase - ensure we get a fresh collection reference
+      const applicationsCollection = getApplicationsCollection();
       const docRef = await addDoc(applicationsCollection, {
         jobId,
         userId,
@@ -221,6 +225,7 @@ export const applyForJob = async (jobId: string, userId: string, applicationData
 // Get applications for a specific job
 export const getApplicationsForJob = async (jobId: string) => {
   try {
+    const applicationsCollection = getApplicationsCollection();
     const q = query(applicationsCollection, where("jobId", "==", jobId), orderBy("appliedAt", "desc"));
     const querySnapshot = await getDocs(q);
     

@@ -32,8 +32,6 @@ export const addAuthDomain = () => {
   try {
     const currentDomain = window.location.hostname;
     if (!currentDomain.includes('nexify-job-platform.firebaseapp.com')) {
-      // This is a workaround for development environments
-      // In production, you would add domains through Firebase Console
       console.log(`Using domain: ${currentDomain} for authentication`);
       
       // Support for regional domains in India

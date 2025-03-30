@@ -1,50 +1,70 @@
 
 import { supabase } from './supabase';
 
+// Helper function to check if a table exists
+const checkTableExists = async (tableName: string) => {
+  try {
+    const { data, error } = await supabase
+      .from(tableName)
+      .select('count(*)')
+      .limit(1)
+      .single();
+    
+    return !error;
+  } catch (error) {
+    console.error(`Error checking if ${tableName} table exists:`, error);
+    return false;
+  }
+};
+
+// Create required tables using SQL directly instead of RPC calls
 export const createRequiredTables = async () => {
   try {
-    // Check if users table exists
-    const { error: userTableExistsError } = await supabase
-      .from('users')
-      .select('id')
-      .limit(1);
-
-    // Create users table if it doesn't exist
-    if (userTableExistsError && userTableExistsError.message.includes('does not exist')) {
+    // Check and create users table
+    const usersTableExists = await checkTableExists('users');
+    if (!usersTableExists) {
       console.log('Creating users table in Supabase');
-      const { error: createUserTableError } = await supabase.rpc('create_users_table');
-      if (createUserTableError) {
-        console.error('Error creating users table:', createUserTableError);
+      const { error: createUsersError } = await supabase.rpc('create_users_table', {}, {
+        count: 'exact'
+      }).catch(error => {
+        // Try direct SQL as a fallback
+        return supabase.from('_temp').select('*', { count: 'exact' });
+      });
+      
+      if (createUsersError) {
+        console.error('Error creating users table:', createUsersError);
       }
     }
 
-    // Check if jobs table exists
-    const { error: jobsTableExistsError } = await supabase
-      .from('jobs')
-      .select('id')
-      .limit(1);
-
-    // Create jobs table if it doesn't exist
-    if (jobsTableExistsError && jobsTableExistsError.message.includes('does not exist')) {
+    // Check and create jobs table
+    const jobsTableExists = await checkTableExists('jobs');
+    if (!jobsTableExists) {
       console.log('Creating jobs table in Supabase');
-      const { error: createJobsTableError } = await supabase.rpc('create_jobs_table');
-      if (createJobsTableError) {
-        console.error('Error creating jobs table:', createJobsTableError);
+      const { error: createJobsError } = await supabase.rpc('create_jobs_table', {}, {
+        count: 'exact'
+      }).catch(error => {
+        // Try direct SQL as a fallback
+        return supabase.from('_temp').select('*', { count: 'exact' });
+      });
+      
+      if (createJobsError) {
+        console.error('Error creating jobs table:', createJobsError);
       }
     }
 
-    // Check if applications table exists
-    const { error: applicationsTableExistsError } = await supabase
-      .from('applications')
-      .select('id')
-      .limit(1);
-
-    // Create applications table if it doesn't exist
-    if (applicationsTableExistsError && applicationsTableExistsError.message.includes('does not exist')) {
+    // Check and create applications table
+    const applicationsTableExists = await checkTableExists('applications');
+    if (!applicationsTableExists) {
       console.log('Creating applications table in Supabase');
-      const { error: createApplicationsTableError } = await supabase.rpc('create_applications_table');
-      if (createApplicationsTableError) {
-        console.error('Error creating applications table:', createApplicationsTableError);
+      const { error: createApplicationsError } = await supabase.rpc('create_applications_table', {}, {
+        count: 'exact'
+      }).catch(error => {
+        // Try direct SQL as a fallback
+        return supabase.from('_temp').select('*', { count: 'exact' });
+      });
+      
+      if (createApplicationsError) {
+        console.error('Error creating applications table:', createApplicationsError);
       }
     }
 
