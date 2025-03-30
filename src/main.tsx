@@ -1,16 +1,15 @@
-
 import { createRoot } from 'react-dom/client';
-import React, { Suspense } from 'react';
+import React, { Suspense, useEffect } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { HelmetProvider } from 'react-helmet-async';
 import { ErrorBoundary } from 'react-error-boundary';
 import App from './App.tsx';
 import SimpleFallbackPage from './components/SimpleFallbackPage.tsx';
 import './index.css';
-import { app, db } from './lib/firebase'; // Ensure Firebase is initialized first
+import { app, db, auth } from './lib/firebase';
 
-// Verify Firebase initialization
-console.log("Firebase initialization status:", !!app && !!db);
+// Verify Firebase initialization status
+console.log("Firebase initialization status:", !!app && !!db && !!auth);
 
 // Create the query client with robust error handling
 const queryClient = new QueryClient({
@@ -75,6 +74,31 @@ const ErrorFallback = ({ error, resetErrorBoundary }) => {
   );
 };
 
+// Firebase initialization check component
+const FirebaseInitializationCheck = ({ children }) => {
+  const [isInitialized, setIsInitialized] = React.useState(false);
+  
+  useEffect(() => {
+    if (app && db && auth) {
+      console.log("Firebase is initialized correctly");
+      setIsInitialized(true);
+    } else {
+      console.error("Firebase initialization failed!");
+    }
+  }, []);
+  
+  if (!isInitialized) {
+    return <div className="min-h-screen flex items-center justify-center">
+      <div className="p-4 bg-yellow-100 rounded-md">
+        <h2 className="font-bold">Initializing Firebase...</h2>
+        <p>Please wait while we connect to our services.</p>
+      </div>
+    </div>;
+  }
+  
+  return <>{children}</>;
+};
+
 // Register service worker
 if ('serviceWorker' in navigator && import.meta.env.PROD) {
   window.addEventListener('load', () => {
@@ -126,7 +150,9 @@ if (!rootElement) {
         <HelmetProvider context={helmetContext}>
           <QueryClientProvider client={queryClient}>
             <Suspense fallback={<SimpleFallbackPage />}>
-              <App />
+              <FirebaseInitializationCheck>
+                <App />
+              </FirebaseInitializationCheck>
             </Suspense>
           </QueryClientProvider>
         </HelmetProvider>

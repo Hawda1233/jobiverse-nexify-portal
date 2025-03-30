@@ -2,9 +2,9 @@
 import { db } from "./firebase";
 import { collection, doc, setDoc, getDoc, updateDoc } from "firebase/firestore";
 
-// Collection references
-const employerProfilesCollection = collection(db, "employerProfiles");
-const candidateProfilesCollection = collection(db, "candidateProfiles");
+// Collection references - initialize with db reference directly
+const employerProfilesCollection = () => collection(db, "employerProfiles");
+const candidateProfilesCollection = () => collection(db, "candidateProfiles");
 
 // Interface for employer profile data
 export interface EmployerProfileData {
@@ -29,7 +29,7 @@ export interface EmployerProfileData {
 // Create or update employer profile
 export const saveEmployerProfile = async (profileData: Omit<EmployerProfileData, "createdAt" | "updatedAt">) => {
   try {
-    const profileRef = doc(employerProfilesCollection, profileData.uid);
+    const profileRef = doc(db, "employerProfiles", profileData.uid);
     const docSnap = await getDoc(profileRef);
     
     if (docSnap.exists()) {
@@ -57,7 +57,7 @@ export const saveEmployerProfile = async (profileData: Omit<EmployerProfileData,
 // Get employer profile by user ID
 export const getEmployerProfile = async (uid: string) => {
   try {
-    const profileRef = doc(employerProfilesCollection, uid);
+    const profileRef = doc(db, "employerProfiles", uid);
     const docSnap = await getDoc(profileRef);
     
     if (docSnap.exists()) {
@@ -116,7 +116,7 @@ export interface CandidateProfileData {
 // Create or update candidate profile
 export const saveCandidateProfile = async (profileData: Omit<CandidateProfileData, "createdAt" | "updatedAt">) => {
   try {
-    const profileRef = doc(candidateProfilesCollection, profileData.uid);
+    const profileRef = doc(db, "candidateProfiles", profileData.uid);
     const docSnap = await getDoc(profileRef);
     
     if (docSnap.exists()) {
@@ -144,7 +144,7 @@ export const saveCandidateProfile = async (profileData: Omit<CandidateProfileDat
 // Get candidate profile by user ID
 export const getCandidateProfile = async (uid: string) => {
   try {
-    const profileRef = doc(candidateProfilesCollection, uid);
+    const profileRef = doc(db, "candidateProfiles", uid);
     const docSnap = await getDoc(profileRef);
     
     if (docSnap.exists()) {

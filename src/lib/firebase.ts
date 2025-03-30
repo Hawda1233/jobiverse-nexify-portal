@@ -12,12 +12,12 @@ const firebaseConfig = {
   appId: "1:123456789012:web:abcdef1234567890abcdef"
 };
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
+// Initialize Firebase first
+const firebaseApp = initializeApp(firebaseConfig);
 
 // Initialize Firestore and Auth explicitly with the app instance
-export const auth = getAuth(app);
-export const db = getFirestore(app);
+export const auth = getAuth(firebaseApp);
+export const db = getFirestore(firebaseApp);
 
 // Configure Google Auth Provider with custom parameters
 export const googleProvider = new GoogleAuthProvider();
@@ -48,4 +48,4 @@ export const addAuthDomain = () => {
 addAuthDomain();
 
 // Export the initialized app
-export { app };
+export { firebaseApp as app };
