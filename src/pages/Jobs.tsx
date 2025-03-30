@@ -5,7 +5,7 @@ import JobFilter from '@/components/JobFilter';
 import SearchBar from '@/components/SearchBar';
 import { Button } from '@/components/ui/button';
 import { Pagination, PaginationContent, PaginationItem, PaginationLink } from '@/components/ui/pagination';
-import { getJobsFromSupabase } from '@/lib/supabase';
+import { getJobs, formatJobData } from '@/lib/supabaseOperations';
 import { JobType } from '@/lib/jobsData';
 import { motion } from 'framer-motion';
 import { Zap, Box, Globe, BrainCircuit } from 'lucide-react';
@@ -39,33 +39,23 @@ const Jobs = () => {
       setError(null);
       
       try {
-        // Fetch regular jobs from Supabase
-        const jobsData = await getJobsFromSupabase();
+        // Fetch regular jobs from Supabase using our new function
+        const jobsData = await getJobs({
+          filter: searchTerm,
+          location: selectedLocation,
+          category: selectedCategory
+        });
         
         if (!jobsData || jobsData.length === 0) {
-          console.log('No jobs found or error fetching jobs');
+          console.log('No jobs found');
           setJobs([]);
           setTotalPages(1);
           setIsLoading(false);
           return;
         }
         
-        // Map Supabase data structure to our JobType
-        const transformedJobs = jobsData.map((job: any): JobType => ({
-          id: job.id || `temp-${Date.now()}`,
-          title: job.title || 'Untitled Position',
-          companyName: job.company_name || 'Unknown Company',
-          location: job.location || 'Remote',
-          jobType: job.job_type || 'Full-time',
-          salary: job.salary || 'Competitive',
-          category: job.category || 'Technology',
-          description: job.description || 'No description provided',
-          experienceLevel: job.experience_level || 'Entry Level',
-          featured: job.featured || false,
-          postedBy: job.posted_by || 'Nexify',
-          postedTime: formatPostedDate(job.created_at) || 'Recently',
-          companyLogo: "/placeholder.svg" // Default logo
-        }));
+        // Map Supabase data structure to our JobType using the format function
+        const transformedJobs = jobsData.map(job => formatJobData(job));
         
         setJobs(transformedJobs);
         setTotalPages(Math.ceil(transformedJobs.length / 9) || 1);
@@ -86,7 +76,7 @@ const Jobs = () => {
     };
     
     fetchJobs();
-  }, [currentUser, userData, toast]);
+  }, [searchTerm, selectedLocation, selectedCategory, toast]);
   
   // Format posted date from Supabase timestamp to relative time
   const formatPostedDate = (timestamp: string): string => {

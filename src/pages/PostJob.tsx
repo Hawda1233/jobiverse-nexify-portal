@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -7,7 +6,7 @@ import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { getEmployerProfile } from "@/lib/profileOperations";
-import { addJobToSupabase } from "@/lib/supabase";
+import { addJob } from "@/lib/supabaseOperations";
 import { Loader2, Building2 } from "lucide-react";
 import { 
   Form,
@@ -115,7 +114,7 @@ const PostJob = () => {
     setIsLoading(true);
     
     try {
-      // Add job to Supabase
+      // Add job to Supabase using our new function
       const jobData = {
         title: data.title,
         company_name: data.company,
@@ -130,7 +129,7 @@ const PostJob = () => {
         keywords: generateKeywords(data.title, data.category, data.description)
       };
       
-      await addJobToSupabase(jobData);
+      await addJob(jobData);
       
       toast({
         title: "Job Posted Successfully",

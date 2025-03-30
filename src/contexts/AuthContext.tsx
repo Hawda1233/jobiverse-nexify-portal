@@ -13,9 +13,10 @@ import {
 import { auth, googleProvider, addAuthDomain } from "../lib/firebase";
 import { useToast } from "@/hooks/use-toast";
 import { saveCandidateProfile, saveEmployerProfile } from "@/lib/profileOperations";
+import { syncUserWithSupabase, updateUserRoleInSupabase } from "@/lib/supabaseOperations";
 
-// New interface for user data including role
-interface UserData {
+// Interface for user data including role
+export interface UserData {
   uid: string;
   email: string | null;
   displayName: string | null;
@@ -57,7 +58,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     addAuthDomain();
   }, []);
 
-  // Create user data in local storage
+  // Create user data in local storage and sync with Supabase
   const createUserData = async (user: User, role: "candidate" | "hr" = "candidate", data?: { company?: string, industry?: string }) => {
     if (!user) return;
     
@@ -73,6 +74,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Store user data in localStorage
     localStorage.setItem(`user_data_${user.uid}`, JSON.stringify(userData));
     setUserData(userData);
+    
+    // Sync user with Supabase
+    await syncUserWithSupabase({
+      uid: user.uid,
+      email: user.email,
+      displayName: user.displayName
+    });
+    
+    // Update role in Supabase
+    if (role) {
+      await updateUserRoleInSupabase(user.uid, role, data);
+    }
     
     // Also create the appropriate profile in Firestore
     try {
@@ -97,18 +110,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   // Load user data from local storage
-  const loadUserData = (user: User) => {
+  const loadUserData = async (user: User) => {
     if (!user) return null;
     
     const storedData = localStorage.getItem(`user_data_${user.uid}`);
     if (storedData) {
       const userData = JSON.parse(storedData) as UserData;
       setUserData(userData);
+      
+      // Sync with Supabase in background
+      syncUserWithSupabase({
+        uid: user.uid,
+        email: user.email,
+        displayName: user.displayName
+      });
+      
       return userData;
     }
     
     // If no data exists, create default data
-    createUserData(user);
+    await createUserData(user);
     return null;
   };
 
@@ -127,7 +148,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
     }
     
-    // Create user data with role
+    // Create user data with role and sync with Supabase
     await createUserData(
       userCredential.user, 
       isHR ? "hr" : "candidate",
@@ -145,8 +166,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const result = await signInWithPopup(auth, googleProvider);
       
-      // Check if user data exists, if not create it
-      const userData = loadUserData(result.user);
+      // Check if user data exists, if not create it and sync with Supabase
+      const userData = await loadUserData(result.user);
       if (!userData) {
         await createUserData(result.user);
       }
@@ -191,7 +212,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return signOut(auth);
   }
 
-  // Update user role
+  // Update user role and sync with Supabase
   async function updateUserRole(role: "candidate" | "hr", data?: { company?: string, industry?: string }) {
     if (!currentUser) throw new Error("No user is signed in");
     
@@ -204,6 +225,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       localStorage.setItem(`user_data_${currentUser.uid}`, JSON.stringify(updatedUserData));
       setUserData(updatedUserData);
+      
+      // Sync role update with Supabase
+      await updateUserRoleInSupabase(currentUser.uid, role, data);
       
       // Also update the appropriate profile in Firestore if needed
       if (role === "hr" && data?.company) {
@@ -223,10 +247,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setCurrentUser(user);
       if (user) {
-        loadUserData(user);
+        await loadUserData(user);
       } else {
         setUserData(null);
       }

@@ -86,6 +86,11 @@ if ('serviceWorker' in navigator && import.meta.env.PROD) {
 
 // Find root element and initialize app with better error handling
 const rootElement = document.getElementById("root");
+
+// Check if we've already created a root for this element
+// to avoid the "container that has already been passed to createRoot()" warning
+let root;
+
 if (!rootElement) {
   console.error("Root element not found!");
   // Create a fallback element if root is not found
@@ -93,11 +98,18 @@ if (!rootElement) {
   fallbackElement.id = "root";
   document.body.appendChild(fallbackElement);
   
-  const root = createRoot(fallbackElement);
+  root = createRoot(fallbackElement);
   root.render(<SimpleFallbackPage />);
 } else {
-  // Create root component
-  const root = createRoot(rootElement);
+  // Check if we already have a root instance on the window object
+  if (!(window as any).__REACT_ROOT__) {
+    // Create root component and store the reference
+    root = createRoot(rootElement);
+    (window as any).__REACT_ROOT__ = root;
+  } else {
+    // Use the existing root
+    root = (window as any).__REACT_ROOT__;
+  }
 
   // Render app with all required providers and error boundary
   root.render(
