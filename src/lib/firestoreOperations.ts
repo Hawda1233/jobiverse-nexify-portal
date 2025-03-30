@@ -1,6 +1,6 @@
 
 import { db } from "./firebase";
-import { collection, addDoc, getDocs, query, where, orderBy, Timestamp, doc, getDoc, updateDoc, deleteDoc, limit } from "firebase/firestore";
+import { collection, addDoc, getDocs, query, where, orderBy, Timestamp, doc, getDoc, updateDoc, deleteDoc, limit, DocumentData } from "firebase/firestore";
 import { JobType } from "./jobsData";
 import { getCandidateProfile } from "./profileOperations";
 import { supabase, getJobsFromSupabase, addJobToSupabase, applyForJobInSupabase, getUserApplicationsFromSupabase } from "./supabase";
@@ -244,6 +244,27 @@ export const getApplicationsForJob = async (jobId: string) => {
   }
 };
 
+// Define type for application data
+interface ApplicationData {
+  id: string | number;
+  job_id?: string;
+  jobId?: string;
+  jobTitle?: string;
+  jobs?: {
+    title: string;
+    company_name: string;
+    location?: string;
+  };
+  job_title?: string;
+  companyName?: string;
+  company_name?: string;
+  location?: string;
+  status: string;
+  appliedAt?: any;
+  applied_at?: string;
+  [key: string]: any;
+}
+
 // Get applications submitted by a specific user from Firestore or Supabase
 export const getUserApplications = async (userId: string) => {
   try {
@@ -251,20 +272,24 @@ export const getUserApplications = async (userId: string) => {
     try {
       const supabaseApplications = await getUserApplicationsFromSupabase(userId);
       
-      return supabaseApplications.map(application => ({
+      return supabaseApplications.map((application: ApplicationData) => ({
         id: application.id,
         jobId: application.job_id,
-        jobTitle: application.jobs.title,
-        companyName: application.jobs.company_name,
-        location: application.jobs.location || "",
+        jobTitle: application.jobs?.title,
+        companyName: application.jobs?.company_name,
+        location: application.jobs?.location || "",
         status: application.status,
-        appliedDate: new Date(application.applied_at),
-        ...application
+        appliedDate: new Date(application.applied_at || Date.now()),
+        // Only spread known properties, not the entire unknown object
+        phoneNumber: application.phone_number,
+        resume: application.resume,
+        coverLetter: application.cover_letter
       }));
     } catch (supabaseError) {
       console.error("Error getting user applications from Supabase, falling back to Firebase:", supabaseError);
       
       // Fallback to Firebase
+      const applicationsCollection = getApplicationsCollection();
       const q = query(applicationsCollection, where("userId", "==", userId), orderBy("appliedAt", "desc"));
       const querySnapshot = await getDocs(q);
       
@@ -279,7 +304,10 @@ export const getUserApplications = async (userId: string) => {
           location: data.location || "",
           status: data.status,
           appliedDate: data.appliedAt.toDate(),
-          ...data
+          // Only include specific properties we know exist
+          phoneNumber: data.phoneNumber,
+          resume: data.resume,
+          coverLetter: data.coverLetter
         });
       });
       
@@ -333,16 +361,17 @@ export const getPersonalizedJobs = async (userId: string) => {
     const candidateSkills = candidateProfile.skills.map(skill => skill.toLowerCase());
     
     // Get all active jobs
+    const jobsCollection = getJobsCollection();
     const q = query(jobsCollection, where("active", "==", true), orderBy("createdAt", "desc"));
     const querySnapshot = await getDocs(q);
     
     const jobs: JobType[] = [];
     const jobsWithScores: { job: JobType, score: number }[] = [];
     
-    querySnapshot.forEach((doc) => {
-      const data = doc.data();
+    querySnapshot.forEach((docSnapshot) => {
+      const data = docSnapshot.data();
       const job: JobType = {
-        id: String(doc.id), // Convert to string to match JobType
+        id: String(docSnapshot.id), // Convert to string to match JobType
         title: data.title,
         companyName: data.companyName,
         location: data.location,
