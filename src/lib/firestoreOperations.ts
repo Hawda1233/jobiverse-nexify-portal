@@ -1,6 +1,5 @@
-
 import { db } from "./firebase";
-import { collection, addDoc, getDocs, query, where, orderBy, Timestamp, doc, getDoc, updateDoc, deleteDoc, limit, DocumentData } from "firebase/firestore";
+import { collection, addDoc, getDocs, query, where, orderBy, Timestamp, doc, getDoc, updateDoc, deleteDoc, limit } from "firebase/firestore";
 import { JobType } from "./jobsData";
 import { getCandidateProfile } from "./profileOperations";
 import { supabase, getJobsFromSupabase, addJobToSupabase, applyForJobInSupabase, getUserApplicationsFromSupabase } from "./supabase";
@@ -283,7 +282,7 @@ export const getUserApplications = async (userId: string) => {
         // Only spread known properties, not the entire unknown object
         phoneNumber: application.phone_number,
         resume: application.resume,
-        coverLetter: application.cover_letter
+        coverLetter: application.coverLetter
       }));
     } catch (supabaseError) {
       console.error("Error getting user applications from Supabase, falling back to Firebase:", supabaseError);
