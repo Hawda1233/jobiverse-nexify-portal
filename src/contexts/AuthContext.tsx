@@ -76,19 +76,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUserData(userData);
     
     // Sync user with Supabase
-    await syncUserWithSupabase({
-      uid: user.uid,
-      email: user.email,
-      displayName: user.displayName
-    });
-    
-    // Update role in Supabase
-    if (role) {
-      await updateUserRoleInSupabase(user.uid, role, data);
-    }
-    
-    // Also create the appropriate profile in Firestore
     try {
+      await syncUserWithSupabase({
+        uid: user.uid,
+        email: user.email,
+        displayName: user.displayName
+      });
+      
+      // Update role in Supabase
+      if (role) {
+        await updateUserRoleInSupabase(user.uid, role, data);
+      }
+      
+      // Also create the appropriate profile in Firestore
       if (role === "hr" && data?.company) {
         await saveEmployerProfile({
           uid: user.uid,
@@ -105,7 +105,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         });
       }
     } catch (error) {
-      console.error("Error creating profile:", error);
+      console.error("Error syncing user data:", error);
     }
   };
 
@@ -119,11 +119,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUserData(userData);
       
       // Sync with Supabase in background
-      syncUserWithSupabase({
-        uid: user.uid,
-        email: user.email,
-        displayName: user.displayName
-      });
+      try {
+        await syncUserWithSupabase({
+          uid: user.uid,
+          email: user.email,
+          displayName: user.displayName
+        });
+      } catch (error) {
+        console.error("Error syncing user with Supabase:", error);
+      }
       
       return userData;
     }

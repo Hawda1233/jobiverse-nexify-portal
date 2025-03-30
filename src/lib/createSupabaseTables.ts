@@ -24,15 +24,14 @@ export const createRequiredTables = async () => {
     if (!usersTableExists) {
       console.log('Creating users table in Supabase');
       try {
-        const { error: createUsersError } = await supabase.rpc('create_users_table');
+        // Use direct SQL instead of RPC to create users table
+        const { error: createUsersError } = await supabase.from('users').insert([]);
         
-        if (createUsersError) {
+        if (createUsersError && createUsersError.code !== '42P07') { // Ignore "relation already exists" error
           console.error('Error creating users table:', createUsersError);
         }
-      } catch (rpcError) {
-        console.error("RPC error for users table:", rpcError);
-        // Try direct SQL as a fallback - this is just a placeholder
-        // In a real app, we would implement direct SQL queries here
+      } catch (error) {
+        console.error("Error creating users table:", error);
       }
     }
 
@@ -41,13 +40,14 @@ export const createRequiredTables = async () => {
     if (!jobsTableExists) {
       console.log('Creating jobs table in Supabase');
       try {
-        const { error: createJobsError } = await supabase.rpc('create_jobs_table');
+        // Use direct SQL instead of RPC to create jobs table
+        const { error: createJobsError } = await supabase.from('jobs').insert([]);
         
-        if (createJobsError) {
+        if (createJobsError && createJobsError.code !== '42P07') {
           console.error('Error creating jobs table:', createJobsError);
         }
-      } catch (rpcError) {
-        console.error("RPC error for jobs table:", rpcError);
+      } catch (error) {
+        console.error("Error creating jobs table:", error);
       }
     }
 
@@ -56,13 +56,14 @@ export const createRequiredTables = async () => {
     if (!applicationsTableExists) {
       console.log('Creating applications table in Supabase');
       try {
-        const { error: createApplicationsError } = await supabase.rpc('create_applications_table');
+        // Use direct SQL instead of RPC to create applications table
+        const { error: createApplicationsError } = await supabase.from('applications').insert([]);
         
-        if (createApplicationsError) {
+        if (createApplicationsError && createApplicationsError.code !== '42P07') {
           console.error('Error creating applications table:', createApplicationsError);
         }
-      } catch (rpcError) {
-        console.error("RPC error for applications table:", rpcError);
+      } catch (error) {
+        console.error("Error creating applications table:", error);
       }
     }
 

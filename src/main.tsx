@@ -1,3 +1,4 @@
+
 import { createRoot } from 'react-dom/client';
 import React, { Suspense, useEffect } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -8,7 +9,7 @@ import SimpleFallbackPage from './components/SimpleFallbackPage.tsx';
 import './index.css';
 import { app, db, auth } from './lib/firebase';
 
-// Verify Firebase initialization status
+// Verify Firebase initialization status - use app directly
 console.log("Firebase initialization status:", !!app && !!db && !!auth);
 
 // Create the query client with robust error handling

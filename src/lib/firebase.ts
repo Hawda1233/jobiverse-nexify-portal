@@ -13,11 +13,11 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase first
-const firebaseApp = initializeApp(firebaseConfig);
+const app = initializeApp(firebaseConfig);
 
 // Initialize Firestore and Auth explicitly with the app instance
-export const auth = getAuth(firebaseApp);
-export const db = getFirestore(firebaseApp);
+export const auth = getAuth(app);
+export const db = getFirestore(app);
 
 // Configure Google Auth Provider with custom parameters
 export const googleProvider = new GoogleAuthProvider();
@@ -48,4 +48,4 @@ export const addAuthDomain = () => {
 addAuthDomain();
 
 // Export the initialized app
-export { firebaseApp as app };
+export { app };
