@@ -1,10 +1,11 @@
+
 import { db } from "./firebase";
 import { collection, addDoc, getDocs, query, where, orderBy, Timestamp, doc, getDoc, updateDoc, deleteDoc, limit } from "firebase/firestore";
 import { JobType } from "./jobsData";
 import { getCandidateProfile } from "./profileOperations";
 import { supabase, getJobsFromSupabase, addJobToSupabase, applyForJobInSupabase, getUserApplicationsFromSupabase } from "./supabase";
 
-// Collection reference
+// Collection reference - ensure db is properly initialized
 const jobsCollection = collection(db, "jobs");
 const applicationsCollection = collection(db, "applications");
 

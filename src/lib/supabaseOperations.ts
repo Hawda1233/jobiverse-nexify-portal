@@ -8,43 +8,49 @@ export const syncUserWithSupabase = async (firebaseUser: any) => {
   if (!firebaseUser) return null;
   
   try {
-    const { data, error } = await supabase
-      .from('users')
-      .select('*')
-      .eq('firebase_uid', firebaseUser.uid)
-      .single();
-    
-    if (error && error.code !== 'PGRST116') {
-      console.error('Error checking user in Supabase:', error);
-      return null;
-    }
-    
-    if (!data) {
-      // Create new user in Supabase if they don't exist
-      const { data: newUser, error: insertError } = await supabase
+    // Check if users table exists before making request
+    try {
+      const { data, error } = await supabase
         .from('users')
-        .insert([
-          { 
-            firebase_uid: firebaseUser.uid, 
-            email: firebaseUser.email,
-            display_name: firebaseUser.displayName || '',
-            role: 'candidate',
-            created_at: new Date(),
-            updated_at: new Date()
-          }
-        ])
-        .select()
+        .select('*')
+        .eq('firebase_uid', firebaseUser.uid)
         .single();
       
-      if (insertError) {
-        console.error('Error creating user in Supabase:', insertError);
+      if (error && error.code !== 'PGRST116') {
+        console.error('Error checking user in Supabase:', error);
         return null;
       }
       
-      return newUser;
+      if (!data) {
+        // Create new user in Supabase if they don't exist
+        const { data: newUser, error: insertError } = await supabase
+          .from('users')
+          .insert([
+            { 
+              firebase_uid: firebaseUser.uid, 
+              email: firebaseUser.email,
+              display_name: firebaseUser.displayName || '',
+              role: 'candidate',
+              created_at: new Date(),
+              updated_at: new Date()
+            }
+          ])
+          .select()
+          .single();
+        
+        if (insertError) {
+          console.error('Error creating user in Supabase:', insertError);
+          return null;
+        }
+        
+        return newUser;
+      }
+      
+      return data;
+    } catch (tableError) {
+      console.error('Users table may not exist in Supabase:', tableError);
+      return null;
     }
-    
-    return data;
   } catch (error) {
     console.error('Error in syncUserWithSupabase:', error);
     return null;

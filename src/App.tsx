@@ -35,7 +35,8 @@ import Footer from "@/components/Footer";
 import { ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import LoadingFallback from "@/components/LoadingFallback";
-import { Suspense } from "react";
+import { Suspense, useEffect } from "react";
+import { initializeSupabase } from "./lib/createSupabaseTables";
 
 const ProtectedRoute = ({ requiredRole, children }: { requiredRole?: "candidate" | "hr", children: React.ReactNode }) => {
   const { currentUser, userData, loading } = useAuth();
@@ -252,20 +253,26 @@ const AppRoutes = () => {
   );
 };
 
-const App = () => (
-  <ErrorBoundary>
-    <AuthProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <ServiceWorkerRegistration />
-          <OfflineWarning />
-          <AppRoutes />
-        </BrowserRouter>
-      </TooltipProvider>
-    </AuthProvider>
-  </ErrorBoundary>
-);
+const App = () => {
+  useEffect(() => {
+    initializeSupabase().catch(console.error);
+  }, []);
+
+  return (
+    <ErrorBoundary>
+      <AuthProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <ServiceWorkerRegistration />
+            <OfflineWarning />
+            <AppRoutes />
+          </BrowserRouter>
+        </TooltipProvider>
+      </AuthProvider>
+    </ErrorBoundary>
+  );
+};
 
 export default App;

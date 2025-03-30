@@ -7,6 +7,10 @@ import { ErrorBoundary } from 'react-error-boundary';
 import App from './App.tsx';
 import SimpleFallbackPage from './components/SimpleFallbackPage.tsx';
 import './index.css';
+import { app, db } from './lib/firebase'; // Ensure Firebase is initialized first
+
+// Verify Firebase initialization
+console.log("Firebase initialization status:", !!app && !!db);
 
 // Create the query client with robust error handling
 const queryClient = new QueryClient({

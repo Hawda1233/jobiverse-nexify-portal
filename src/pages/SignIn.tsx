@@ -8,8 +8,9 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArrowRight, Mail, Lock, Briefcase, User } from "lucide-react";
+import { ErrorBoundary } from "react-error-boundary";
 
-const SignIn = () => {
+const SignInContent = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -361,6 +362,32 @@ const SignIn = () => {
         </Tabs>
       </Card>
     </div>
+  );
+};
+
+const SignIn = () => {
+  return (
+    <ErrorBoundary FallbackComponent={({ error }) => (
+      <div className="flex flex-col items-center justify-center min-h-screen p-4">
+        <div className="w-full max-w-md p-6 bg-white rounded-lg shadow-lg">
+          <h2 className="text-2xl font-bold mb-4 text-red-500">Error Loading Sign In</h2>
+          <p className="mb-4">We encountered an error while loading the sign-in page.</p>
+          <pre className="bg-gray-100 p-4 rounded text-sm overflow-auto mb-4 max-h-[200px]">
+            {error.message}
+          </pre>
+          <Button onClick={() => window.location.reload()} className="w-full">
+            Try Again
+          </Button>
+          <div className="mt-4 text-center">
+            <Link to="/" className="text-blue-500 hover:underline">
+              Go to Home Page
+            </Link>
+          </div>
+        </div>
+      </div>
+    )}>
+      <SignInContent />
+    </ErrorBoundary>
   );
 };
 
