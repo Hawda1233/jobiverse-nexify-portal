@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -7,6 +6,7 @@ import { AuthProvider } from "./contexts/AuthContext";
 import { useAuth } from "@/contexts/AuthContext";
 import OfflineWarning from "@/components/OfflineWarning";
 import ServiceWorkerRegistration from "@/components/ServiceWorkerRegistration";
+import ErrorBoundary from "@/components/ErrorBoundary";
 import Index from "./pages/Index";
 import Jobs from "./pages/Jobs";
 import JobDetails from "./pages/JobDetails";
@@ -69,7 +69,7 @@ const JobseekerLayout = () => {
   }
 
   return (
-    <>
+    <ErrorBoundary>
       <Navbar />
       <div className="min-h-screen pt-16">
         <Suspense fallback={<LoadingFallback />}>
@@ -77,7 +77,7 @@ const JobseekerLayout = () => {
         </Suspense>
       </div>
       <Footer />
-    </>
+    </ErrorBoundary>
   );
 };
 
@@ -91,7 +91,7 @@ const HRLayout = () => {
   }
 
   return (
-    <>
+    <ErrorBoundary>
       <HRNavbar />
       <div className="min-h-screen pt-16">
         <Suspense fallback={<LoadingFallback />}>
@@ -99,27 +99,29 @@ const HRLayout = () => {
         </Suspense>
       </div>
       <Footer />
-    </>
+    </ErrorBoundary>
   );
 };
 
 const CleanLayout = () => {
   return (
-    <div className="min-h-screen">
-      <div className="fixed top-4 left-4 z-50">
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={() => window.history.back()}
-          className="rounded-full bg-background/60 backdrop-blur-sm"
-        >
-          <ChevronLeft className="h-5 w-5" />
-        </Button>
+    <ErrorBoundary>
+      <div className="min-h-screen">
+        <div className="fixed top-4 left-4 z-50">
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => window.history.back()}
+            className="rounded-full bg-background/60 backdrop-blur-sm"
+          >
+            <ChevronLeft className="h-5 w-5" />
+          </Button>
+        </div>
+        <Suspense fallback={<LoadingFallback />}>
+          <Outlet />
+        </Suspense>
       </div>
-      <Suspense fallback={<LoadingFallback />}>
-        <Outlet />
-      </Suspense>
-    </div>
+    </ErrorBoundary>
   );
 };
 
@@ -144,7 +146,6 @@ const AppRoutes = () => {
     );
   }
 
-  // Redirect authenticated users based on their role
   if (currentUser && userData) {
     const isOnAuthPage = window.location.pathname === '/signin' || 
                         window.location.pathname === '/signup' || 
@@ -175,7 +176,6 @@ const AppRoutes = () => {
         <Route path="/terms" element={<Terms />} />
       </Route>
       
-      {/* Jobseeker-only routes */}
       <Route element={
         <ProtectedRoute requiredRole="candidate">
           <JobseekerLayout />
@@ -189,7 +189,6 @@ const AppRoutes = () => {
         <Route path="/comparison" element={<ComparisonTool />} />
       </Route>
       
-      {/* HR-only routes */}
       <Route element={
         <ProtectedRoute requiredRole="hr">
           <HRLayout />
@@ -254,17 +253,19 @@ const AppRoutes = () => {
 };
 
 const App = () => (
-  <AuthProvider>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <ServiceWorkerRegistration />
-        <OfflineWarning />
-        <AppRoutes />
-      </BrowserRouter>
-    </TooltipProvider>
-  </AuthProvider>
+  <ErrorBoundary>
+    <AuthProvider>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <ServiceWorkerRegistration />
+          <OfflineWarning />
+          <AppRoutes />
+        </BrowserRouter>
+      </TooltipProvider>
+    </AuthProvider>
+  </ErrorBoundary>
 );
 
 export default App;

@@ -1,10 +1,11 @@
 
 import { createRoot } from 'react-dom/client';
-import React from 'react';
+import React, { Suspense } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { HelmetProvider } from 'react-helmet-async';
 import { ErrorBoundary } from 'react-error-boundary';
 import App from './App.tsx';
+import SimpleFallbackPage from './components/SimpleFallbackPage.tsx';
 import './index.css';
 
 // Create the query client with robust error handling
@@ -13,7 +14,7 @@ const queryClient = new QueryClient({
     queries: {
       refetchOnWindowFocus: false,
       staleTime: 5 * 60 * 1000, // 5 minutes
-      retry: 2, // Increase retry count
+      retry: 2,
       retryDelay: 1000,
       meta: {
         onError: (error: Error) => {
@@ -93,7 +94,7 @@ if (!rootElement) {
   document.body.appendChild(fallbackElement);
   
   const root = createRoot(fallbackElement);
-  root.render(<div>Failed to mount app: Root element not found</div>);
+  root.render(<SimpleFallbackPage />);
 } else {
   // Create root component
   const root = createRoot(rootElement);
@@ -108,7 +109,9 @@ if (!rootElement) {
       }}>
         <HelmetProvider context={helmetContext}>
           <QueryClientProvider client={queryClient}>
-            <App />
+            <Suspense fallback={<SimpleFallbackPage />}>
+              <App />
+            </Suspense>
           </QueryClientProvider>
         </HelmetProvider>
       </ErrorBoundary>
