@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { Menu, X, User, BriefcaseBusiness, Bell, LogOut, Briefcase, Building, BookOpen, Scale, LayoutDashboard, ClipboardList, LogIn } from 'lucide-react';
+import { Menu, X, User, BriefcaseBusiness, LogOut, Briefcase, Building, BookOpen, Scale, LayoutDashboard, ClipboardList, LogIn } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import {
@@ -231,47 +231,37 @@ const Navbar = () => {
           </Button>
           
           {currentUser ? (
-            <>
-              <Button 
-                variant="ghost" 
-                size="icon"
-                onClick={() => navigate('/notifications')}
-              >
-                <Bell className="h-5 w-5" />
-              </Button>
-              
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="relative h-10 w-10 rounded-full">
-                    <Avatar>
-                      <AvatarImage src={currentUser.photoURL || ""} />
-                      <AvatarFallback>{getUserInitials()}</AvatarFallback>
-                    </Avatar>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuLabel>My Account</DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => navigate('/profile')}>
-                    <User className="mr-2 h-4 w-4" />
-                    Profile
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => navigate('/dashboard')}>
-                    <LayoutDashboard className="mr-2 h-4 w-4" />
-                    Dashboard
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => navigate('/applications')}>
-                    <ClipboardList className="mr-2 h-4 w-4" />
-                    My Applications
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={handleLogout}>
-                    <LogOut className="mr-2 h-4 w-4" />
-                    Log out
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="relative h-10 w-10 rounded-full">
+                  <Avatar>
+                    <AvatarImage src={currentUser.photoURL || ""} />
+                    <AvatarFallback>{getUserInitials()}</AvatarFallback>
+                  </Avatar>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => navigate('/profile')}>
+                  <User className="mr-2 h-4 w-4" />
+                  Profile
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate('/dashboard')}>
+                  <LayoutDashboard className="mr-2 h-4 w-4" />
+                  Dashboard
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate('/applications')}>
+                  <ClipboardList className="mr-2 h-4 w-4" />
+                  My Applications
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleLogout}>
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Log out
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           ) : (
             <div className="flex items-center gap-2">
               <Button variant="outline" className="flex items-center gap-2" onClick={() => navigate('/signin')}>
@@ -417,20 +407,6 @@ interface NavLinkProps {
   children: React.ReactNode;
   onClick?: (e: React.MouseEvent) => void;
 }
-
-const NavLink = ({ to, active, children }: NavLinkProps) => (
-  <Link
-    to={to}
-    className={cn(
-      'relative font-medium text-sm transition-colors hover:text-accent',
-      active ? 'text-accent' : 'text-foreground/80',
-      "after:absolute after:bottom-[-4px] after:left-0 after:h-[2px] after:w-full after:origin-bottom-right after:scale-x-0 after:bg-accent after:transition-transform after:duration-300",
-      active && "after:origin-bottom-left after:scale-x-100"
-    )}
-  >
-    {children}
-  </Link>
-);
 
 const MobileNavLink = ({ to, active, children, onClick }: NavLinkProps) => (
   <Link

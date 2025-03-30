@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { Menu, X, User, BriefcaseBusiness, Bell, LogOut, ChartBarIcon, Users, FileText, LayoutDashboard, ClipboardList, PlusCircle } from 'lucide-react';
+import { Menu, X, User, BriefcaseBusiness, LogOut, ChartBarIcon, Users, FileText, LayoutDashboard, ClipboardList, PlusCircle } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import {
@@ -208,10 +208,6 @@ const HRNavbar = () => {
             <span>Post Job</span>
           </Button>
           
-          <Button variant="ghost" size="icon">
-            <Bell className="h-5 w-5" />
-          </Button>
-          
           {currentUser ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -265,6 +261,7 @@ const HRNavbar = () => {
         </Button>
       </div>
 
+      {/* Mobile menu */}
       {mobileMenuOpen && (
         <div className="md:hidden absolute top-full left-0 w-full neo-blur py-4 px-6 animate-fade-in">
           <nav className="flex flex-col gap-4 mb-4">

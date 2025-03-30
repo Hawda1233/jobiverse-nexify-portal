@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -40,7 +41,9 @@ const ProtectedRoute = ({ requiredRole, children }: { requiredRole?: "candidate"
   const { currentUser, userData, loading } = useAuth();
 
   if (loading) {
-    return <div className="flex h-screen items-center justify-center">Loading...</div>;
+    return <div className="flex h-screen items-center justify-center">
+      <LoadingFallback />
+    </div>;
   }
 
   if (!currentUser) {
@@ -56,29 +59,49 @@ const ProtectedRoute = ({ requiredRole, children }: { requiredRole?: "candidate"
   return <>{children}</>;
 };
 
-const JobseekerLayout = () => (
-  <>
-    <Navbar />
-    <div className="min-h-screen">
-      <Suspense fallback={<LoadingFallback />}>
-        <Outlet />
-      </Suspense>
-    </div>
-    <Footer />
-  </>
-);
+const JobseekerLayout = () => {
+  const { loading } = useAuth();
 
-const HRLayout = () => (
-  <>
-    <HRNavbar />
-    <div className="min-h-screen">
-      <Suspense fallback={<LoadingFallback />}>
-        <Outlet />
-      </Suspense>
-    </div>
-    <Footer />
-  </>
-);
+  if (loading) {
+    return <div className="min-h-screen flex items-center justify-center">
+      <LoadingFallback />
+    </div>;
+  }
+
+  return (
+    <>
+      <Navbar />
+      <div className="min-h-screen pt-16">
+        <Suspense fallback={<LoadingFallback />}>
+          <Outlet />
+        </Suspense>
+      </div>
+      <Footer />
+    </>
+  );
+};
+
+const HRLayout = () => {
+  const { loading } = useAuth();
+
+  if (loading) {
+    return <div className="min-h-screen flex items-center justify-center">
+      <LoadingFallback />
+    </div>;
+  }
+
+  return (
+    <>
+      <HRNavbar />
+      <div className="min-h-screen pt-16">
+        <Suspense fallback={<LoadingFallback />}>
+          <Outlet />
+        </Suspense>
+      </div>
+      <Footer />
+    </>
+  );
+};
 
 const CleanLayout = () => {
   return (
@@ -100,16 +123,8 @@ const CleanLayout = () => {
   );
 };
 
-const RoleBasedLayout = () => {
-  const { userData, loading } = useAuth();
-  
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <LoadingFallback />
-      </div>
-    );
-  }
+const PublicLayout = () => {
+  const { userData } = useAuth();
   
   if (userData?.role === "hr") {
     return <HRLayout />;
@@ -119,11 +134,34 @@ const RoleBasedLayout = () => {
 };
 
 const AppRoutes = () => {
-  const { currentUser } = useAuth();
+  const { currentUser, userData, loading } = useAuth();
+  
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <LoadingFallback />
+      </div>
+    );
+  }
+
+  // Redirect authenticated users based on their role
+  if (currentUser && userData) {
+    const isOnAuthPage = window.location.pathname === '/signin' || 
+                        window.location.pathname === '/signup' || 
+                        window.location.pathname === '/hr-signup';
+    
+    if (isOnAuthPage) {
+      if (userData.role === 'hr') {
+        return <Navigate to="/hr-dashboard" replace />;
+      } else {
+        return <Navigate to="/dashboard" replace />;
+      }
+    }
+  }
   
   return (
     <Routes>
-      <Route path="/" element={<RoleBasedLayout />}>
+      <Route path="/" element={<PublicLayout />}>
         <Route path="/" element={<Index />} />
       </Route>
       
@@ -137,15 +175,33 @@ const AppRoutes = () => {
         <Route path="/terms" element={<Terms />} />
       </Route>
       
+      {/* Jobseeker-only routes */}
       <Route element={
-        <ProtectedRoute>
-          <RoleBasedLayout />
+        <ProtectedRoute requiredRole="candidate">
+          <JobseekerLayout />
         </ProtectedRoute>
       }>
+        <Route path="/dashboard" element={<JobseekerDashboard />} />
+        <Route path="/applications" element={<Applications />} />
         <Route path="/jobs" element={<Jobs />} />
         <Route path="/companies" element={<Jobs />} />
         <Route path="/resources" element={<ResourcesPage />} />
         <Route path="/comparison" element={<ComparisonTool />} />
+      </Route>
+      
+      {/* HR-only routes */}
+      <Route element={
+        <ProtectedRoute requiredRole="hr">
+          <HRLayout />
+        </ProtectedRoute>
+      }>
+        <Route path="/hr-dashboard" element={<HRDashboard />} />
+        <Route path="/post-job" element={<PostJob />} />
+        <Route path="/hr-dashboard/jobs" element={<HRDashboard />} />
+        <Route path="/hr-dashboard/applications" element={<HRDashboard />} />
+        <Route path="/hr-dashboard/candidates" element={<HRDashboard />} />
+        <Route path="/hr-dashboard/analytics" element={<HRDashboard />} />
+        <Route path="/hr-dashboard/company" element={<HRDashboard />} />
       </Route>
       
       <Route element={<CleanLayout />}>
@@ -163,26 +219,6 @@ const AppRoutes = () => {
         <Route path="/profile" element={
           <ProtectedRoute>
             <Profile />
-          </ProtectedRoute>
-        } />
-        <Route path="/dashboard" element={
-          <ProtectedRoute requiredRole="candidate">
-            <JobseekerDashboard />
-          </ProtectedRoute>
-        } />
-        <Route path="/applications" element={
-          <ProtectedRoute requiredRole="candidate">
-            <Applications />
-          </ProtectedRoute>
-        } />
-        <Route path="/hr-dashboard" element={
-          <ProtectedRoute requiredRole="hr">
-            <HRDashboard />
-          </ProtectedRoute>
-        } />
-        <Route path="/post-job" element={
-          <ProtectedRoute requiredRole="hr">
-            <PostJob />
           </ProtectedRoute>
         } />
         
