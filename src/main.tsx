@@ -9,7 +9,7 @@ import SimpleFallbackPage from './components/SimpleFallbackPage.tsx';
 import './index.css';
 import { app, db, auth } from './lib/firebase';
 
-// Verify Firebase initialization status - immediately check at module load time
+// Verify Firebase initialization status on load
 const firebaseInitialized = !!app && !!db && !!auth;
 console.log("Firebase initialization status:", firebaseInitialized);
 

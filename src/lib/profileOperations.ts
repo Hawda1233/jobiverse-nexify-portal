@@ -2,9 +2,9 @@
 import { db } from "./firebase";
 import { collection, doc, setDoc, getDoc, updateDoc } from "firebase/firestore";
 
-// Define collection references properly - using functions to ensure db is initialized
-const getEmployerProfilesRef = () => collection(db, "employerProfiles");
-const getCandidateProfilesRef = () => collection(db, "candidateProfiles");
+// Define collection references - ensuring db is properly initialized first
+const getEmployerProfilesCollection = () => collection(db, "employerProfiles");
+const getCandidateProfilesCollection = () => collection(db, "candidateProfiles");
 
 // Interface for employer profile data
 export interface EmployerProfileData {
@@ -29,6 +29,7 @@ export interface EmployerProfileData {
 // Create or update employer profile
 export const saveEmployerProfile = async (profileData: Omit<EmployerProfileData, "createdAt" | "updatedAt">) => {
   try {
+    // Use doc() with the initialized db instance
     const profileRef = doc(db, "employerProfiles", profileData.uid);
     const docSnap = await getDoc(profileRef);
     
