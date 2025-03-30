@@ -12,21 +12,21 @@ const firebaseConfig = {
   appId: "1:123456789012:web:abcdef1234567890abcdef"
 };
 
-// Initialize Firebase first 
+// Initialize Firebase first - ensure this happens before any other Firebase service is used
 const app = initializeApp(firebaseConfig);
 
-// Initialize Firebase services after the app is initialized
+// Initialize Firestore and Auth explicitly with the app instance
 export const db = getFirestore(app);
 export const auth = getAuth(app);
 
-// Configure Google Auth Provider
+// Configure Google Auth Provider with custom parameters
 export const googleProvider = new GoogleAuthProvider();
 googleProvider.setCustomParameters({
   prompt: 'select_account',
   'hl': 'hi'
 });
 
-// Add authorized domains for local development
+// Add authorized domains dynamically for local development
 export const addAuthDomain = () => {
   try {
     const currentDomain = window.location.hostname;
@@ -42,6 +42,9 @@ export const addAuthDomain = () => {
     console.error("Error setting auth domain:", error);
   }
 };
+
+// Call this function when initializing the app
+addAuthDomain();
 
 // Export the initialized app
 export { app };

@@ -1,17 +1,29 @@
 
 import { createRoot } from 'react-dom/client';
-import React, { Suspense, useEffect } from 'react';
+import React, { Suspense, useEffect, useState } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { HelmetProvider } from 'react-helmet-async';
 import { ErrorBoundary } from 'react-error-boundary';
 import App from './App.tsx';
 import SimpleFallbackPage from './components/SimpleFallbackPage.tsx';
 import './index.css';
-import { app, db, auth } from './lib/firebase';
+import { app, db, auth, addAuthDomain } from './lib/firebase';
 
-// Verify Firebase initialization status on load
-const firebaseInitialized = !!app && !!db && !!auth;
-console.log("Firebase initialization status:", firebaseInitialized);
+// Ensure Firebase is initialized and ready
+const ensureFirebaseInitialized = () => {
+  // Make sure auth domain is added
+  addAuthDomain();
+  
+  // Verify Firebase initialization status
+  const firebaseInitialized = !!app && !!db && !!auth;
+  console.log("Firebase initialization status:", firebaseInitialized);
+  
+  if (!firebaseInitialized) {
+    console.error("Firebase failed to initialize properly!");
+  }
+  
+  return firebaseInitialized;
+};
 
 // Create the query client with robust error handling
 const queryClient = new QueryClient({
@@ -78,9 +90,10 @@ const ErrorFallback = ({ error, resetErrorBoundary }) => {
 
 // Firebase initialization check component
 const FirebaseInitializationCheck = ({ children }) => {
-  const [isInitialized, setIsInitialized] = React.useState(firebaseInitialized);
+  const [isInitialized, setIsInitialized] = React.useState(false);
   
   useEffect(() => {
+    // Check if Firebase is initialized
     if (app && db && auth) {
       console.log("Firebase is initialized correctly");
       setIsInitialized(true);
@@ -113,6 +126,9 @@ if ('serviceWorker' in navigator && import.meta.env.PROD) {
       });
   });
 }
+
+// Make sure Firebase is initialized before rendering
+ensureFirebaseInitialized();
 
 // Find root element and initialize app with better error handling
 const rootElement = document.getElementById("root");
