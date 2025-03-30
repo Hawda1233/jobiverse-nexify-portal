@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -6,6 +5,7 @@ import { BrowserRouter, Routes, Route, Outlet, Navigate } from "react-router-dom
 import { AuthProvider } from "./contexts/AuthContext";
 import { useAuth } from "@/contexts/AuthContext";
 import OfflineWarning from "@/components/OfflineWarning";
+import ServiceWorkerRegistration from "@/components/ServiceWorkerRegistration";
 import Index from "./pages/Index";
 import Jobs from "./pages/Jobs";
 import JobDetails from "./pages/JobDetails";
@@ -33,6 +33,8 @@ import HRNavbar from "@/components/HRNavbar";
 import Footer from "@/components/Footer";
 import { ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import LoadingFallback from "@/components/LoadingFallback";
+import { Suspense } from "react";
 
 const ProtectedRoute = ({ requiredRole, children }: { requiredRole?: "candidate" | "hr", children: React.ReactNode }) => {
   const { currentUser, userData, loading } = useAuth();
@@ -58,7 +60,9 @@ const JobseekerLayout = () => (
   <>
     <Navbar />
     <div className="min-h-screen">
-      <Outlet />
+      <Suspense fallback={<LoadingFallback />}>
+        <Outlet />
+      </Suspense>
     </div>
     <Footer />
   </>
@@ -68,7 +72,9 @@ const HRLayout = () => (
   <>
     <HRNavbar />
     <div className="min-h-screen">
-      <Outlet />
+      <Suspense fallback={<LoadingFallback />}>
+        <Outlet />
+      </Suspense>
     </div>
     <Footer />
   </>
@@ -87,7 +93,9 @@ const CleanLayout = () => {
           <ChevronLeft className="h-5 w-5" />
         </Button>
       </div>
-      <Outlet />
+      <Suspense fallback={<LoadingFallback />}>
+        <Outlet />
+      </Suspense>
     </div>
   );
 };
@@ -98,7 +106,7 @@ const RoleBasedLayout = () => {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full"></div>
+        <LoadingFallback />
       </div>
     );
   }
@@ -215,6 +223,7 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
+        <ServiceWorkerRegistration />
         <OfflineWarning />
         <AppRoutes />
       </BrowserRouter>
