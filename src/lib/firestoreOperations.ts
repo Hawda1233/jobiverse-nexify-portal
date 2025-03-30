@@ -1,12 +1,24 @@
+
 import { db } from "./firebase";
 import { collection, addDoc, getDocs, query, where, orderBy, Timestamp, doc, getDoc, updateDoc, deleteDoc, limit } from "firebase/firestore";
 import { JobType } from "./jobsData";
 import { getCandidateProfile } from "./profileOperations";
 import { supabase, getJobsFromSupabase, addJobToSupabase, applyForJobInSupabase, getUserApplicationsFromSupabase } from "./supabase";
 
-// Collection reference - ensure we're using the initialized Firestore instance
-const getJobsCollection = () => collection(db, "jobs");
-const getApplicationsCollection = () => collection(db, "applications");
+// Collection references - using functions with safety checks to ensure db is initialized
+const getJobsCollection = () => {
+  if (!db) {
+    throw new Error("Firestore database not initialized");
+  }
+  return collection(db, "jobs");
+};
+
+const getApplicationsCollection = () => {
+  if (!db) {
+    throw new Error("Firestore database not initialized");
+  }
+  return collection(db, "applications");
+};
 
 // Add a new job to Firestore or Supabase
 export const addJobToFirestore = async (jobData: Omit<JobType, "id" | "postedTime">) => {
@@ -39,23 +51,28 @@ export const addJobToFirestore = async (jobData: Omit<JobType, "id" | "postedTim
       console.error("Error adding job to Supabase, falling back to Firebase:", supabaseError);
       
       // Fallback to Firebase - ensure we get a fresh collection reference
-      const jobsCollection = getJobsCollection();
-      const docRef = await addDoc(jobsCollection, {
-        ...jobData,
-        createdAt: Timestamp.now(),
-        updatedAt: Timestamp.now(),
-        active: true,
-        keywords: generateJobKeywords(jobData), // Add keywords for better matching
-      });
-      
-      // Format the posted time
-      const postedTime = formatPostedTime(new Date());
-      
-      return { 
-        id: docRef.id,
-        ...jobData,
-        postedTime 
-      };
+      try {
+        const jobsCollection = getJobsCollection();
+        const docRef = await addDoc(jobsCollection, {
+          ...jobData,
+          createdAt: Timestamp.now(),
+          updatedAt: Timestamp.now(),
+          active: true,
+          keywords: generateJobKeywords(jobData), // Add keywords for better matching
+        });
+        
+        // Format the posted time
+        const postedTime = formatPostedTime(new Date());
+        
+        return { 
+          id: docRef.id,
+          ...jobData,
+          postedTime 
+        };
+      } catch (firebaseError) {
+        console.error("Firebase error in addJobToFirestore:", firebaseError);
+        throw firebaseError;
+      }
     }
   } catch (error) {
     console.error("Error adding job:", error);
@@ -119,15 +136,55 @@ export const getJobsFromFirestore = async () => {
       console.error("Error getting jobs from Supabase, falling back to Firebase:", supabaseError);
       
       // Fallback to Firebase - ensure we get a fresh collection reference
+      try {
+        const jobsCollection = getJobsCollection();
+        const q = query(jobsCollection, where("active", "==", true), orderBy("createdAt", "desc"));
+        const querySnapshot = await getDocs(q);
+        
+        const jobs: JobType[] = [];
+        querySnapshot.forEach((doc) => {
+          const data = doc.data();
+          jobs.push({
+            id: doc.id,
+            title: data.title,
+            companyName: data.companyName,
+            location: data.location,
+            jobType: data.jobType,
+            salary: data.salary,
+            category: data.category,
+            description: data.description,
+            postedTime: formatPostedTime(data.createdAt.toDate()),
+            experienceLevel: data.experienceLevel,
+            featured: data.featured,
+            postedBy: data.postedBy,
+          });
+        });
+        
+        return jobs;
+      } catch (firebaseError) {
+        console.error("Firebase error in getJobsFromFirestore:", firebaseError);
+        throw firebaseError;
+      }
+    }
+  } catch (error) {
+    console.error("Error getting jobs:", error);
+    throw error;
+  }
+};
+
+// Get jobs posted by specific HR user
+export const getJobsByHR = async (userId: string) => {
+  try {
+    try {
       const jobsCollection = getJobsCollection();
-      const q = query(jobsCollection, where("active", "==", true), orderBy("createdAt", "desc"));
+      const q = query(jobsCollection, where("postedBy", "==", userId), orderBy("createdAt", "desc"));
       const querySnapshot = await getDocs(q);
       
       const jobs: JobType[] = [];
       querySnapshot.forEach((doc) => {
         const data = doc.data();
         jobs.push({
-          id: doc.id,
+          id: String(doc.id), // Convert to string to match JobType
           title: data.title,
           companyName: data.companyName,
           location: data.location,
@@ -143,43 +200,13 @@ export const getJobsFromFirestore = async () => {
       });
       
       return jobs;
+    } catch (error) {
+      console.error("Firebase error in getJobsByHR:", error);
+      return []; // Return empty array on error to avoid crashing
     }
   } catch (error) {
-    console.error("Error getting jobs:", error);
-    throw error;
-  }
-};
-
-// Get jobs posted by specific HR user
-export const getJobsByHR = async (userId: string) => {
-  try {
-    const jobsCollection = getJobsCollection();
-    const q = query(jobsCollection, where("postedBy", "==", userId), orderBy("createdAt", "desc"));
-    const querySnapshot = await getDocs(q);
-    
-    const jobs: JobType[] = [];
-    querySnapshot.forEach((doc) => {
-      const data = doc.data();
-      jobs.push({
-        id: String(doc.id), // Convert to string to match JobType
-        title: data.title,
-        companyName: data.companyName,
-        location: data.location,
-        jobType: data.jobType,
-        salary: data.salary,
-        category: data.category,
-        description: data.description,
-        postedTime: formatPostedTime(data.createdAt.toDate()),
-        experienceLevel: data.experienceLevel,
-        featured: data.featured,
-        postedBy: data.postedBy,
-      });
-    });
-    
-    return jobs;
-  } catch (error) {
     console.error("Error getting HR jobs:", error);
-    throw error;
+    return []; // Return empty array on error to avoid crashing
   }
 };
 
@@ -204,16 +231,21 @@ export const applyForJob = async (jobId: string, userId: string, applicationData
       console.error("Error applying for job in Supabase, falling back to Firebase:", supabaseError);
       
       // Fallback to Firebase - ensure we get a fresh collection reference
-      const applicationsCollection = getApplicationsCollection();
-      const docRef = await addDoc(applicationsCollection, {
-        jobId,
-        userId,
-        ...applicationData,
-        status: "applied",
-        appliedAt: Timestamp.now(),
-      });
-      
-      return docRef.id;
+      try {
+        const applicationsCollection = getApplicationsCollection();
+        const docRef = await addDoc(applicationsCollection, {
+          jobId,
+          userId,
+          ...applicationData,
+          status: "applied",
+          appliedAt: Timestamp.now(),
+        });
+        
+        return docRef.id;
+      } catch (firebaseError) {
+        console.error("Firebase error in applyForJob:", firebaseError);
+        throw firebaseError;
+      }
     }
   } catch (error) {
     console.error("Error applying for job:", error);
@@ -224,22 +256,27 @@ export const applyForJob = async (jobId: string, userId: string, applicationData
 // Get applications for a specific job
 export const getApplicationsForJob = async (jobId: string) => {
   try {
-    const applicationsCollection = getApplicationsCollection();
-    const q = query(applicationsCollection, where("jobId", "==", jobId), orderBy("appliedAt", "desc"));
-    const querySnapshot = await getDocs(q);
-    
-    const applications: any[] = [];
-    querySnapshot.forEach((doc) => {
-      applications.push({
-        id: doc.id,
-        ...doc.data(),
+    try {
+      const applicationsCollection = getApplicationsCollection();
+      const q = query(applicationsCollection, where("jobId", "==", jobId), orderBy("appliedAt", "desc"));
+      const querySnapshot = await getDocs(q);
+      
+      const applications: any[] = [];
+      querySnapshot.forEach((doc) => {
+        applications.push({
+          id: doc.id,
+          ...doc.data(),
+        });
       });
-    });
-    
-    return applications;
+      
+      return applications;
+    } catch (error) {
+      console.error("Firebase error in getApplicationsForJob:", error);
+      return []; // Return empty array on error to avoid crashing
+    }
   } catch (error) {
     console.error("Error getting applications:", error);
-    throw error;
+    return []; // Return empty array on error to avoid crashing
   }
 };
 
@@ -282,39 +319,44 @@ export const getUserApplications = async (userId: string) => {
         // Only spread known properties, not the entire unknown object
         phoneNumber: application.phone_number,
         resume: application.resume,
-        coverLetter: application.coverLetter
+        coverLetter: application.cover_letter
       }));
     } catch (supabaseError) {
       console.error("Error getting user applications from Supabase, falling back to Firebase:", supabaseError);
       
       // Fallback to Firebase
-      const applicationsCollection = getApplicationsCollection();
-      const q = query(applicationsCollection, where("userId", "==", userId), orderBy("appliedAt", "desc"));
-      const querySnapshot = await getDocs(q);
-      
-      const applications: any[] = [];
-      querySnapshot.forEach((doc) => {
-        const data = doc.data();
-        applications.push({
-          id: doc.id,
-          jobId: data.jobId,
-          jobTitle: data.jobTitle,
-          companyName: data.companyName,
-          location: data.location || "",
-          status: data.status,
-          appliedDate: data.appliedAt.toDate(),
-          // Only include specific properties we know exist
-          phoneNumber: data.phoneNumber,
-          resume: data.resume,
-          coverLetter: data.coverLetter
+      try {
+        const applicationsCollection = getApplicationsCollection();
+        const q = query(applicationsCollection, where("userId", "==", userId), orderBy("appliedAt", "desc"));
+        const querySnapshot = await getDocs(q);
+        
+        const applications: any[] = [];
+        querySnapshot.forEach((doc) => {
+          const data = doc.data();
+          applications.push({
+            id: doc.id,
+            jobId: data.jobId,
+            jobTitle: data.jobTitle,
+            companyName: data.companyName,
+            location: data.location || "",
+            status: data.status,
+            appliedDate: data.appliedAt.toDate(),
+            // Only include specific properties we know exist
+            phoneNumber: data.phoneNumber,
+            resume: data.resume,
+            coverLetter: data.coverLetter
+          });
         });
-      });
-      
-      return applications;
+        
+        return applications;
+      } catch (firebaseError) {
+        console.error("Firebase error in getUserApplications:", firebaseError);
+        return []; // Return empty array on error to avoid crashing
+      }
     }
   } catch (error) {
     console.error("Error getting user applications:", error);
-    throw error;
+    return []; // Return empty array on error to avoid crashing
   }
 };
 
@@ -360,44 +402,49 @@ export const getPersonalizedJobs = async (userId: string) => {
     const candidateSkills = candidateProfile.skills.map(skill => skill.toLowerCase());
     
     // Get all active jobs
-    const jobsCollection = getJobsCollection();
-    const q = query(jobsCollection, where("active", "==", true), orderBy("createdAt", "desc"));
-    const querySnapshot = await getDocs(q);
-    
-    const jobs: JobType[] = [];
-    const jobsWithScores: { job: JobType, score: number }[] = [];
-    
-    querySnapshot.forEach((docSnapshot) => {
-      const data = docSnapshot.data();
-      const job: JobType = {
-        id: String(docSnapshot.id), // Convert to string to match JobType
-        title: data.title,
-        companyName: data.companyName,
-        location: data.location,
-        jobType: data.jobType,
-        salary: data.salary,
-        category: data.category,
-        description: data.description,
-        postedTime: formatPostedTime(data.createdAt.toDate()),
-        experienceLevel: data.experienceLevel,
-        featured: data.featured,
-        postedBy: data.postedBy,
-      };
+    try {
+      const jobsCollection = getJobsCollection();
+      const q = query(jobsCollection, where("active", "==", true), orderBy("createdAt", "desc"));
+      const querySnapshot = await getDocs(q);
       
-      // Calculate match score based on skills relevance
-      const matchScore = calculateJobMatchScore(job, candidateSkills, data.keywords || []);
+      const jobs: JobType[] = [];
+      const jobsWithScores: { job: JobType, score: number }[] = [];
       
-      jobsWithScores.push({ job, score: matchScore });
-    });
-    
-    // Sort jobs by match score (higher first)
-    jobsWithScores.sort((a, b) => b.score - a.score);
-    
-    // Return sorted jobs
-    return jobsWithScores.map(item => item.job);
+      querySnapshot.forEach((docSnapshot) => {
+        const data = docSnapshot.data();
+        const job: JobType = {
+          id: String(docSnapshot.id), // Convert to string to match JobType
+          title: data.title,
+          companyName: data.companyName,
+          location: data.location,
+          jobType: data.jobType,
+          salary: data.salary,
+          category: data.category,
+          description: data.description,
+          postedTime: formatPostedTime(data.createdAt.toDate()),
+          experienceLevel: data.experienceLevel,
+          featured: data.featured,
+          postedBy: data.postedBy,
+        };
+        
+        // Calculate match score based on skills relevance
+        const matchScore = calculateJobMatchScore(job, candidateSkills, data.keywords || []);
+        
+        jobsWithScores.push({ job, score: matchScore });
+      });
+      
+      // Sort jobs by match score (higher first)
+      jobsWithScores.sort((a, b) => b.score - a.score);
+      
+      // Return sorted jobs
+      return jobsWithScores.map(item => item.job);
+    } catch (error) {
+      console.error("Firebase error in getPersonalizedJobs:", error);
+      return getJobsFromFirestore(); // Fallback to regular jobs
+    }
   } catch (error) {
     console.error("Error getting personalized jobs:", error);
-    throw error;
+    return getJobsFromFirestore(); // Fallback to regular jobs on error
   }
 };
 

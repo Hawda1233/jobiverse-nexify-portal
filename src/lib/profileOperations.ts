@@ -3,8 +3,19 @@ import { db } from "./firebase";
 import { collection, doc, setDoc, getDoc, updateDoc } from "firebase/firestore";
 
 // Define collection references properly - using functions to ensure db is initialized
-const getEmployerProfilesRef = () => collection(db, "employerProfiles");
-const getCandidateProfilesRef = () => collection(db, "candidateProfiles");
+const getEmployerProfilesRef = () => {
+  if (!db) {
+    throw new Error("Firestore database not initialized");
+  }
+  return collection(db, "employerProfiles");
+};
+
+const getCandidateProfilesRef = () => {
+  if (!db) {
+    throw new Error("Firestore database not initialized");
+  }
+  return collection(db, "candidateProfiles");
+};
 
 // Interface for employer profile data
 export interface EmployerProfileData {
@@ -29,6 +40,10 @@ export interface EmployerProfileData {
 // Create or update employer profile
 export const saveEmployerProfile = async (profileData: Omit<EmployerProfileData, "createdAt" | "updatedAt">) => {
   try {
+    if (!db) {
+      throw new Error("Firestore database not initialized");
+    }
+    
     const profileRef = doc(db, "employerProfiles", profileData.uid);
     const docSnap = await getDoc(profileRef);
     
@@ -57,6 +72,11 @@ export const saveEmployerProfile = async (profileData: Omit<EmployerProfileData,
 // Get employer profile by user ID
 export const getEmployerProfile = async (uid: string) => {
   try {
+    if (!db) {
+      throw new Error("Firestore database not initialized");
+      return null;
+    }
+    
     const profileRef = doc(db, "employerProfiles", uid);
     const docSnap = await getDoc(profileRef);
     
@@ -116,6 +136,10 @@ export interface CandidateProfileData {
 // Create or update candidate profile
 export const saveCandidateProfile = async (profileData: Omit<CandidateProfileData, "createdAt" | "updatedAt">) => {
   try {
+    if (!db) {
+      throw new Error("Firestore database not initialized");
+    }
+    
     const profileRef = doc(db, "candidateProfiles", profileData.uid);
     const docSnap = await getDoc(profileRef);
     
@@ -144,6 +168,11 @@ export const saveCandidateProfile = async (profileData: Omit<CandidateProfileDat
 // Get candidate profile by user ID
 export const getCandidateProfile = async (uid: string) => {
   try {
+    if (!db) {
+      throw new Error("Firestore database not initialized");
+      return null;
+    }
+    
     const profileRef = doc(db, "candidateProfiles", uid);
     const docSnap = await getDoc(profileRef);
     

@@ -3,6 +3,7 @@ import { initializeApp } from "firebase/app";
 import { getAuth, GoogleAuthProvider } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 
+// Initialize Firebase configuration
 const firebaseConfig = {
   apiKey: "AIzaSyBsLDH2LSdF1ZpwXtY3_unDpAFUfy35VC0",
   authDomain: "nexify-job-platform.firebaseapp.com",
@@ -30,9 +31,9 @@ googleProvider.setCustomParameters({
 export const addAuthDomain = () => {
   try {
     const currentDomain = window.location.hostname;
+    console.log(`Using domain: ${currentDomain} for authentication`);
+    
     if (!currentDomain.includes('nexify-job-platform.firebaseapp.com')) {
-      console.log(`Using domain: ${currentDomain} for authentication`);
-      
       // Support for regional domains in India
       if (currentDomain.includes('.in') || currentDomain.includes('india')) {
         console.log('Indian domain detected, applying regional settings');
@@ -43,7 +44,7 @@ export const addAuthDomain = () => {
   }
 };
 
-// Call this function when initializing the app
+// Ensure addAuthDomain is called immediately during import
 addAuthDomain();
 
 // Export the initialized app
